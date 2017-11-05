@@ -67,19 +67,13 @@ NOUSER = User(id=0, username=None, password=None)
 # STATIC PART - SEE RESPECTIVE HTML FILES
 #///////////////////////////////////////////////////////////////////////////////////////////////////
 
-@app.route('/')
-def base_url():
-    return redirect('/static/index.html')
-@app.route('/teapot')
-def teapot():
-    return make_response("", 418, {'content-type'})
 
 #///////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 # DYNAMIC PART - REST-API
 #///////////////////////////////////////////////////////////////////////////////////////////////////
-@app.route('/signup', methods=['POST'])
+@app.route('/rest/signup', methods=['POST'])
 def signup():
     "The Endpoint URI for signing up. Takes email, username and password JSON returns 201 on success"
 
@@ -126,7 +120,7 @@ def signup():
     return make_message_response("User " + requestJSON['username'] + " created", 201)
 
 
-@app.route('/dev/removeUser/<uname>', methods=['DELETE'])
+@app.route('/rest/dev/removeUser/<uname>', methods=['DELETE'])
 @jwt_required()
 def removeUser(uname):
     # check if you are the user in question ________TODO: check for administrative priviliges
@@ -140,7 +134,7 @@ def removeUser(uname):
     return make_response(("", 204, None))
 
 
-@app.route('/check_token', methods=['GET'])
+@app.route('/rest/check_token', methods=['GET'])
 @jwt_required()
 def check_token():
     retObj = {}
@@ -148,7 +142,7 @@ def check_token():
     return make_json_response(retObj, 200)
 
 
-@app.route('/appointment/<appointmentID>')
+@app.route('/rest/appointment/<appointmentID>')
 @jwt_required()
 def appointment_data(appointmentID):
     #check if user has viewing priviliges or global administrative priviliges
@@ -200,7 +194,7 @@ app.config['MYSQL_USER'] = 'flaskuser'
 app.config['MYSQL_PASSWORD'] = 'software'
 app.config['MYSQL_DB'] = 'interne_test'
 app.config['MYSQL_HOST'] = 'localhost'
-
+app.config['JWT_AUTH_URL_RULE']='/rest/auth'
 
 jwt = JWT(app, authenticate, identity)
 mysql = MySQL(app)

@@ -25,7 +25,7 @@ class InterneServerTestCase(unittest.TestCase):
         reqData["username"] = username
         reqData["password"] = password
        
-        responseLogin = self.app.post('/auth', data=json.dumps(reqData), headers={
+        responseLogin = self.app.post('/rest/auth', data=json.dumps(reqData), headers={
                                       'content-type': 'application/json'}, follow_redirects=True)
        
         responseJSON = json.loads(responseLogin.data)
@@ -44,11 +44,11 @@ class InterneServerTestCase(unittest.TestCase):
         responseJSON={}
         try:
             responseCheck = self.app.get(
-                '/check_token', data="{}", headers={'Authorization': "JWT " + token}, follow_redirects=True)
+                '/rest/check_token', data="{}", headers={'Authorization': "JWT " + token}, follow_redirects=True)
             responseJSON = json.loads(responseCheck.data)
         except Exception:
             print(Exception)
-            print("On Get Request: /check_token "+"{Authorization : JWT "+token+" | Data: "+"{}")
+            print("On Get Request: /rest/check_token "+"{Authorization : JWT "+token+" | Data: "+"{}")
             print("Returned: ")
             print(responseCheck.data)
         self.assertTrue(responseJSON['Username'] == 'monomo', msg='Authorization Failure: monomo+monomomo')
@@ -57,19 +57,19 @@ class InterneServerTestCase(unittest.TestCase):
         self.assertTrue(token==None, msg="Login thisuserdoesnotexist+nope returned a Token")
 
         responseCheck=self.app.post(
-        '/check-token', data="{}", headers={'content-type':'application/json', 'Authorization':"JWT wrong_token"})
+        '/rest/check-token', data="{}", headers={'content-type':'application/json', 'Authorization':"JWT wrong_token"})
         self.assertFalse(responseCheck.status==200, msg="JWT Wrong Token returned HTTP 200 OK")
 
             
 
     def test_signup(self):
-        "Tests Signup on /signup, login on the new account on /auth, checks the token, then deletes the new account on /dev/removeUser/<id>"
+        "Tests Signup on /rest/signup, login on the new account on /rest/auth, checks the token, then deletes the new account on /rest/dev/removeUser/<id>"
         postData={}
         postData['username']='temptest'
         postData['email']='testemail@test.test'
         postData['password']='1234'
 
-        rq=self.app.post('/signup', data=json.dumps(postData), headers={'content-type' : 'application/json'})
+        rq=self.app.post('/rest/signup', data=json.dumps(postData), headers={'content-type' : 'application/json'})
         try:
             self.assertTrue(rq.status_code==201, msg="User temptest+1234 could not be created;")
         except AssertionError:
@@ -82,13 +82,13 @@ class InterneServerTestCase(unittest.TestCase):
         self.assertFalse(token == None, msg="Login temptest+1234 Failure (test-based account)")
 
         responseCheck = self.app.get(
-            '/check_token', data="{}", headers={'content-type' : 'application/json','Authorization': "JWT " + token}, follow_redirects=False)
-        self.assertTrue(len(responseCheck.data)>0, msg="/check_token returned no Data")
+            '/rest&check_token', data="{}", headers={'content-type' : 'application/json','Authorization': "JWT " + token}, follow_redirects=False)
+        self.assertTrue(len(responseCheck.data)>0, msg="/rest/check_token returned no Data")
        
         try:
             responseJSON = json.loads(responseCheck.data)
         except json.JSONDecodeError:
-            print("/check_token Data irregular. (No JSON)")
+            print("/rest/check_token Data irregular. (No JSON)")
             print("Data received was:")
             print(str(responseCheck))
             self.assertTrue(False)
@@ -97,9 +97,9 @@ class InterneServerTestCase(unittest.TestCase):
        
 
 
-        response=self.app.delete('/dev/removeUser/temptest', headers={'Authorization' : "JWT "+ token})
+        response=self.app.delete('/rest/dev/removeUser/temptest', headers={'Authorization' : "JWT "+ token})
         if response.status_code!=204:
-            print("/dev/removeUser/"+str(id)+" did not return status 204. Message is: "+response.status)
+            print("/rest/dev/removeUser/"+str(id)+" did not return status 204. Message is: "+response.status)
             print(response.data)
         self.assertTrue(response.status_code==204)
         token=self.login('temptest', '1234')
