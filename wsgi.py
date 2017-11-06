@@ -1,4 +1,3 @@
-import Interne_server
-
+from Interne_server import app as application
 if __name__ == "__main__":
-    app.run()
+    application.run()
