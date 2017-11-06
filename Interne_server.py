@@ -4,9 +4,6 @@ from flask_mysqldb import MySQL
 from raven.contrib.flask import Sentry
 from werkzeug import generate_password_hash, check_password_hash
 from flask_jwt import JWT, jwt_required, current_identity
-from OpenSSL import SSL
-import requests
-
 import json
 import datetime
 from werkzeug.security import safe_str_cmp
