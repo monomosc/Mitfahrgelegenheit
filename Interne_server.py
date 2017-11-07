@@ -117,19 +117,6 @@ def signup():
     return make_message_response("User " + requestJSON['username'] + " created", 201)
 
 
-@app.route('/rest/dev/removeUser/<uname>', methods=['DELETE'])
-@jwt_required()
-def removeUser(uname):
-    # check if you are the user in question ________TODO: check for administrative priviliges
-    
-    if username != current_identity.username:
-        return make_message_response("Can only remove self; or requires administrative priviliges. User " + str(current_identity.id) + " trying to remove " + str(UID), 401)
-    cur = mysql.connection.cursor()
-    cur.execute("START TRANSACTION;")
-    cur.execute('DELETE FROM user WHERE userID=' + str(current_identity.id))
-    cur.execute("COMMIT;")
-    return make_response(("", 204, None))
-
 
 @app.route('/rest/check_token', methods=['GET'])
 @jwt_required()
@@ -150,8 +137,25 @@ def appointment_data(appointmentID):
 
 
 
+# DYNAMIC PART - REST-DEV-API
+#///////////////////////////////////////////////////////////////////////////////////////////////////
 
+@app.route('/rest/dev/removeUser/<uname>', methods=['DELETE'])
+@jwt_required()
+def removeUser(uname):
+    # check if you are the user in question ________TODO: check for administrative priviliges
+    
+    if username != current_identity.username:
+        return make_message_response("Can only remove self; or requires administrative priviliges. User " + str(current_identity.id) + " trying to remove " + str(UID), 401)
+    cur = mysql.connection.cursor()
+    cur.execute("START TRANSACTION;")
+    cur.execute('DELETE FROM user WHERE userID=' + str(current_identity.id))
+    cur.execute("COMMIT;")
+    return make_response(("", 204, None))
 
+@application.route('/rest/dev/check-api')
+def checkApi():
+    return make_response("REST-API seems to work")
 
 
 #///////////////////////////////////////////////////////////////////////////////////////////////////
