@@ -8,7 +8,7 @@ import json
 import datetime
 from werkzeug.security import safe_str_cmp
 
-app = Flask(__name__)
+application = Flask(__name__)
 
 #CLASS: USER
 #///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -186,17 +186,17 @@ def make_json_response(jsonDictionary, status):
         return make_response('{"message" : "Internal Server Error: Some Method created invalid JSON Data"}', 500, {'content_type': 'application/json'})
 
 
-app.config['SECRET_KEY'] = 'SECRET_KEY'
-app.config['MYSQL_USER'] = 'flaskuser'
-app.config['MYSQL_PASSWORD'] = 'software'
-app.config['MYSQL_DB'] = 'interne_test'
-app.config['MYSQL_HOST'] = 'localhost'
-app.config['JWT_AUTH_URL_RULE']='/rest/auth'
+application.config['SECRET_KEY'] = 'SECRET_KEY'
+application.config['MYSQL_USER'] = 'flaskuser'
+application.config['MYSQL_PASSWORD'] = 'software'
+application.config['MYSQL_DB'] = 'interne_test'
+application.config['MYSQL_HOST'] = 'localhost'
+application.config['JWT_AUTH_URL_RULE']='/rest/auth'
 
-jwt = JWT(app, authenticate, identity)
-mysql = MySQL(app)
+jwt = JWT(application, authenticate, identity)
+mysql = MySQL(application)
 sentry = Sentry(
-    app, dsn='https://6ac6c6188eb6499fa2967475961a03ca:2f617eada90f478bb489cd4cf2c50663@sentry.io/232283')
+    application, dsn='https://6ac6c6188eb6499fa2967475961a03ca:2f617eada90f478bb489cd4cf2c50663@sentry.io/232283')
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0')
+    application.run(host='0.0.0.0')
