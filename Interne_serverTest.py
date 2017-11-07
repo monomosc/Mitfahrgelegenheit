@@ -39,6 +39,7 @@ class InterneServerTestCase(unittest.TestCase):
 
     
     def test_login(self):
+        "Tests login of existing user monomo+monomomo"
         token = self.login('monomo', 'monomomo')
         self.assertFalse(token == None, msg="Login monomo+monomomo Failure")
         responseJSON={}
@@ -70,11 +71,13 @@ class InterneServerTestCase(unittest.TestCase):
         postData['password']='1234'
 
         rq=self.app.post('/api/signup', data=json.dumps(postData), headers={'content-type' : 'application/json'})
-        try:
-            self.assertTrue(rq.status_code==201, msg="User temptest+1234 could not be created;")
-        except AssertionError:
-            print(rq.status_code)
-            print(rq.data)
+        
+        if rq.status_code!=409:         #409 : User already exists; not an error
+            try:
+                self.assertTrue(rq.status_code==201, msg="User temptest+1234 could not be created;")
+            except AssertionError:
+                print(rq.status_code)
+                print(rq.data)
         
         
 

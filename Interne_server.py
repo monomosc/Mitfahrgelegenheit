@@ -48,7 +48,7 @@ class User(object):
             cur.execute("SELECT * FROM user WHERE username='" +
                         username + "';")
             data = cur.fetchall()
-            if (len(data) > 0):
+            if len(data) > 0:
                 return User(int(data[0][4]), str(data[0][0]), str(data[0][2]))
             else:
                 return NOUSER
@@ -145,7 +145,7 @@ def appointment_data(appointmentID):
 def removeUser(uname):
     # check if you are the user in question ________TODO: check for administrative priviliges
     
-    if username != current_identity.username:
+    if uname != current_identity.username:
         return make_message_response("Can only remove self; or requires administrative priviliges. User " + str(current_identity.id) + " trying to remove " + str(UID), 401)
     cur = mysql.connection.cursor()
     cur.execute("START TRANSACTION;")
@@ -195,7 +195,7 @@ application.config['MYSQL_USER'] = 'flaskuser'
 application.config['MYSQL_PASSWORD'] = 'software'
 application.config['MYSQL_DB'] = 'interne_test'
 application.config['MYSQL_HOST'] = 'localhost'
-application.config['JWT_AUTH_URL_RULE']='/rest/auth'
+application.config['JWT_AUTH_URL_RULE']='/api/auth'
 
 jwt = JWT(application, authenticate, identity)
 mysql = MySQL(application)
