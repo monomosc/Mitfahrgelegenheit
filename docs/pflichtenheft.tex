@@ -1,0 +1,95 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[ngerman]{babel}
+\usepackage{hyperref}
+\usepackage{graphicx} 
+\usepackage{listings}
+\usepackage{concmath}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath}
+
+\author{Moritz Basel, Samuel Metzler, Dominik Weissenseel}
+\title{Interne Mitfahrgelegenheit}
+\date{\today{}}
+\begin{document}
+\normalfont
+
+
+\maketitle{}
+\tableofcontents{}
+
+\section{Einführung}
+\subsection{Zweck des Dokuments}
+In diesem Dokument wird der Umfang und die Funktionalität des Systems ("die Software") "Interne Mitfahrgelegenheit" spezifiziert, sowie deren Architektur umrissen.
+\subsection{Zweck der Software}
+Die Software stellt ein System zur automatischen Verteilung von Mitfahrern auf Autos zur Verfügung. Zu festgesetzten Terminen stellen Teilnehmer Autos zur Verfügung oder teilen ihren Wunsch mitgenommen zu werden mit.
+\subsection{Zielgruppe}
+Die Software richtet sich an mittlere bis große Organisationen, die oft oder regelmäßig Fahrten von einem definiertem Startort zu verschiedenen Zielorten unternimmt und dabei auf private Autos der Teilnehmer setzt.
+\section{Beschreibung}
+\subsection{Funktionen}
+Die Software stellt alle Funktionen eines webbasierten Login-Dienstes sowie die zugehörige administrative Funktionalität  bereit.
+\subsubsection{Login-Funktionalitäten}
+\begin{enumerate}
+\item Signup - Erstellen von Nutzern
+\item Login - Login eines Nutzers
+\end{enumerate}
+\subsubsection{Administrative Funktionalitäten}
+\begin{enumerate}
+\item Delete User - Löschen von Nutzern
+\item Diagnostics - Einsehen von Daten zu allen Nutzern und Appointments
+\end{enumerate}
+\subsubsection{Appointments}
+Appointments stellen das Herzstück der Software dar. Nutzer bzw. Administratoren erstellen Appointments, die von allen Nutzern eingesehen werden können. Nach der Erstellung existiert ein Zeitrahmen, in dem andere Nutzer sich als MUSS-Fahrer, KANN-Fahrer oder MIT-Fahrer eintragen. In den ersten beiden Fällen geschieht dies zusammen mit einer Kapazitätsangabe.
+Am Ende der Frist werden alle Teilnehmer nach logischen Regeln auf die angemeldeten Autos verteilt oder es wird ein Fehlerereignis generiert, wenn zuwenig Plätze vorhanden sind.
+Nach der Fahrt validieren alle aktiven Fahrer ihre Fahrt und das Appointment wird archiviert.
+\subsection{MUSS-Kriterien}
+\begin{enumerate}
+\item Klares, per TLS gesichertes System zum Einloggen, zur Übertragung der Daten und zur Persistenz derselben
+\item Fähigkeit des Nutzers, Appointments zu erstellen, zu löschen und alle aktiven anzuzeigen
+\item Anmelden zu einem bestehendem Appointment um mitgenommen zu werden, garantiert mit dem eigenen Auto zu fahren oder es vom System entscheiden zu lassen
+\item Anzeigen der vorläufigen Fahrerverteilung zu einem Appointment
+\item Klare Meldung zu unvollständigen Appointments mit Aufforderung der Lösung des Problems durch Menschen (z.B. via Email)
+\end{enumerate}
+\subsection{KANN-Kriterien}
+\subsection{Abgrenzungskriterien}
+\subsection{Nichtfunktionale Anforderungen}
+\begin{enumerate}
+\item Sämtliche API-Calls finden ausschließlich verschlüsselt via HTTPS/TLS statt.
+\item Passwörter werden nicht direkt übertragen; nur Hashes werden vom Backend empfangen
+\item Die Antwortzeit des Systems darf für keine Anfrage zwei (2) Sekunden übersteigen und sollte meistens unter 0.5 Sekunden liegen.
+\end{enumerate}
+\section{User Stories}
+\section{Architektur}
+Die Software wird zur Wahrung der Extensionalität strikt zwischen Backend(Server) und Frontend(Client) getrennt. Diese Praxis ist allgemein bekannt und anerkannt und erfordert eine Spezifikation einer Schnittstelle (API).
+\subsection{REST-Schnittstelle}
+Die Spezifikation der REST-API befindet sich in einem separatem Dokument.
+Datenaustausch findet via JSON statt.
+\subsection{Datenbankschema}
+Das Datenbankschema für die Software ist via ein E-R Diagram definiert.\\
+\begin{figure}[!htb]
+\includegraphics[width=\textwidth]{ER_Diagram.png}
+\caption{ER-Diagram für Interne Mitfahrgelegenheit}
+\end{figure}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\end{document}
+
