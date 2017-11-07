@@ -70,7 +70,7 @@ NOUSER = User(id=0, username=None, password=None)
 
 # DYNAMIC PART - REST-API
 #///////////////////////////////////////////////////////////////////////////////////////////////////
-@application.route('/rest/signup', methods=['POST'])
+@application.route('/api/signup', methods=['POST'])
 def signup():
     "The Endpoint URI for signing up. Takes email, username and password JSON returns 201 on success"
 
@@ -118,7 +118,7 @@ def signup():
 
 
 
-@application.route('/rest/check_token', methods=['GET'])
+@application.route('/api/check_token', methods=['GET'])
 @jwt_required()
 def check_token():
     retObj = {}
@@ -126,7 +126,7 @@ def check_token():
     return make_json_response(retObj, 200)
 
 
-@application.route('/rest/appointment/<appointmentID>')
+@application.route('/api/appointments/<appointmentID>')
 @jwt_required()
 def appointment_data(appointmentID):
     #check if user has viewing priviliges or global administrative priviliges
@@ -140,7 +140,7 @@ def appointment_data(appointmentID):
 # DYNAMIC PART - REST-DEV-API
 #///////////////////////////////////////////////////////////////////////////////////////////////////
 
-@application.route('/rest/dev/removeUser/<uname>', methods=['DELETE'])
+@application.route('/api/dev/removeUser/<uname>', methods=['DELETE'])
 @jwt_required()
 def removeUser(uname):
     # check if you are the user in question ________TODO: check for administrative priviliges
@@ -153,7 +153,7 @@ def removeUser(uname):
     cur.execute("COMMIT;")
     return make_response(("", 204, None))
 
-@application.route('/rest/dev/check-api')
+@application.route('/api/dev/check-api')
 def checkApi():
     return make_response("REST-API seems to work")
 
