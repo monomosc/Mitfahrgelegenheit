@@ -2,12 +2,12 @@
 from flask import Flask, request, send_from_directory, make_response, redirect, url_for
 from flask_mysqldb import MySQL
 from raven.contrib.flask import Sentry
-#from werkzeug import generate_password_hash, check_password_hash
+from werkzeug import generate_password_hash, check_password_hash
 from flask_jwt import JWT, jwt_required, current_identity
 import json
 import datetime
 from werkzeug.security import safe_str_cmp
-import flask_jwt_extended
+#import flask_jwt_extended
 
 application = Flask(__name__)
 
@@ -107,7 +107,7 @@ def signup(uname):
     cursor.execute("COMMIT;")
 
     # Respond 201 CREATED            MISSING HEADER LOCATION URI FOR USER PROFILE
-    return make_response("User " + uname + " created", 201,  {'content-type': 'application/json', 'Location' + '/api/users/'+uname})
+    return make_response("User " + uname + " created", 201,  {'content-type': 'application/json', 'Location' : '/api/users/'+uname})
 
 
 

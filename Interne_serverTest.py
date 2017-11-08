@@ -25,11 +25,13 @@ class InterneServerTestCase(unittest.TestCase):
         reqData["username"] = username
         reqData["password"] = password
        
-        responseLogin = self.app.post('/api/auth', data=json.dumps(reqData), headers={
-                                      'content-type': 'application/json'}, follow_redirects=True)
-       
-        responseJSON = json.loads(responseLogin.data)
-
+        responseLogin = self.app.post('/api/auth', data=json.dumps(reqData),
+                                     headers={'content-type': 'application/json'}, follow_redirects=True)
+        try:
+            responseJSON = json.loads(responseLogin.data)
+        except json.JSONDecodeError:
+            print(responseLogin)
+            self.fail()
     
         if 'access_token' in responseJSON:
             return responseJSON["access_token"]
@@ -64,13 +66,13 @@ class InterneServerTestCase(unittest.TestCase):
             
 
     def test_signup(self):
-        "Tests Signup on /api/signup, login on the new account on /api/auth, checks the token, then deletes the new account on /api/dev/removeUser/<id>"
-        postData={}
-        postData['username']='temptest'
-        postData['email']='testemail@test.test'
-        postData['password']='1234'
+        "Tests Signup on /api/users/uname, login on the new account on /api/auth, checks the token, then deletes the new account on /api/dev/removeUser/<id>"
+        putData={}
+        
+        putData['email']='testemail@test.test'
+        putData['password']='1234'
 
-        rq=self.app.post('/api/signup', data=json.dumps(postData), headers={'content-type' : 'application/json'})
+        rq=self.app.put('/api/users/temptest', data=json.dumps(putData), headers={'content-type' : 'application/json'})
         
         if rq.status_code!=409:         #409 : User already exists; not an error
             try:
