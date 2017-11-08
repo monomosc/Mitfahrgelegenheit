@@ -63,8 +63,8 @@ NOUSER = User(id=0, username=None, password=None)
 
 # DYNAMIC PART - REST-API
 #///////////////////////////////////////////////////////////////////////////////////////////////////
-@application.route('/api/signup', methods=['POST'])
-def signup():
+@application.route('/api/users/<uname>', methods=['PUT'])
+def signup(uname):
     "The Endpoint URI for signing up. Takes email, username and password JSON returns 201 on success"
 
     # Check for Sortof Valid Data
@@ -78,11 +78,11 @@ def signup():
     except json.JSONDecodeError:
         return make_message_response("Malformed JSON in Request Body", 400)
 
-    if 'username' not in requestJSON or 'email' not in requestJSON or 'password' not in requestJSON:
-        return make_message_response("Signup must contain (username, password, email) JSON keys", 400)
+    if 'email' not in requestJSON or 'password' not in requestJSON:
+        return make_message_response("Signup must contain (password, email) JSON keys", 400)
 
     # Check if User already exists
-    testuser = User.loadUser(username=requestJSON['username'])
+    testuser = User.loadUser(username=uname)
     if testuser != NOUSER:
         return make_message_response("User already exists", 409)
 
@@ -91,13 +91,13 @@ def signup():
     cursor = mysql.connection.cursor()
 
     # OK CHECK for SQL Injection
-    checkall = requestJSON['username'] + requestJSON['email']
+    checkall = uname + requestJSON['email']
     if 'DROP' in checkall or 'DELETE' in checkall or 'INSERT' in checkall or 'ALTER' in checkall or 'SELECT' in checkall:
         return make_message_response("Bad Term in Request Body", 404)
 
     # build the sql request
     sqlReq = "INSERT INTO user (`username`, `email`, `f_password`, `create_time`) "
-    sqlReq = sqlReq + "VALUES ('" + requestJSON['username'] + "', '" + \
+    sqlReq = sqlReq + "VALUES ('" + uname + "', '" + \
         requestJSON['email'] + "', '" + \
         hashed_password + "', CURRENT_TIMESTAMP);"
 
@@ -107,7 +107,7 @@ def signup():
     cursor.execute("COMMIT;")
 
     # Respond 201 CREATED            MISSING HEADER LOCATION URI FOR USER PROFILE
-    return make_message_response("User " + requestJSON['username'] + " created", 201)
+    return make_response("User " + uname + " created", 201,  {'content-type': 'application/json', 'Location' + '/api/users/'+uname})
 
 
 
