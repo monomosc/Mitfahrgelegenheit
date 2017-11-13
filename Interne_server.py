@@ -110,6 +110,11 @@ def signup():
     return make_response("User " + uname + " created", 201,  {'content-type': 'application/json', 'Location' : '/api/users/'+uname})
 
 
+@application.route('/api/users/<username>', methods=['GET']
+def user_profile(uname):
+    #check for authorization: Only a global Admin or the User itself can access this resource
+    return make_message_response("Not yet implemented", 500)
+
 
 @application.route('/api/check_token', methods=['GET'])
 @jwt_required()
