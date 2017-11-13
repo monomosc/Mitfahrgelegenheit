@@ -63,8 +63,8 @@ NOUSER = User(id=0, username=None, password=None)
 
 # DYNAMIC PART - REST-API
 #///////////////////////////////////////////////////////////////////////////////////////////////////
-@application.route('/api/users/<uname>', methods=['PUT'])
-def signup(uname):
+@application.route('/api/users', methods=['POST'])
+def signup():
     "The Endpoint URI for signing up. Takes email, username and password JSON returns 201 on success"
 
     # Check for Sortof Valid Data
@@ -82,7 +82,7 @@ def signup(uname):
         return make_message_response("Signup must contain (password, email) JSON keys", 400)
 
     # Check if User already exists
-    testuser = User.loadUser(username=uname)
+    testuser = User.loadUser(uid=requestJSON['username'])
     if testuser != NOUSER:
         return make_message_response("User already exists", 409)
 
@@ -97,7 +97,7 @@ def signup(uname):
 
     # build the sql request
     sqlReq = "INSERT INTO user (`username`, `email`, `f_password`, `create_time`) "
-    sqlReq = sqlReq + "VALUES ('" + uname + "', '" + \
+    sqlReq = sqlReq + "VALUES ('" + requestJSON['username'] + "', '" + \
         requestJSON['email'] + "', '" + \
         hashed_password + "', CURRENT_TIMESTAMP);"
 
@@ -185,9 +185,9 @@ def make_json_response(jsonDictionary, status):
 
 application.config['SECRET_KEY'] = 'SECRET_KEY'
 application.config['MYSQL_USER'] = 'flaskuser'
-application.config['MYSQL_PASSWORD'] = 'software'
+application.config['MYSQL_PASSWORD'] = 'Test1234'
 application.config['MYSQL_DB'] = 'interne_test'
-application.config['MYSQL_HOST'] = 'localhost'
+application.config['MYSQL_HOST'] = '127.0.0.1'
 application.config['JWT_AUTH_URL_RULE']='/api/auth'
 
 jwt = JWT(application, authenticate, identity)
