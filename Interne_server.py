@@ -1,28 +1,37 @@
 # Moritz Basel - interne_server.py
-from flask import Flask, request, send_from_directory, make_response, redirect, url_for
+from flask import Flask, request, send_from_directory, make_response, redirect, jsonify
 from flask_mysqldb import MySQL
 from raven.contrib.flask import Sentry
 from werkzeug import generate_password_hash, check_password_hash
-from flask_jwt import JWT, jwt_required, current_identity
 import json
 import datetime
 from werkzeug.security import safe_str_cmp
-#import flask_jwt_extended
+from flask_jwt_extended import (JWTManager, jwt_required, create_access_token, get_jwt_identity, get_jwt_claims)
 
 application = Flask(__name__)
-
+jwt = JWTManager(application)
+mysql = MySQL(application)
 #CLASS: USER
 #///////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 class User(object):
     "The User class represents the User Object as well as the object relational mapping in the Database"
+    #Fields:
+    #id                     //The MySQL autoincreasing ID
+    #username               //Username
+    #password               //Hashed Password
+    #email                  //Email Address
+    #phoneNumber            //Phone Number
+    #globalAdminStatus      //Global Admin Status, currently 0 or 1
 
     def __init__(self, id, username, password):
         self.id = id
         self.username = username
         self.password = password
-
+        self.email = "nothing@nothing.de"
+        self.phoneNumber="00000000"
+        self.globalAdminStatus=0
     def __str__(self):
         return "User(id=%s)" % self.id
 
@@ -110,14 +119,14 @@ def signup():
     return make_response("User " + uname + " created", 201,  {'content-type': 'application/json', 'Location' : '/api/users/'+uname})
 
 
-@application.route('/api/users/<username>', methods=['GET']
+@application.route('/api/users/<uname>', methods=['GET'])
 def user_profile(uname):
     #check for authorization: Only a global Admin or the User itself can access this resource
     return make_message_response("Not yet implemented", 500)
 
 
 @application.route('/api/check_token', methods=['GET'])
-@jwt_required()
+@jwt_required
 def check_token():
     retObj = {}
     retObj["Username"] = current_identity.username
@@ -125,12 +134,32 @@ def check_token():
 
 
 @application.route('/api/appointments/<appointmentID>')
-@jwt_required()
+@jwt_required
 def appointment_data(appointmentID):
     #check if user has viewing priviliges or global administrative priviliges
 
 
     return make_message_response("Appointments not yet implemented", 500)
+
+@application.route('/api/auth', methods=['POST'])
+def authenticate_and_return_accessToken():
+    "Authentication endpoint"
+    if not request.is_json:
+        return make_message_response("Missing JSON request", 400)
+    requestJSON=json.loads(request.data)
+    if 'username' not in requestJSON or 'password' not in requestJSON:
+        return make_message_response("Missing username or password fields", 400)
+    
+    thisuser=User.loadUser(username=requestJSON['username'])
+    if thisuser!=NOUSER:
+        if check_password_hash(thisuser.password, requestJSON['password']):
+            #authentication OK!
+            access_token=create_access_token(identity=thisuser)
+            return make_json_response({'access_token' : access_token}, 200)
+        else:
+            return make_message_response("Invalid Username or Password", 401)
+    else:
+        return make_message_response("User does not exist", 401)
 
 
 
@@ -139,7 +168,7 @@ def appointment_data(appointmentID):
 #///////////////////////////////////////////////////////////////////////////////////////////////////
 
 @application.route('/api/dev/removeUser/<uname>', methods=['DELETE'])
-@jwt_required()
+@jwt_required
 def removeUser(uname):
     # check if you are the user in question ________TODO: check for administrative priviliges
     
@@ -159,23 +188,6 @@ def checkApi():
 #///////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-# Helper Methods:
-def authenticate(uname, pw):
-    thisuser = User.loadUser(username=uname)
-    if thisuser != NOUSER:
-        if check_password_hash(thisuser.password, pw):
-            return thisuser
-        else:
-            return None
-
-
-def identity(payload):
-
-    user_id = payload['identity']
-    thisuser = User.loadUser(uid=user_id)
-    if thisuser != NOUSER:
-        return thisuser
-
 
 def make_message_response(string, status):
     return make_json_response('{"message" : "' + string + '"}', status)
@@ -187,16 +199,31 @@ def make_json_response(jsonDictionary, status):
     except json.JSONDecodeError:
         return make_response('{"message" : "Internal Server Error: Some Method created invalid JSON Data"}', 500, {'content_type': 'application/json'})
 
+#//////////////////////////////////////////////////////////////////////////////////////////////////
+# JWT FUNCTIONS:
 
-application.config['SECRET_KEY'] = 'SECRET_KEY'
+@jwt.user_claims_loader
+def add_claims_to_access_token(user):
+    return {'Username' : user.username,
+            'Email'    : user.email,
+            'PhoneNumber' : user.phoneNumber,
+            'GlobalAdminStatus' : user.globalAdminStatus}
+    
+@jwt.user_identity_loader
+def user_identity_lookup(user):
+    return user.id
+
+
 application.config['MYSQL_USER'] = 'flaskuser'
 application.config['MYSQL_PASSWORD'] = 'Test1234'
 application.config['MYSQL_DB'] = 'interne_test'
 application.config['MYSQL_HOST'] = '127.0.0.1'
-application.config['JWT_AUTH_URL_RULE']='/api/auth'
 
-jwt = JWT(application, authenticate, identity)
-mysql = MySQL(application)
+
+
+
+
+
 sentry = Sentry(
     application, dsn='https://6ac6c6188eb6499fa2967475961a03ca:2f617eada90f478bb489cd4cf2c50663@sentry.io/232283')
 
