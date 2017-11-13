@@ -115,22 +115,31 @@ def signup():
     cursor.execute(sqlReq)
     cursor.execute("COMMIT;")
 
+    cursor.execute("SELECT c_username")
     # Respond 201 CREATED            MISSING HEADER LOCATION URI FOR USER PROFILE
-    return make_response("User " + uname + " created", 201,  {'content-type': 'application/json', 'Location' : '/api/users/'+uname})
+    return make_response("User " + uname + " created", 201,  {'content-type': 'application/json', 'Location' : '/api/auth'})
 
 
-@application.route('/api/users/<uname>', methods=['GET'])
-def user_profile(uname):
+
+@application.route('/api/users/<UidOrName>', methods=['GET'])   #TODO add auth checking and user profile
+def user_profileByID(UidOrName):
+    "User Profile Endpoint"
+    id=0
+    try:
+        id=int(UidOrName)
+    except (TypeError, ValueError):
+        thisuser=User.loadUser(username=UidOrName)
+        if thisuser==NOUSER:
+            return make_message_response("User not found", 404)
+        return redirect('/api/users/'+thisuser.username)
     #check for authorization: Only a global Admin or the User itself can access this resource
+
+
+
+
+
     return make_message_response("Not yet implemented", 500)
 
-
-@application.route('/api/check_token', methods=['GET'])
-@jwt_required
-def check_token():
-    retObj = {}
-    retObj["Username"] = current_identity.username
-    return make_json_response(retObj, 200)
 
 
 @application.route('/api/appointments/<appointmentID>')
@@ -167,16 +176,26 @@ def authenticate_and_return_accessToken():
 # DYNAMIC PART - REST-DEV-API
 #///////////////////////////////////////////////////////////////////////////////////////////////////
 
+@application.route('/api/dev/check_token', methods=['GET'])
+@jwt_required
+def check_token():
+    
+    retObj = {}
+    retObj=get_jwt_claims().copy()
+    retObj['id']=get_jwt_identity()
+    return make_json_response(retObj, 200)
+
+
 @application.route('/api/dev/removeUser/<uname>', methods=['DELETE'])
 @jwt_required
 def removeUser(uname):
     # check if you are the user in question ________TODO: check for administrative priviliges
     
-    if uname != current_identity.username:
-        return make_message_response("Can only remove self; or requires administrative priviliges. User " + str(current_identity.id) + " trying to remove " + str(UID), 401)
+    if uname != get_jwt_claims['username'] and get_jwt_claims['GlobalAdminStatus']!=1:
+        return make_message_response("Can only remove self; or requires administrative priviliges. User " + str(get_jwt_claims['username']) + " trying to remove " + uname, 401)
     cur = mysql.connection.cursor()
     cur.execute("START TRANSACTION;")
-    cur.execute('DELETE FROM user WHERE userID=' + str(current_identity.id))
+    cur.execute('DELETE FROM t_Users WHERE c_ID_Users=' + str(get_jwt_identity()))
     cur.execute("COMMIT;")
     return make_response(("", 204, None))
 
@@ -199,11 +218,19 @@ def make_json_response(jsonDictionary, status):
     except json.JSONDecodeError:
         return make_response('{"message" : "Internal Server Error: Some Method created invalid JSON Data"}', 500, {'content_type': 'application/json'})
 
+
+
+
+
+
+
+
 #//////////////////////////////////////////////////////////////////////////////////////////////////
-# JWT FUNCTIONS:
+# JWT CALLBACK FUNCTIONS:
 
 @jwt.user_claims_loader
 def add_claims_to_access_token(user):
+    "Defines all fields to be remembered and recovered in the JSON Token"
     return {'Username' : user.username,
             'Email'    : user.email,
             'PhoneNumber' : user.phoneNumber,
@@ -211,14 +238,39 @@ def add_claims_to_access_token(user):
     
 @jwt.user_identity_loader
 def user_identity_lookup(user):
+    "UID for a Token Identity"
     return user.id
+
+@jwt.claims_verification_failed_loader
+def claims_verification_failed_loader():
+    return make_message_response("User Claims Verification Failed - Probably an Illegal Token", 400)
+
+@jwt.expired_token_loader
+def expired_token_loader(msgstring):
+    return make_message_response(msgstring, 401)
+
+@jwt.needs_fresh_token_loader
+def needs_fresh_token_loader():
+    return make_message_response("Fresh Token required", 401)
+
+@jwt.invalid_token_loader
+def invalid_token_loader(msgstring):
+    return make_message_response(msgstring, 401)
+
+@jwt.revoked_token_loader
+def revoked_token_loader():
+    return make_message_response("Token has been revoked")
+
+@jwt.unauthorized_loader
+def unauthorized_loader(msgstring):
+    return make_message_response(msgstring, 401)
 
 
 application.config['MYSQL_USER'] = 'flaskuser'
 application.config['MYSQL_PASSWORD'] = 'Test1234'
-application.config['MYSQL_DB'] = 'interne_test'
+application.config['MYSQL_DB'] = 'Interne_Mitfahrgelegenheit'
 application.config['MYSQL_HOST'] = '127.0.0.1'
-
+application.config['JWT_SECRET_KEY']= 'SomethingSomethingSecretSecret'
 
 
 
