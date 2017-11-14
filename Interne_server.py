@@ -25,13 +25,13 @@ class User(object):
     #phoneNumber            //Phone Number
     #globalAdminStatus      //Global Admin Status, currently 0 or 1
 
-    def __init__(self, id, username, password):
+    def __init__(self, id, username, password, email, phoneNumber, globalAdminStatus:
         self.id = id
         self.username = username
         self.password = password
-        self.email = "nothing@nothing.de"
-        self.phoneNumber="00000000"
-        self.globalAdminStatus=0
+        self.email = email
+        self.phoneNumber=phoneNumber
+        self.globalAdminStatus=globalAdminStatus
     def __str__(self):
         return "User(id=%s)" % self.id
 
@@ -43,23 +43,24 @@ class User(object):
         if uid:
             # Start MYSQL connection
             cur = mysql.connection.cursor()
-            cur.execute("SELECT * FROM user where userID=" + str(uid) + ";")
+            cur.execute("SELECT * FROM t_Users where c_ID_Users=" + str(uid) + ";")
             data = cur.fetchall()
             if len(data) > 0:
                 if username != None:
                     if str(data[0][0] != username):
                         return NOUSER
-                return User(int(data[0][4]), str(data[0][0]), str(data[0][2]))
-                #              ID              Username       Hashed Password
+                return User(int(data[0][5]), str(data[0][0]), str(data[0][4]), str(data[0][2]), str(data[0][3]), int(data[0][1]))
+                #              ID              Username       Hashed Password       Email           Phone Number    Global Admin Status
             else:
                 return NOUSER
         if username:
             cur = mysql.connection.cursor()
-            cur.execute("SELECT * FROM user WHERE username='" +
+            cur.execute("SELECT * FROM t_Users WHERE c_name_Users='" +
                         username + "';")
             data = cur.fetchall()
             if len(data) > 0:
-                return User(int(data[0][4]), str(data[0][0]), str(data[0][2]))
+                return User(int(data[0][5]), str(data[0][0]), str(data[0][4]), str(data[0][2]), str(data[0][3]), int(data[0][1]))
+                #              ID              Username       Hashed Password       Email           Phone Number    Global Admin Status
             else:
                 return NOUSER
 
