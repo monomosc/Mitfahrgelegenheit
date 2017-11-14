@@ -106,17 +106,15 @@ def signup():
         return make_message_response("Bad Term in Request Body", 404)
 
     # build the sql request
-    sqlReq = "INSERT INTO user (`username`, `email`, `f_password`, `create_time`) "
-    sqlReq = sqlReq + "VALUES ('" + requestJSON['username'] + "', '" + \
+    sqlReq = "INSERT INTO t_Users (`c_nameUsers`, `c_globalAdmin_Users`, `c_email_Users`, `c_passwordHash_Users`) "
+    sqlReq = sqlReq + "VALUES ('" + requestJSON['username'] + "', '0', '" + \
         requestJSON['email'] + "', '" + \
-        hashed_password + "', CURRENT_TIMESTAMP);"
+        hashed_password + "';"
 
     # execute it
     cursor.execute("START TRANSACTION;")
     cursor.execute(sqlReq)
     cursor.execute("COMMIT;")
-
-    cursor.execute("SELECT c_username")
     # Respond 201 CREATED            MISSING HEADER LOCATION URI FOR USER PROFILE
     return make_response("User " + uname + " created", 201,  {'content-type': 'application/json', 'Location' : ['/api/auth', '/api/users/'+requestJSON['username']]})
 
