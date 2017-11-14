@@ -93,6 +93,14 @@ def signup():
         return make_message_response("Signup must contain (username, phoneNumber) JSON Keys", 400)
 
     
+    # Check if User already exists
+    try:
+        testuser = User.loadUser(username=requestJSON['username'])
+        if testuser != NOUSER:
+            return make_message_response("User already exists", 409)
+    except Exception:
+        sentry.captureException()
+        return make_message_response("Unknown Server Error, The Sentry Error Code is: "+g.sentry_event_id, 500)
     
     # hash the password
     hashed_password = generate_password_hash(requestJSON['password'])
