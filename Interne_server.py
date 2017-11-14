@@ -25,7 +25,7 @@ class User(object):
     #phoneNumber            //Phone Number
     #globalAdminStatus      //Global Admin Status, currently 0 or 1
 
-    def __init__(self, id, username, password, email, phoneNumber, globalAdminStatus:
+    def __init__(self, id, username, password, email, phoneNumber, globalAdminStatus):
         self.id = id
         self.username = username
         self.password = password
