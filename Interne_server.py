@@ -66,7 +66,7 @@ class User(object):
 
 
 # Generic Return Code that is checked against indicating failure
-NOUSER = User(id=0, username=None, password=None)
+NOUSER = User(id=0, username=None, password=None, email=None, phoneNumber=None, globalAdminStatus=None)
 
 
 
@@ -277,8 +277,8 @@ application.config['JWT_SECRET_KEY']= 'SomethingSomethingSecretSecret'
 
 
 
-sentry = Sentry(
-    application, dsn='https://6ac6c6188eb6499fa2967475961a03ca:2f617eada90f478bb489cd4cf2c50663@sentry.io/232283')
 
 if __name__ == "__main__":
+    sentry = Sentry(
+    application, dsn='https://6ac6c6188eb6499fa2967475961a03ca:2f617eada90f478bb489cd4cf2c50663@sentry.io/232283')
     application.run(host='0.0.0.0')
