@@ -92,14 +92,8 @@ def signup():
     if 'phoneNumber' not in requestJSON or 'username' not in requestJSON:
         return make_message_response("Signup must contain (username, phoneNumber) JSON Keys", 400)
 
-    # Check if User already exists
-    try:
-        testuser = User.loadUser(username=requestJSON['username'])
-        if testuser != NOUSER:
-            return make_message_response("User already exists", 409)
-    except Exception:
-        sentry.captureException()
-        return make_message_response("Unknown Server Error, The Sentry Error Code is: "+g.sentry_event_id, 500)
+    
+    
     # hash the password
     hashed_password = generate_password_hash(requestJSON['password'])
     
@@ -113,7 +107,7 @@ def signup():
     sqlReq = "INSERT INTO t_Users (`c_nameUsers`, `c_globalAdmin_Users`, `c_email_Users`, `c_phoneNumber_Users`, `c_passwordHash_Users`) "
     sqlReq = sqlReq + "VALUES ('" + requestJSON['username'] + "', '0', '" + \
         requestJSON['email'] + "', '" + requestJSON['phoneNumber'] + "', '" +\
-        hashed_password + "';"
+        hashed_password + "');"
     
     # execute it
     cursor = mysql.connection.cursor()
