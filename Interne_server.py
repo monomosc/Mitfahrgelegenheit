@@ -269,7 +269,7 @@ def unauthorized_loader(msgstring):
 application.config['MYSQL_USER'] = 'flaskuser'
 application.config['MYSQL_PASSWORD'] = 'Test1234'
 application.config['MYSQL_DB'] = 'Interne_Mitfahrgelegenheit'
-application.config['MYSQL_HOST'] = '127.0.0.1'
+application.config['MYSQL_HOST'] = 'localhost'
 application.config['JWT_SECRET_KEY']= 'SomethingSomethingSecretSecret'
 
 
