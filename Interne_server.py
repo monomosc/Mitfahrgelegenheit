@@ -43,7 +43,7 @@ class User(object):
         if uid:
             # Start MYSQL connection
             cur = mysql.connection.cursor()
-            cur.execute("SELECT * FROM t_Users where c_ID_Users=" + str(uid) + ";")
+            cur.execute("SELECT * FROM t_Users WHERE c_ID_Users='" + str(uid) + "';")
             data = cur.fetchall()
             if len(data) > 0:
                 if username != None:
@@ -92,7 +92,7 @@ def signup():
         return make_message_response("Signup must contain (password, email) JSON keys", 400)
 
     # Check if User already exists
-    testuser = User.loadUser(uid=requestJSON['username'])
+    testuser = User.loadUser(username=requestJSON['username'])
     if testuser != NOUSER:
         return make_message_response("User already exists", 409)
 
