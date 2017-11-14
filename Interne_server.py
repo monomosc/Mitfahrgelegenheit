@@ -98,7 +98,7 @@ def signup():
 
     # hash the password
     hashed_password = generate_password_hash(requestJSON['password'])
-    cursor = mysql.connection.cursor()
+    
 
     # OK CHECK for SQL Injection
     checkall = requestJSON['username'] + requestJSON['email']
@@ -106,15 +106,17 @@ def signup():
         return make_message_response("Bad Term in Request Body", 404)
 
     # build the sql request
-    sqlReq = "INSERT INTO t_Users (`c_nameUsers`, `c_globalAdmin_Users`, `c_email_Users`, `c_passwordHash_Users`) "
+    sqlReq = "INSERT INTO t_Users (`c_nameUsers`, `c_globalAdmin_Users`, `c_email_Users`, `c_phoneNumber_Users`, `c_passwordHash_Users`) "
     sqlReq = sqlReq + "VALUES ('" + requestJSON['username'] + "', '0', '" + \
-        requestJSON['email'] + "', '" + \
+        requestJSON['email'] + "', '" + requestJSON['phoneNumber'] + "', '" +\
         hashed_password + "';"
-
+    
     # execute it
+    cursor = mysql.connection.cursor()
     cursor.execute("START TRANSACTION;")
     cursor.execute(sqlReq)
     cursor.execute("COMMIT;")
+
     # Respond 201 CREATED            MISSING HEADER LOCATION URI FOR USER PROFILE
     return make_response("User " + uname + " created", 201,  {'content-type': 'application/json', 'Location' : ['/api/auth', '/api/users/'+requestJSON['username']]})
 
