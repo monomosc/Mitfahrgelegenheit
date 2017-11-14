@@ -101,7 +101,7 @@ def signup():
     cursor = mysql.connection.cursor()
 
     # OK CHECK for SQL Injection
-    checkall = uname + requestJSON['email']
+    checkall = requestJSON['username'] + requestJSON['email']
     if 'DROP' in checkall or 'DELETE' in checkall or 'INSERT' in checkall or 'ALTER' in checkall or 'SELECT' in checkall:
         return make_message_response("Bad Term in Request Body", 404)
 
@@ -118,7 +118,7 @@ def signup():
 
     cursor.execute("SELECT c_username")
     # Respond 201 CREATED            MISSING HEADER LOCATION URI FOR USER PROFILE
-    return make_response("User " + uname + " created", 201,  {'content-type': 'application/json', 'Location' : '/api/auth'})
+    return make_response("User " + uname + " created", 201,  {'content-type': 'application/json', 'Location' : ['/api/auth', '/api/users/'+reuqestJSON['username']])
 
 
 
