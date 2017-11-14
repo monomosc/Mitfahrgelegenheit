@@ -101,7 +101,7 @@ def signup():
     except Exception:
         sentry.captureException()
         return make_message_response("Unknown Server Error, The Sentry Error Code is: "+g.sentry_event_id, 500)
-    
+
     # hash the password
     hashed_password = generate_password_hash(requestJSON['password'])
     
@@ -112,7 +112,7 @@ def signup():
         return make_message_response("Bad Term in Request Body", 404)
 
     # build the sql request
-    sqlReq = "INSERT INTO t_Users (`c_nameUsers`, `c_globalAdmin_Users`, `c_email_Users`, `c_phoneNumber_Users`, `c_passwordHash_Users`) "
+    sqlReq = "INSERT INTO t_Users (`c_name_Users`, `c_globalAdmin_Users`, `c_email_Users`, `c_phoneNumber_Users`, `c_passwordHash_Users`) "
     sqlReq = sqlReq + "VALUES ('" + requestJSON['username'] + "', '0', '" + \
         requestJSON['email'] + "', '" + requestJSON['phoneNumber'] + "', '" +\
         hashed_password + "');"
