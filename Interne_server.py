@@ -118,7 +118,7 @@ def signup():
 
     cursor.execute("SELECT c_username")
     # Respond 201 CREATED            MISSING HEADER LOCATION URI FOR USER PROFILE
-    return make_response("User " + uname + " created", 201,  {'content-type': 'application/json', 'Location' : ['/api/auth', '/api/users/'+reuqestJSON['username']])
+    return make_response("User " + uname + " created", 201,  {'content-type': 'application/json', 'Location' : ['/api/auth', '/api/users/'+requestJSON['username']]})
 
 
 
