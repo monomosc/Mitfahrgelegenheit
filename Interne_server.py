@@ -55,8 +55,7 @@ class User(object):
                 return NOUSER
         if username:
             cur = mysql.connection.cursor()
-            cur.execute("SELECT * FROM t_Users WHERE c_name_Users='" +
-                        username + "';")
+            cur.execute("SELECT * FROM t_Users WHERE c_name_Users= '"+username + "';")
             data = cur.fetchall()
             if len(data) > 0:
                 return User(int(data[0][5]), str(data[0][0]), str(data[0][4]), str(data[0][2]), str(data[0][3]), int(data[0][1]))
@@ -90,12 +89,17 @@ def signup():
 
     if 'email' not in requestJSON or 'password' not in requestJSON:
         return make_message_response("Signup must contain (password, email) JSON keys", 400)
+    if 'phoneNumber' not in requestJSON or 'username' not in requestJSON:
+        return make_message_response("Signup must contain (username, phoneNumber) JSON Keys", 400)
 
     # Check if User already exists
-    testuser = User.loadUser(username=requestJSON['username'])
-    if testuser != NOUSER:
-        return make_message_response("User already exists", 409)
-
+    try:
+        testuser = User.loadUser(username=requestJSON['username'])
+        if testuser != NOUSER:
+            return make_message_response("User already exists", 409)
+    except Exception:
+        sentry.captureException()
+        return make_message_response("Unknown Server Error, The Sentry Error Code is: "+g.sentry_event_id, 500)
     # hash the password
     hashed_password = generate_password_hash(requestJSON['password'])
     
@@ -220,7 +224,12 @@ def make_json_response(jsonDictionary, status):
         return make_response('{"message" : "Internal Server Error: Some Method created invalid JSON Data"}', 500, {'content_type': 'application/json'})
 
 
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+# Error 500 general handler
 
+@application.errorhandler(500)
+def internal_server_error(error):
+    return make_json_response({"message" : "General Server Error", "Event ID" : str(sentry.event_id)}, 500)
 
 
 
