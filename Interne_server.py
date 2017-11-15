@@ -160,7 +160,7 @@ def appointment_data(appointmentID):
     if get_jwt_claims()['GlobalAdminStatus']!=1:
         uid=get_jwt_identity()
         cur=mysql.connection.cursor()
-        cur.execute("SELECT EXISTS(SELECT 1 FROM t_relation_Users_isAPartOf_Organization WHERE 'c_ID_Users' = '"+get_jwt_identity()+"' AND 'c_ID_Organizations' = '"+appointmentID"';")
+        cur.execute("SELECT EXISTS(SELECT 1 FROM t_relation_Users_isAPartOf_Organization WHERE 'c_ID_Users' = '"+get_jwt_identity()+"' AND 'c_ID_Organizations' = '"+appointmentID+"';")
         data=cur.fetchall()
         if (data==0):
             return make_message_response("Either the Appointment does not exist or you are not a part of its Organization")
