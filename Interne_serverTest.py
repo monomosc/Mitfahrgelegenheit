@@ -63,11 +63,11 @@ class InterneServerTestCase(unittest.TestCase):
         responseJSON = {}
         try:
             responseCheck = self.app.get(
-                '/api/check_token', data="{}", headers={'Authorization': "JWT " + token}, follow_redirects=True)
+                '/api/dev/check_token', data="{}", headers={'Authorization': "JWT " + token}, follow_redirects=True)
             responseJSON = json.loads(responseCheck.data)
         except Exception:
             print(Exception)
-            print("On Get Request: /api/check_token " +
+            print("On Get Request: /api/dev/check_token " +
                   "{Authorization : JWT " + token + " | Data: " + "{}")
             print("Returned: ")
             print(responseCheck.data)
@@ -111,14 +111,14 @@ class InterneServerTestCase(unittest.TestCase):
             token == None, msg="Login temptest+1234 Failure (test-based account)")
 
         responseCheck = self.app.get(
-            '/api/check_token', data="{}", headers={'content-type': 'application/json', 'Authorization': "JWT " + token}, follow_redirects=False)
+            '/api/dev/check_token', data="{}", headers={'content-type': 'application/json', 'Authorization': "JWT " + token}, follow_redirects=False)
         self.assertTrue(len(responseCheck.data) > 0,
                         msg="/api/check_token returned no Data")
 
         try:
             responseJSON = json.loads(responseCheck.data)
         except json.JSONDecodeError:
-            print("/api/check_token Data irregular. (No JSON)")
+            print("/api/dev/check_token Data irregular. (No JSON)")
             print("Data received was:")
             print(str(responseCheck))
             self.assertTrue(False)
