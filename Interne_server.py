@@ -6,7 +6,7 @@ from werkzeug import generate_password_hash, check_password_hash
 import json
 import datetime
 from werkzeug.security import safe_str_cmp
-from flask_jwt_extended import (JWTManager, jwt_required, create_access_token, get_jwt_identity, get_jwt_claims)
+from flask_jwt_extended import (JWTManager, jwt_required, create_access_token, get_jwt_identity, get_jwt_claims, jwt_optional)
 
 application = Flask(__name__)
 jwt = JWTManager(application)
@@ -68,11 +68,9 @@ class User(object):
 NOUSER = User(id=0, username=None, password=None, email=None, phoneNumber=None, globalAdminStatus=None)
 
 
-
-
 # DYNAMIC PART - REST-API
 #///////////////////////////////////////////////////////////////////////////////////////////////////
-@application.route('/api/users', methods=['POST'])
+@application.route('/api/users', methods=['POST'])                  #Complete, Test complete
 def signup():
     "The Endpoint URI for signing up. Takes email, username and password JSON returns 201 on success"
 
@@ -87,6 +85,7 @@ def signup():
     except json.JSONDecodeError:
         return make_message_response("Malformed JSON in Request Body", 400)
 
+    #check for JSON keys
     if 'email' not in requestJSON or 'password' not in requestJSON:
         return make_message_response("Signup must contain (password, email) JSON keys", 400)
     if 'phoneNumber' not in requestJSON or 'username' not in requestJSON:
@@ -106,7 +105,7 @@ def signup():
     hashed_password = generate_password_hash(requestJSON['password'])
     
 
-    # OK CHECK for SQL Injection
+    # CHECK for SQL Injection
     checkall = requestJSON['username'] + requestJSON['email']
     if 'DROP' in checkall or 'DELETE' in checkall or 'INSERT' in checkall or 'ALTER' in checkall or 'SELECT' in checkall:
         return make_message_response("Bad Term in Request Body", 404)
@@ -123,41 +122,81 @@ def signup():
     cursor.execute(sqlReq)
     cursor.execute("COMMIT;")
 
-    # Respond 201 CREATED            MISSING HEADER LOCATION URI FOR USER PROFILE
+    # Respond 201 CREATED     
     return make_response("User " + requestJSON['username'] + " created", 201,  {'content-type': 'application/json', 'Location' : ['/api/auth', '/api/users/'+requestJSON['username']]})
 
 
 
-@application.route('/api/users/<UidOrName>', methods=['GET'])   #TODO add auth checking and user profile
-def user_profileByID(UidOrName):
+@application.route('/api/users/<UidOrName>', methods=['GET'])
+@jwt_optional
+def user_profileByID(UidOrName):                                        #Profile itself NYI
     "User Profile Endpoint"
     id=0
+    #if we are at a /api/users/<Username>, redirect to /api/users/<ID>
     try:
         id=int(UidOrName)
     except (TypeError, ValueError):
         thisuser=User.loadUser(username=UidOrName)
         if thisuser==NOUSER:
             return make_message_response("User not found", 404)
-        return redirect('/api/users/'+thisuser.username)
+        return redirect('/api/users/'+thisuser.id)
     #check for authorization: Only a global Admin or the User itself can access this resource
+    activeUserID=get_jwt_identity()
+    if activeUserID == None:
+        return make_message_response("Cannot be accessed by Anon User", 401)
 
-
-
-
-
+    if (get_jwt_claims()['GlobalAdminStatus']!=1):
+        if get_jwt_identity()!=id:
+            return make_message_response('Not allowed', 403)
+    
+    
     return make_message_response("Not yet implemented", 500)
 
 
 
-@application.route('/api/appointments/<appointmentID>')
+@application.route('/api/appointments/<appointmentID>')             #Not yet implemented
 @jwt_required
 def appointment_data(appointmentID):
-    #check if user has viewing priviliges or global administrative priviliges
+    if get_jwt_claims()['GlobalAdminStatus']!=1:
+        uid=get_jwt_identity()
+        cur=mysql.connection.cursor()
+        cur.execute("SELECT EXISTS(SELECT 1 FROM t_relation_Users_isAPartOf_Organization WHERE 'c_ID_Users' = '"+get_jwt_identity()+"' AND 'c_ID_Organizations' = '"+appointmentID"';")
+        data=cur.fetchall()
+        if (data==0):
+            return make_message_response("Either the Appointment does not exist or you are not a part of its Organization")
+
 
 
     return make_message_response("Appointments not yet implemented", 500)
 
-@application.route('/api/auth', methods=['POST'])
+
+@application.route('/api/users')                                    #TODO: Write Test
+@jwt_required
+def users():
+    if get_jwt_claims()['GlobalAdminStatus']!=1:
+        return make_message_response("Not allowed", 403)
+
+    offset=1
+    amount=10
+    if 'offset' in request.args:
+        offset=request.args['offset']
+    if 'amount' in request.args:
+        amount=request.args['amount']
+    
+    
+    cursor=myssql.connection.cursor()
+    cursor.execute("SELECT * FROM t_Users LIMIT "+str(offset), ","+str(amount)+";")
+    data=cursor.fetchall()
+    returnList=[]
+    for i in (0, amount-1):
+        returnList[i]={'id' : data[i][5], 'username' : data[i][0], 'email' : data[i][2], 'phoneNumber' : data[i][3]}
+    return make_json_response(returnList, 200)
+
+
+
+
+
+@application.route('/api/auth', methods=['POST'])                   #complete, Test Complete
 def authenticate_and_return_accessToken():
     "Authentication endpoint"
     if not request.is_json:
@@ -178,8 +217,6 @@ def authenticate_and_return_accessToken():
         return make_message_response("User does not exist", 401)
 
 
-
-
 # DYNAMIC PART - REST-DEV-API
 #///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -196,7 +233,7 @@ def check_token():
 @application.route('/api/dev/removeUser/<uname>', methods=['DELETE'])
 @jwt_required
 def removeUser(uname):
-    # check if you are the user in question ________TODO: check for administrative priviliges
+    # check if you are the user in question or have Administrative Privileges
     
     if uname != get_jwt_claims['username'] and get_jwt_claims['GlobalAdminStatus']!=1:
         return make_message_response("Can only remove self; or requires administrative priviliges. User " + str(get_jwt_claims['username']) + " trying to remove " + uname, 401)
@@ -206,10 +243,13 @@ def removeUser(uname):
     cur.execute("COMMIT;")
     return make_response(("", 204, None))
 
-@application.route('/api/dev/check-api')
+@application.route('/api/dev/check_api')
 def checkApi():
     return make_response("REST-API seems to work")
 
+@application.route('/api/dev/check-api')
+def chc():
+    return checkApi()
 
 #///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -232,9 +272,6 @@ def make_json_response(jsonDictionary, status):
 @application.errorhandler(500)
 def internal_server_error(error):
     return make_json_response({"message" : "General Server Error", "Event ID" : str(sentry.event_id)}, 500)
-
-
-
 
 
 #//////////////////////////////////////////////////////////////////////////////////////////////////
@@ -283,10 +320,6 @@ application.config['MYSQL_PASSWORD'] = 'Test1234'
 application.config['MYSQL_DB'] = 'Interne_Mitfahrgelegenheit'
 application.config['MYSQL_HOST'] = '127.0.0.1'
 application.config['JWT_SECRET_KEY']= 'SomethingSomethingSecretSecret'
-
-
-
-
 
 
 if __name__ == "__main__":
