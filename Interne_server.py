@@ -6,7 +6,8 @@ from werkzeug import generate_password_hash, check_password_hash
 import json
 import datetime
 from werkzeug.security import safe_str_cmp
-from flask_jwt_extended import (JWTManager, jwt_required, create_access_token, get_jwt_identity, get_jwt_claims, jwt_optional)
+from flask_jwt_extended import (
+    JWTManager, jwt_required, create_access_token, get_jwt_identity, get_jwt_claims, jwt_optional)
 
 application = Flask(__name__)
 jwt = JWTManager(application)
@@ -17,21 +18,22 @@ mysql = MySQL(application)
 
 class User(object):
     "The User class represents the User Object as well as the object relational mapping in the Database"
-    #Fields:
-    #id                     //The MySQL autoincreasing ID
+    # Fields:
+    # id                     //The MySQL autoincreasing ID
     #username               //Username
-    #password               //Hashed Password
-    #email                  //Email Address
-    #phoneNumber            //Phone Number
-    #globalAdminStatus      //Global Admin Status, currently 0 or 1
+    # password               //Hashed Password
+    # email                  //Email Address
+    # phoneNumber            //Phone Number
+    # globalAdminStatus      //Global Admin Status, currently 0 or 1
 
     def __init__(self, id, username, password, email, phoneNumber, globalAdminStatus):
         self.id = id
         self.username = username
         self.password = password
         self.email = email
-        self.phoneNumber=phoneNumber
-        self.globalAdminStatus=globalAdminStatus
+        self.phoneNumber = phoneNumber
+        self.globalAdminStatus = globalAdminStatus
+
     def __str__(self):
         return "User(id=%s)" % self.id
 
@@ -43,7 +45,8 @@ class User(object):
         if uid:
             # Start MYSQL connection
             cur = mysql.connection.cursor()
-            cur.execute("SELECT * FROM t_Users WHERE c_ID_Users='" + str(uid) + "';")
+            cur.execute(
+                "SELECT * FROM t_Users WHERE c_ID_Users='" + str(uid) + "';")
             data = cur.fetchall()
             if len(data) > 0:
                 if username != None:
@@ -55,7 +58,8 @@ class User(object):
                 return NOUSER
         if username:
             cur = mysql.connection.cursor()
-            cur.execute("SELECT * FROM t_Users WHERE c_name_Users= '"+username + "';")
+            cur.execute(
+                "SELECT * FROM t_Users WHERE c_name_Users= '" + username + "';")
             data = cur.fetchall()
             if len(data) > 0:
                 return User(int(data[0][5]), str(data[0][0]), str(data[0][4]), str(data[0][2]), str(data[0][3]), int(data[0][1]))
@@ -65,12 +69,13 @@ class User(object):
 
 
 # Generic Return Code that is checked against indicating failure
-NOUSER = User(id=0, username=None, password=None, email=None, phoneNumber=None, globalAdminStatus=None)
+NOUSER = User(id=0, username=None, password=None, email=None,
+              phoneNumber=None, globalAdminStatus=None)
 
 
 # DYNAMIC PART - REST-API
 #///////////////////////////////////////////////////////////////////////////////////////////////////
-@application.route('/api/users', methods=['POST'])                  #Complete, Test complete
+@application.route('/api/users', methods=['POST'])  # Complete, Test complete
 def signup():
     "The Endpoint URI for signing up. Takes email, username and password JSON returns 201 on success"
 
@@ -85,13 +90,12 @@ def signup():
     except json.JSONDecodeError:
         return make_message_response("Malformed JSON in Request Body", 400)
 
-    #check for JSON keys
+    # check for JSON keys
     if 'email' not in requestJSON or 'password' not in requestJSON:
         return make_message_response("Signup must contain (password, email) JSON keys", 400)
     if 'phoneNumber' not in requestJSON or 'username' not in requestJSON:
         return make_message_response("Signup must contain (username, phoneNumber) JSON Keys", 400)
 
-    
     # Check if User already exists
     try:
         testuser = User.loadUser(username=requestJSON['username'])
@@ -99,11 +103,10 @@ def signup():
             return make_message_response("User already exists", 409)
     except Exception:
         sentry.captureException()
-        return make_message_response("Unknown Server Error, The Sentry Error Code is: "+g.sentry_event_id, 500)
+        return make_message_response("Unknown Server Error, The Sentry Error Code is: " + g.sentry_event_id, 500)
 
     # hash the password
     hashed_password = generate_password_hash(requestJSON['password'])
-    
 
     # CHECK for SQL Injection
     checkall = requestJSON['username'] + requestJSON['email']
@@ -115,102 +118,96 @@ def signup():
     sqlReq = sqlReq + "VALUES ('" + requestJSON['username'] + "', '0', '" + \
         requestJSON['email'] + "', '" + requestJSON['phoneNumber'] + "', '" +\
         hashed_password + "');"
-    
+
     # execute it
     cursor = mysql.connection.cursor()
     cursor.execute("START TRANSACTION;")
     cursor.execute(sqlReq)
     cursor.execute("COMMIT;")
 
-    # Respond 201 CREATED     
-    return make_response("User " + requestJSON['username'] + " created", 201,  {'content-type': 'application/json', 'Location' : ['/api/auth', '/api/users/'+requestJSON['username']]})
-
+    # Respond 201 CREATED
+    return make_response("User " + requestJSON['username'] + " created", 201,  {'content-type': 'application/json', 'Location': ['/api/auth', '/api/users/' + requestJSON['username']]})
 
 
 @application.route('/api/users/<UidOrName>', methods=['GET'])
 @jwt_optional
-def user_profileByID(UidOrName):                                        #Profile itself NYI
+def user_profileByID(UidOrName):  # Profile itself NYI
     "User Profile Endpoint"
-    id=0
-    #if we are at a /api/users/<Username>, redirect to /api/users/<ID>
+    id = 0
+    # if we are at a /api/users/<Username>, redirect to /api/users/<ID>
     try:
-        id=int(UidOrName)
+        id = int(UidOrName)
     except (TypeError, ValueError):
-        thisuser=User.loadUser(username=UidOrName)
-        if thisuser==NOUSER:
+        thisuser = User.loadUser(username=UidOrName)
+        if thisuser == NOUSER:
             return make_message_response("User not found", 404)
-        return redirect('/api/users/'+thisuser.id)
-    #check for authorization: Only a global Admin or the User itself can access this resource
-    activeUserID=get_jwt_identity()
+        return redirect('/api/users/' + thisuser.id)
+    # check for authorization: Only a global Admin or the User itself can access this resource
+    activeUserID = get_jwt_identity()
     if activeUserID == None:
         return make_message_response("Cannot be accessed by Anon User", 401)
 
-    if (get_jwt_claims()['GlobalAdminStatus']!=1):
-        if get_jwt_identity()!=id:
+    if (get_jwt_claims()['GlobalAdminStatus'] != 1):
+        if get_jwt_identity() != id:
             return make_message_response('Not allowed', 403)
-    
-    
+
     return make_message_response("Not yet implemented", 500)
 
 
-
-@application.route('/api/appointments/<appointmentID>')             #Not yet implemented
+@application.route('/api/appointments/<appointmentID>')  # Not yet implemented
 @jwt_required
 def appointment_data(appointmentID):
-    if get_jwt_claims()['GlobalAdminStatus']!=1:
-        uid=get_jwt_identity()
-        cur=mysql.connection.cursor()
-        cur.execute("SELECT EXISTS(SELECT 1 FROM t_relation_Users_isAPartOf_Organization WHERE 'c_ID_Users' = '"+get_jwt_identity()+"' AND 'c_ID_Organizations' = '"+appointmentID+"';")
-        data=cur.fetchall()
-        if (data==0):
+    if get_jwt_claims()['GlobalAdminStatus'] != 1:
+        uid = get_jwt_identity()
+        cur = mysql.connection.cursor()
+        cur.execute("SELECT EXISTS(SELECT 1 FROM t_relation_Users_isAPartOf_Organization WHERE 'c_ID_Users' = '" +
+                    get_jwt_identity() + "' AND 'c_ID_Organizations' = '" + appointmentID + "';")
+        data = cur.fetchall()
+        if (data == 0):
             return make_message_response("Either the Appointment does not exist or you are not a part of its Organization")
-
-
 
     return make_message_response("Appointments not yet implemented", 500)
 
 
-@application.route('/api/users')                                    #TODO: Write Test
+@application.route('/api/users')  # TODO: Write Test
 @jwt_required
 def users():
-    if get_jwt_claims()['GlobalAdminStatus']!=1:
+    if get_jwt_claims()['GlobalAdminStatus'] != 1:
         return make_message_response("Not allowed", 403)
 
-    offset=1
-    amount=10
+    offset = 1
+    amount = 10
     if 'offset' in request.args:
-        offset=request.args['offset']
+        offset = request.args['offset']
     if 'amount' in request.args:
-        amount=request.args['amount']
-    
-    
-    cursor=myssql.connection.cursor()
-    cursor.execute("SELECT * FROM t_Users LIMIT "+str(offset), ","+str(amount)+";")
-    data=cursor.fetchall()
-    returnList=[]
-    for i in (0, amount-1):
-        returnList[i]={'id' : data[i][5], 'username' : data[i][0], 'email' : data[i][2], 'phoneNumber' : data[i][3]}
+        amount = request.args['amount']
+
+    cursor = myssql.connection.cursor()
+    cursor.execute("SELECT * FROM t_Users LIMIT " +
+                   str(offset), "," + str(amount) + ";")
+    data = cursor.fetchall()
+    returnList = []
+    for i in (0, amount - 1):
+        returnList[i] = {'id': data[i][5], 'username': data[i]
+                         [0], 'email': data[i][2], 'phoneNumber': data[i][3]}
     return make_json_response(returnList, 200)
 
 
-
-
-
-@application.route('/api/auth', methods=['POST'])                   #complete, Test Complete
+@application.route('/api/auth', methods=['POST'])  # complete, Test Complete
 def authenticate_and_return_accessToken():
     "Authentication endpoint"
     if not request.is_json:
         return make_message_response("Missing JSON request", 400)
-    requestJSON=json.loads(request.data)
+    requestJSON = json.loads(request.data)
     if 'username' not in requestJSON or 'password' not in requestJSON:
         return make_message_response("Missing username or password fields", 400)
-    
-    thisuser=User.loadUser(username=requestJSON['username'])
-    if thisuser!=NOUSER:
+
+    thisuser = User.loadUser(username=requestJSON['username'])
+    if thisuser != NOUSER:
         if check_password_hash(thisuser.password, requestJSON['password']):
-            #authentication OK!
-            access_token=create_access_token(identity=thisuser)
-            return make_json_response({'access_token' : access_token}, 200)
+            # authentication OK!
+            access_token = create_access_token(identity=thisuser)
+            return make_json_response({'access_token': access_token}, 200)
         else:
             return make_message_response("Invalid Username or Password", 401)
     else:
@@ -223,10 +220,10 @@ def authenticate_and_return_accessToken():
 @application.route('/api/dev/check_token', methods=['GET'])
 @jwt_required
 def check_token():
-    
+
     retObj = {}
-    retObj=get_jwt_claims().copy()
-    retObj['id']=get_jwt_identity()
+    retObj = get_jwt_claims().copy()
+    retObj['id'] = get_jwt_identity()
     return make_json_response(retObj, 200)
 
 
@@ -234,25 +231,27 @@ def check_token():
 @jwt_required
 def removeUser(uname):
     # check if you are the user in question or have Administrative Privileges
-    
-    if uname != get_jwt_claims['username'] and get_jwt_claims['GlobalAdminStatus']!=1:
+
+    if uname != get_jwt_claims['username'] and get_jwt_claims['GlobalAdminStatus'] != 1:
         return make_message_response("Can only remove self; or requires administrative priviliges. User " + str(get_jwt_claims['username']) + " trying to remove " + uname, 401)
     cur = mysql.connection.cursor()
     cur.execute("START TRANSACTION;")
-    cur.execute('DELETE FROM t_Users WHERE c_ID_Users=' + str(get_jwt_identity()))
+    cur.execute('DELETE FROM t_Users WHERE c_ID_Users=' +
+                str(get_jwt_identity()))
     cur.execute("COMMIT;")
     return make_response(("", 204, None))
+
 
 @application.route('/api/dev/check_api')
 def checkApi():
     return make_response("REST-API seems to work")
+
 
 @application.route('/api/dev/check-api')
 def chc():
     return checkApi()
 
 #///////////////////////////////////////////////////////////////////////////////////////////////////
-
 
 
 def make_message_response(string, status):
@@ -271,7 +270,7 @@ def make_json_response(jsonDictionary, status):
 
 @application.errorhandler(500)
 def internal_server_error(error):
-    return make_json_response({"message" : "General Server Error", "Event ID" : str(sentry.event_id)}, 500)
+    return make_json_response({"message": "General Server Error", "Event ID": str(sentry.event_id)}, 500)
 
 
 #//////////////////////////////////////////////////////////////////////////////////////////////////
@@ -280,35 +279,42 @@ def internal_server_error(error):
 @jwt.user_claims_loader
 def add_claims_to_access_token(user):
     "Defines all fields to be remembered and recovered in the JSON Token"
-    return {'Username' : user.username,
-            'Email'    : user.email,
-            'PhoneNumber' : user.phoneNumber,
-            'GlobalAdminStatus' : user.globalAdminStatus}
-    
+    return {'Username': user.username,
+            'Email': user.email,
+            'PhoneNumber': user.phoneNumber,
+            'GlobalAdminStatus': user.globalAdminStatus}
+
+
 @jwt.user_identity_loader
 def user_identity_lookup(user):
     "UID for a Token Identity"
     return user.id
 
+
 @jwt.claims_verification_failed_loader
 def claims_verification_failed_loader():
     return make_message_response("User Claims Verification Failed - Probably an Illegal Token", 400)
+
 
 @jwt.expired_token_loader
 def expired_token_loader(msgstring):
     return make_message_response(msgstring, 401)
 
+
 @jwt.needs_fresh_token_loader
 def needs_fresh_token_loader():
     return make_message_response("Fresh Token required", 401)
+
 
 @jwt.invalid_token_loader
 def invalid_token_loader(msgstring):
     return make_message_response(msgstring, 401)
 
+
 @jwt.revoked_token_loader
 def revoked_token_loader():
     return make_message_response("Token has been revoked")
+
 
 @jwt.unauthorized_loader
 def unauthorized_loader(msgstring):
@@ -319,10 +325,10 @@ application.config['MYSQL_USER'] = 'flaskuser'
 application.config['MYSQL_PASSWORD'] = 'Test1234'
 application.config['MYSQL_DB'] = 'Interne_Mitfahrgelegenheit'
 application.config['MYSQL_HOST'] = '127.0.0.1'
-application.config['JWT_SECRET_KEY']= 'SomethingSomethingSecretSecret'
+application.config['JWT_SECRET_KEY'] = 'SomethingSomethingSecretSecret'
 
 
 if __name__ == "__main__":
     sentry = Sentry(
-    application, dsn='https://6ac6c6188eb6499fa2967475961a03ca:2f617eada90f478bb489cd4cf2c50663@sentry.io/232283')
+        application, dsn='https://6ac6c6188eb6499fa2967475961a03ca:2f617eada90f478bb489cd4cf2c50663@sentry.io/232283')
     application.run(host='0.0.0.0')
