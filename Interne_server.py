@@ -169,7 +169,7 @@ def appointment_data(appointmentID):
     return make_message_response("Appointments not yet implemented", 500)
 
 
-@application.route('/api/users')  # TODO: Write Test
+@application.route('/api/users', methods=['GET'])  # TODO: Write Test
 @jwt_required
 def users():
     if get_jwt_claims()['GlobalAdminStatus'] != 1:
@@ -182,7 +182,7 @@ def users():
     if 'amount' in request.args:
         amount = request.args['amount']
 
-    cursor = myssql.connection.cursor()
+    cursor = mysql.connection.cursor()
     cursor.execute("SELECT * FROM t_Users LIMIT " +
                    str(offset), "," + str(amount) + ";")
     data = cursor.fetchall()
@@ -271,6 +271,12 @@ def make_json_response(jsonDictionary, status):
 @application.errorhandler(500)
 def internal_server_error(error):
     return make_json_response({"message": "General Server Error", "Event ID": str(sentry.event_id)}, 500)
+#/////////////////////////////////////////////////////////////////////////////////////////////////
+# Error 404 general handler
+
+@application.errorhandler(404)
+def resource_not_found_error(error):
+    return make_message_response("Resource does not exist", 404)
 
 
 #//////////////////////////////////////////////////////////////////////////////////////////////////
