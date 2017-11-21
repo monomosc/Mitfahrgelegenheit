@@ -319,7 +319,7 @@ def invalid_token_loader(msgstring):
 
 @jwt.revoked_token_loader
 def revoked_token_loader():
-    return make_message_response("Token has been revoked")
+    return make_message_response("Token has been revoked", 401)
 
 
 @jwt.unauthorized_loader
