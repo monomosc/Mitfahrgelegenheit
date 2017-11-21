@@ -51,8 +51,21 @@ Nach der Fahrt validieren alle aktiven Fahrer ihre Fahrt und das Appointment wir
 \item Anzeigen der vorläufigen Fahrerverteilung zu einem Appointment
 \item Klare Meldung zu unvollständigen Appointments mit Aufforderung der Lösung des Problems durch Menschen (z.B. via Email)
 \end{enumerate}
+
 \subsection{KANN-Kriterien}
+
 \subsection{Abgrenzungskriterien}
+\begin{itemize}
+\item Die Anwendung wird weder Fahrtengeld berechnen noch regeln.
+\item Es wird keine direkte Kommunikation zwischen Teilnehmern eines Appointments unterstützt; die Mitfahrer müssen die Kontaktaufnahme mit den Fahrern selbst selbst initiieren.
+\item Die Anwendung wird keine Zwischenhalte oder Treffpunkte fuer ein Appointment bestimmen.
+\item Die Fahrtroute wird nicht geplant werden.
+\item Die Wohnorte von Nutzern werden nicht verwaltet und nicht bei der Aufteilung der Mitfahrer auf Fahrer berücksichtigt.
+\item Die Anwendung wird nicht als öffentlicher Service dienen, sondern von Organisationen, die diese nutzen möchten, selbst gehostet und verwaltet.
+\item Es wird kein Feature zur Meldung von unangebrachten Verhalten eines anderen Nutzers geben.
+\item Es wird keine Garantie für eine reibungslose Aufteilung der Nutzer geben. Die Anwendung liefert vernünftige Vorschläge, jedoch muss die endgültige Absprache von den Nutzern persönlich erledigt werden.
+\end{itemize}
+
 \subsection{Nichtfunktionale Anforderungen}
 \begin{enumerate}
 \item Sämtliche API-Calls finden ausschließlich verschlüsselt via HTTPS/TLS statt.
