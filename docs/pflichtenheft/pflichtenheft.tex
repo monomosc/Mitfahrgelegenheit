@@ -30,27 +30,27 @@ Die Software richtet sich an mittlere bis große Organisationen, die oft oder re
 \subsection{Funktionen}
 Die Software stellt alle Funktionen eines webbasierten Login-Dienstes sowie die zugehörige administrative Funktionalität  bereit.
 \subsubsection{Login-Funktionalitäten}
-\begin{enumerate}
+\begin{itemize}
 \item Signup - Erstellen von Nutzern
 \item Login - Login eines Nutzers
-\end{enumerate}
+\end{itemize}
 \subsubsection{Administrative Funktionalitäten}
-\begin{enumerate}
+\begin{itemize}
 \item Delete User - Löschen von Nutzern
 \item Diagnostics - Einsehen von Daten zu allen Nutzern und Appointments
-\end{enumerate}
+\end{itemize}
 \subsubsection{Appointments}
 Appointments stellen das Herzstück der Software dar. Nutzer bzw. Administratoren erstellen Appointments, die von allen Nutzern eingesehen werden können. Nach der Erstellung existiert ein Zeitrahmen, in dem andere Nutzer sich als MUSS-Fahrer, KANN-Fahrer oder MIT-Fahrer eintragen. In den ersten beiden Fällen geschieht dies zusammen mit einer Kapazitätsangabe.
 Am Ende der Frist werden alle Teilnehmer nach logischen Regeln auf die angemeldeten Autos verteilt oder es wird ein Fehlerereignis generiert, wenn nicht genügend Plätze vorhanden sind.
 Nach der Fahrt validieren alle aktiven Fahrer ihre Fahrt und das Appointment wird archiviert.
 \subsection{MUSS-Kriterien}
-\begin{enumerate}
+\begin{itemize}
 \item Klares, per TLS gesichertes System zum Einloggen, zur Übertragung der Daten und zur Persistenz derselben
 \item Fähigkeit des Nutzers, Appointments zu erstellen, zu löschen und alle aktiven anzuzeigen
 \item Anmelden zu einem bestehendem Appointment um mitgenommen zu werden, garantiert mit dem eigenen Auto zu fahren oder es vom System entscheiden zu lassen
 \item Anzeigen der vorläufigen Fahrerverteilung zu einem Appointment
 \item Klare Meldung zu unvollständigen Appointments mit Aufforderung der Lösung des Problems durch Menschen (z.B. via Email)
-\end{enumerate}
+\end{itemize}
 
 \subsection{KANN-Kriterien}
 
@@ -67,11 +67,11 @@ Nach der Fahrt validieren alle aktiven Fahrer ihre Fahrt und das Appointment wir
 \end{itemize}
 
 \subsection{Nichtfunktionale Anforderungen}
-\begin{enumerate}
+\begin{itemize}
 \item Sämtliche API-Calls finden ausschließlich verschlüsselt via HTTPS/TLS statt.
 \item Passwörter werden nicht direkt übertragen; nur Hashes werden vom Backend empfangen
 \item Die Antwortzeit des Systems darf für keine Anfrage zwei (2) Sekunden übersteigen und sollte meistens unter 0.5 Sekunden liegen.
-\end{enumerate}
+\end{itemize}
 
 
 \section{User Stories}
