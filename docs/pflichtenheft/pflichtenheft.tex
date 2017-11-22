@@ -72,7 +72,6 @@ Nach der Fahrt validieren alle aktiven Fahrer ihre Fahrt und das Appointment wir
 \subsection{Nichtfunktionale Anforderungen}
 \begin{itemize}
 \item Sämtliche API-Calls finden ausschließlich verschlüsselt via HTTPS/TLS statt.
-\item Passwörter werden nicht direkt übertragen; nur Hashes werden vom Backend empfangen
 \item Die Antwortzeit des Systems darf für keine Anfrage zwei (2) Sekunden übersteigen und sollte meistens unter 0.5 Sekunden liegen.
 \end{itemize}
 
@@ -90,7 +89,9 @@ Der Nutzer ruft die Liste von Appointments auf. Dem Nutzer werden daraufhin eine
 Der Fahrer ruft die Liste der Appointments auf, an denen er sich beteiligt. Er wählt das Appointment, für welches er seine Teilnahme absagen möchte. Das System benachrichtigt die anderen Fahrer, seine Mitfahrer und versucht die Kollision mit möglichst wenig propagierenden Konsequenzen aufzulösen.
 
 \section{Architektur}
-Die Software wird zur Wahrung der Extensionalität strikt zwischen Backend(Server) und Frontend(Client) getrennt. Diese Praxis ist allgemein bekannt und anerkannt und erfordert eine Spezifikation einer Schnittstelle (API).
+Die Software wird zur Wahrung der Extensionalität strikt zwischen Backend (Server) und Frontend (Client) getrennt. Das Frontend kann z.B. in Form einer Website, einer webbasierten Mobile App (z.B. Cordova) oder einer nativen Mobile App (Android, iOS) vorliegen.
+\bigskip\\
+Geplant ist eine Andriod-App.
 \subsection{REST-Schnittstelle}
 Die Spezifikation der REST-API befindet sich in einem separatem Dokument.
 Datenaustausch findet via JSON statt.
