@@ -129,29 +129,32 @@ def signup():
     return make_response("User " + requestJSON['username'] + " created", 201,  {'content-type': 'application/json', 'Location': ['/api/auth', '/api/users/' + requestJSON['username']]})
 
 
-@application.route('/api/users/<UidOrName>', methods=['GET'])
+@application.route('/api/users/<int:u_id>', methods=['GET'])
 @jwt_optional
 def user_profileByID(UidOrName):  # Profile itself NYI
-    "User Profile Endpoint"
-    id = 0
-    # if we are at a /api/users/<Username>, redirect to /api/users/<ID>
-    try:
-        id = int(UidOrName)
-    except (TypeError, ValueError):
-        thisuser = User.loadUser(username=UidOrName)
-        if thisuser == NOUSER:
-            return make_message_response("User not found", 404)
-        return redirect('/api/users/' + thisuser.id)
+    "User Profile Endpoint - ID"
     # check for authorization: Only a global Admin or the User itself can access this resource
     activeUserID = get_jwt_identity()
     if activeUserID == None:
         return make_message_response("Cannot be accessed by Anon User", 401)
-
     if (get_jwt_claims()['GlobalAdminStatus'] != 1):
-        if get_jwt_identity() != id:
+        if get_jwt_identity() != UidOrName:
             return make_message_response('Not allowed', 403)
 
+    # get user data from mysql db and return it
+    # this will probably take the form of a JSON list of appointments
     return make_message_response("Not yet implemented", 500)
+
+
+
+@application.route('/api/users/<string:user_name>')
+@jwt_optional
+def userByName(user_name):
+    "User profile redirect Username --> UserID"
+    thisuser=User.loadUser(username=user_name)
+    if thisuser==NOUSER:
+        return make_message_response("User not found", 404)
+    return redirect('/api/users/' + thisuser.id)
 
 
 @application.route('/api/appointments/<appointmentID>')  # Not yet implemented
