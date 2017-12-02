@@ -1,5 +1,6 @@
 # Moritz Basel - interne_server.py
 from flask import Flask, request, send_from_directory, make_response, redirect, jsonify
+
 from flask_mysqldb import MySQL
 from raven.contrib.flask import Sentry
 from werkzeug import generate_password_hash, check_password_hash
@@ -9,9 +10,37 @@ from werkzeug.security import safe_str_cmp
 from flask_jwt_extended import (
     JWTManager, jwt_required, create_access_token, get_jwt_identity, get_jwt_claims, jwt_optional)
 
+
 application = Flask(__name__)
 jwt = JWTManager(application)
 mysql = MySQL(application)
+
+#LOGGING INITIALIZER
+if not application.debug and not application.testing:
+    print("Hello")
+    import logging
+    log_handler=logging.FileHandler('/var/log/Mitfahrgelegenheit.log')
+    log_handler.setLevel(logging.INFO)
+    log_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
+
+    application.logger.addHandler(log_handler)
+    application.logger.setLevel(logging.INFO)
+
+
+application.config['MYSQL_USER'] = 'flaskuser'
+application.config['MYSQL_PASSWORD'] = 'Test1234'
+application.config['MYSQL_DB'] = 'Interne_Mitfahrgelegenheit'
+application.config['MYSQL_HOST'] = '127.0.0.1'
+application.config['JWT_SECRET_KEY'] = 'SomethingSomethingSecretSecret'
+
+
+if __name__ == "__main__":
+    sentry = Sentry(
+        application, dsn='https://6ac6c6188eb6499fa2967475961a03ca:2f617eada90f478bb489cd4cf2c50663@sentry.io/232283')
+    application.run(host='0.0.0.0')
+
+
+
 #CLASS: USER
 #///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -79,6 +108,9 @@ NOUSER = User(id=0, username=None, password=None, email=None,
 def signup():
     "The Endpoint URI for signing up. Takes email, username and password JSON returns 201 on success"
 
+
+    application.logger.info("User Signup on /api/users")
+    
     # Check for Sortof Valid Data
     if 'content-type' in request.headers:
         if request.headers['content-type'] != 'application/json':
@@ -151,6 +183,8 @@ def user_profileByID(UidOrName):  # Profile itself NYI
         if get_jwt_identity() != id:
             return make_message_response('Not allowed', 403)
 
+
+    application.logger.info("Userprofile for User: ")
     return make_message_response("Not yet implemented", 500)
 
 
@@ -166,6 +200,8 @@ def appointment_data(appointmentID):
         if (data == 0):
             return make_message_response("Either the Appointment does not exist or you are not a part of its Organization")
 
+    uclaims=get_jwt_claims()
+    application.logger.info("User: " + uclaims['username'] + " accessing appointment: "+str(appointmentID))
     return make_message_response("Appointments not yet implemented", 500)
 
 
@@ -196,6 +232,7 @@ def users():
 @application.route('/api/auth', methods=['POST'])  # complete, Test Complete
 def authenticate_and_return_accessToken():
     "Authentication endpoint"
+    application.logger.info('User Access Token Request')
     if not request.is_json:
         return make_message_response("Missing JSON request", 400)
     requestJSON = json.loads(request.data)
@@ -206,6 +243,7 @@ def authenticate_and_return_accessToken():
     if thisuser != NOUSER:
         if check_password_hash(thisuser.password, requestJSON['password']):
             # authentication OK!
+            application.logger.info('Access token created for ' + requestJSON['username'])
             access_token = create_access_token(identity=thisuser)
             return make_json_response({'access_token': access_token}, 200)
         else:
@@ -232,8 +270,9 @@ def check_token():
 def removeUser(uname):
     # check if you are the user in question or have Administrative Privileges
 
-    if uname != get_jwt_claims['username'] and get_jwt_claims['GlobalAdminStatus'] != 1:
-        return make_message_response("Can only remove self; or requires administrative priviliges. User " + str(get_jwt_claims['username']) + " trying to remove " + uname, 401)
+    uclaims=get_jwt_claims()
+    if uname != uclaims['username'] and uclaims['GlobalAdminStatus'] != 1:
+        return make_message_response("Can only remove self; or requires administrative priviliges. User " + str(uclaims['username']) + " trying to remove " + uname, 401)
     cur = mysql.connection.cursor()
     cur.execute("START TRANSACTION;")
     cur.execute('DELETE FROM t_Users WHERE c_ID_Users=' +
@@ -244,6 +283,7 @@ def removeUser(uname):
 
 @application.route('/api/dev/check_api')
 def checkApi():
+    application.logger.info('Checking API, Checking Log')
     return make_response("REST-API seems to work")
 
 
@@ -326,15 +366,3 @@ def revoked_token_loader():
 def unauthorized_loader(msgstring):
     return make_message_response(msgstring, 401)
 
-
-application.config['MYSQL_USER'] = 'flaskuser'
-application.config['MYSQL_PASSWORD'] = 'Test1234'
-application.config['MYSQL_DB'] = 'Interne_Mitfahrgelegenheit'
-application.config['MYSQL_HOST'] = '127.0.0.1'
-application.config['JWT_SECRET_KEY'] = 'SomethingSomethingSecretSecret'
-
-
-if __name__ == "__main__":
-    sentry = Sentry(
-        application, dsn='https://6ac6c6188eb6499fa2967475961a03ca:2f617eada90f478bb489cd4cf2c50663@sentry.io/232283')
-    application.run(host='0.0.0.0')
