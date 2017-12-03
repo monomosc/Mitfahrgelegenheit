@@ -22,9 +22,9 @@ if not application.debug and not application.testing:
     log_handler=logging.FileHandler('/var/log/Mitfahrgelegenheit.log')
     log_handler.setLevel(logging.INFO)
     log_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
-
-    application.logger.addHandler(log_handler)
-    application.logger.setLevel(logging.INFO)
+    logger=logging.getLogger(__name__)
+    logger.addHandler(log_handler)
+    logger.setLevel(logging.INFO)
 
 
 application.config['MYSQL_USER'] = 'flaskuser'
@@ -109,7 +109,7 @@ def signup():
     "The Endpoint URI for signing up. Takes email, username and password JSON returns 201 on success"
 
 
-    application.logger.info("User Signup on /api/users")
+    logger.info("User Signup on /api/users")
     
     # Check for Sortof Valid Data
     if 'content-type' in request.headers:
@@ -174,7 +174,7 @@ def user_profileByID(UidOrName):  # Profile itself NYI
             return make_message_response('Not allowed', 403)
 
 
-    application.logger.info("Userprofile for User: ")
+    logger.info("Userprofile for User: ")
     # get user data from mysql db and return it
     # this will probably take the form of a JSON list of appointments
     return make_message_response("Not yet implemented", 500)
@@ -204,7 +204,7 @@ def appointment_data(appointmentID):
             return make_message_response("Either the Appointment does not exist or you are not a part of its Organization")
 
     uclaims=get_jwt_claims()
-    application.logger.info("User: " + uclaims['username'] + " accessing appointment: "+str(appointmentID))
+    logger.info("User: " + uclaims['username'] + " accessing appointment: "+str(appointmentID))
     return make_message_response("Appointments not yet implemented", 500)
 
 
@@ -235,7 +235,7 @@ def users():
 @application.route('/api/auth', methods=['POST'])  # complete, Test Complete
 def authenticate_and_return_accessToken():
     "Authentication endpoint"
-    application.logger.info('User Access Token Request')
+    logger.info('User Access Token Request')
     if not request.is_json:
         return make_message_response("Missing JSON request", 400)
     requestJSON = json.loads(request.data)
@@ -246,7 +246,7 @@ def authenticate_and_return_accessToken():
     if thisuser != NOUSER:
         if check_password_hash(thisuser.password, requestJSON['password']):
             # authentication OK!
-            application.logger.info('Access token created for ' + requestJSON['username'])
+            logger.info('Access token created for ' + requestJSON['username'])
             access_token = create_access_token(identity=thisuser)
             return make_json_response({'access_token': access_token}, 200)
         else:
@@ -286,7 +286,7 @@ def removeUser(uname):
 
 @application.route('/api/dev/check_api')
 def checkApi():
-    application.logger.info('Checking API, Checking Log')
+    logger.info('Checking API, Checking Log')
     return make_response("REST-API seems to work")
 
 
