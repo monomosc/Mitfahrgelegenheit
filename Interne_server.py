@@ -187,14 +187,14 @@ def user_profileByID(UidOrName):  # Profile itself NYI
 
 
 
-@application.route('/api/users/<string:user_name>', methods=['GET'])
-@jwt_optional
-def userByName(user_name):
-    "User profile redirect Username --> UserID"
-    thisuser=User.loadUser(username=user_name)
-    if thisuser==NOUSER:
+#@application.route('/api/users/<string:user_name>', methods=['GET'])
+#@jwt_optional
+#def userByName(user_name):
+ #   "User profile redirect Username --> UserID"
+    #thisuser=User.loadUser(username=user_name)
+    #if thisuser==NOUSER:
         return make_message_response("User not found", 404)
-    return redirect('/api/users/' + thisuser.id)
+   # return redirect(location='/api/users/' + thisuser.id)
 
 
 @application.route('/api/appointments/<appointmentID>')  # Not yet implemented
