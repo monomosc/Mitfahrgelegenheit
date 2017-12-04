@@ -12,20 +12,15 @@ from flask_jwt_extended import (
 
 
 application = Flask(__name__)
+startup=1
 jwt = JWTManager(application)
 mysql = MySQL(application)
+logger=logging.getLogger(__name__)
+
 
 #LOGGING INITIALIZER
 if not application.debug and not application.testing:
-    print("Hello")
-    import logging
-    log_handler=logging.FileHandler('/var/log/Mitfahrgelegenheit.log')
-    log_handler.setLevel(logging.INFO)
-    log_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
-    logger=logging.getLogger(__name__)
-    logger.addHandler(log_handler)
-    logger.setLevel(logging.INFO)
-
+    initialize_log()
 
 application.config['MYSQL_USER'] = 'flaskuser'
 application.config['MYSQL_PASSWORD'] = 'Test1234'
@@ -37,10 +32,10 @@ application.config['JWT_SECRET_KEY'] = 'SomethingSomethingSecretSecret'
 if __name__ == "__main__":
     sentry = Sentry(
         application, dsn='https://6ac6c6188eb6499fa2967475961a03ca:2f617eada90f478bb489cd4cf2c50663@sentry.io/232283')
-    application.run(host='0.0.0.0')
+    application.run(host='127.0.0.1')
 
 
-
+startup=0
 #CLASS: USER
 #///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -366,6 +361,18 @@ def revoked_token_loader():
 
 
 @jwt.unauthorized_loader
-def unauthorized_loader(msgstring):
-    return make_message_response(msgstring, 401)
+def unauthorized_loader(msg):
+    return make_json_response(msg, 401)
 
+
+def initialize_log():
+    import logging
+    now=datetime.datetime.now()
+    if startup==0:
+        logger.removeHandler(log_handler)
+    filename= '/var/log/Mitfahrgelegenheit/Mitfahrgelegenheit-'+str(now.date)+'-'+str(now.month)+'-'+str(now.year)+".log"
+    log_handler=logging.FileHandler(filename)
+    log_handler.setLevel(logging.INFO)
+    log_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
+    logger.addHandler(log_handler)
+    logger.setLevel(logging.INFO)
