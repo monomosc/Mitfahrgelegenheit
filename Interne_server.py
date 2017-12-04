@@ -187,7 +187,7 @@ def user_profileByID(UidOrName):  # Profile itself NYI
 
 
 
-@application.route('/api/users/<string:user_name>')
+@application.route('/api/users/<string:user_name>', methods=['GET'])
 @jwt_optional
 def userByName(user_name):
     "User profile redirect Username --> UserID"
@@ -299,6 +299,19 @@ def checkApi():
 @application.route('/api/dev/check-api')
 def chc():
     return checkApi()
+
+@application.route('/api/dev/protected')
+@jwt_required
+def protected():
+    return make_message_response('This is protected', 200)
+
+@application.route('/api/dev/optional')
+@jwt_optional
+def optional():
+    if get_jwt_identity()==None:
+        return make_message_response('Optional Protection, you had no Token', 200)
+    else:
+        return make_message_response('Optional Protection, you had a token', 200)
 
 #///////////////////////////////////////////////////////////////////////////////////////////////////
 
