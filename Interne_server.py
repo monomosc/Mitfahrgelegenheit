@@ -193,7 +193,7 @@ def user_profileByID(UidOrName):  # Profile itself NYI
  #   "User profile redirect Username --> UserID"
     #thisuser=User.loadUser(username=user_name)
     #if thisuser==NOUSER:
-        return make_message_response("User not found", 404)
+ #       return make_message_response("User not found", 404)
    # return redirect(location='/api/users/' + thisuser.id)
 
 
