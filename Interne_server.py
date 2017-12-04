@@ -169,14 +169,14 @@ def signup():
 
 @application.route('/api/users/<int:u_id>', methods=['GET'])
 @jwt_optional
-def user_profileByID(UidOrName):  # Profile itself NYI
+def user_profileByID(u_id):  # Profile itself NYI
     "User Profile Endpoint - ID"
     # check for authorization: Only a global Admin or the User itself can access this resource
     activeUserID = get_jwt_identity()
     if activeUserID == None:
         return make_message_response("Cannot be accessed by Anon User", 401)
     if (get_jwt_claims()['GlobalAdminStatus'] != 1):
-        if get_jwt_identity() != UidOrName:
+        if get_jwt_identity() != u_id:
             return make_message_response('Not allowed', 403)
 
 
@@ -187,14 +187,14 @@ def user_profileByID(UidOrName):  # Profile itself NYI
 
 
 
-#@application.route('/api/users/<string:user_name>', methods=['GET'])
-#@jwt_optional
-#def userByName(user_name):
- #   "User profile redirect Username --> UserID"
-    #thisuser=User.loadUser(username=user_name)
-    #if thisuser==NOUSER:
- #       return make_message_response("User not found", 404)
-   # return redirect(location='/api/users/' + thisuser.id)
+@application.route('/api/users/<string:user_name>', methods=['GET'])
+@jwt_optional
+def userByName(user_name):
+    "User profile redirect Username --> UserID"
+    thisuser=User.loadUser(username=user_name)
+    if thisuser==NOUSER:
+        return make_message_response("User not found", 404)
+    return redirect(location='/api/users/' + thisuser.id)
 
 
 @application.route('/api/appointments/<appointmentID>')  # Not yet implemented
