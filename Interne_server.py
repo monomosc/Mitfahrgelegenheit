@@ -194,7 +194,7 @@ def userByName(user_name):
     thisuser=User.loadUser(username=user_name)
     if thisuser==NOUSER:
         return make_message_response("User not found", 404)
-    return redirect(location='/api/users/' + thisuser.id)
+    return redirect(location='/api/users/' + str(thisuser.id))
 
 
 @application.route('/api/appointments/<appointmentID>')  # Not yet implemented
