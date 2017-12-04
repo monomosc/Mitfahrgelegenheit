@@ -281,18 +281,20 @@ def removeUser(uname):
 
     uclaims=get_jwt_claims()
     if uname != uclaims['username'] and uclaims['GlobalAdminStatus'] != 1:
+        logger.warning('User : '+ uclaims['username']+ ' tried to remove '+ uname+ '. This Endpoint should not be generally known')
         return make_message_response("Can only remove self; or requires administrative priviliges. User " + str(uclaims['username']) + " trying to remove " + uname, 401)
     cur = mysql.connection.cursor()
     cur.execute("START TRANSACTION;")
     cur.execute('DELETE FROM t_Users WHERE c_ID_Users=' +
                 str(get_jwt_identity()))
     cur.execute("COMMIT;")
+    logger.warning('Removed User : '+uclaims['username']+' - Was this intended?')
     return make_response(("", 204, None))
 
 
 @application.route('/api/dev/check_api')
 def checkApi():
-    logger.info('Checking API, Checking Log')
+    logger.info('/api/dev/check_api test run')
     return make_response("REST-API seems to work")
 
 
@@ -303,11 +305,13 @@ def chc():
 @application.route('/api/dev/protected')
 @jwt_required
 def protected():
+    logger.info('/api/dev/protected Test Run')
     return make_message_response('This is protected', 200)
 
 @application.route('/api/dev/optional')
 @jwt_optional
 def optional():
+    logger.info('/api/dev/optional Test Run')
     if get_jwt_identity()==None:
         return make_message_response('Optional Protection, you had no Token', 200)
     else:
