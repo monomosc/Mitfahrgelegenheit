@@ -401,8 +401,8 @@ def claims_verification_failed_loader():
 
 
 @jwt.expired_token_loader
-def expired_token_loader(msgstring):
-    return make_message_response(msgstring, 401)
+def expired_token_loader():
+    return jsonify(message="Token Expired")
 
 
 @jwt.needs_fresh_token_loader
