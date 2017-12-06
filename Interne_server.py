@@ -25,14 +25,16 @@ logger = logging.getLogger(__name__)
 scheduler = BackgroundScheduler()
 scheduler.start()
 
+log_handler=None
 # LOGGING INITIALIZER
 
 
+
 def initialize_log():
-    if startup == 0:
-        logger.removeHandler(log_handler)
     filename = "/var/log/Mitfahrgelegenheit/Mitfahrgelegenheit-" + \
         time.strftime("%d-%m-%y") + ".log"
+    if not log_handler==None:
+        logger.removeHandler(log_handler)
     log_handler = logging.FileHandler(filename)
     log_handler.setLevel(logging.INFO)
     log_handler.setFormatter(logging.Formatter(
@@ -228,7 +230,7 @@ def appointment_data(appointmentID):
                 " accessing appointment: " + str(appointmentID))
     return make_message_response("Appointments not yet implemented", 500)
 
-
+14
 @application.route('/api/users', methods=['GET'])  # TODO: Write Test
 @jwt_required
 def users():
