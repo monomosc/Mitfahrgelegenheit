@@ -18,8 +18,7 @@ import logging
 
 
 application = Flask(__name__)
-startup = 1
-active_logfile = ''
+
 jwt = JWTManager(application)
 mysql = MySQL(application)
 logger = logging.getLogger(__name__)
@@ -34,7 +33,6 @@ def initialize_log():
         logger.removeHandler(log_handler)
     filename = "/var/log/Mitfahrgelegenheit/Mitfahrgelegenheit-" + \
         time.strftime("%d-%m-%y") + ".log"
-    active_logfile = filename
     log_handler = logging.FileHandler(filename)
     log_handler.setLevel(logging.INFO)
     log_handler.setFormatter(logging.Formatter(
@@ -65,7 +63,7 @@ if __name__ == "__main__":
     application.run(host='127.0.0.1')
 
 
-startup = 0
+
 #CLASS: USER
 #///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -348,14 +346,16 @@ def logfile():
     if get_jwt_claims()['GlobalAdminStatus'] == 0:
         return jsonify(message="Illegal Non-Admin Operation")
 
-    logger.info('Sending Logfile: ' + active_logfile)
+    filename = "/var/log/Mitfahrgelegenheit/Mitfahrgelegenheit-" + \
+        time.strftime("%d-%m-%y") + ".log"
+    logger.info('Sending Logfile: ' + filename)
     latest = request.args.get('latest')
     if latest == 'true':
         try:
-            return send_file(active_logfile, attachment_filename='Mitfahrgelegenheit.log')
+            return send_file(filename, attachment_filename='Mitfahrgelegenheit.log')
         except Exception as ex:
             return jsonify(exception=str(ex))
-
+    return make_message_response("Only ?latest=true allowed", 422)
 
 #//////////////////////////////////////////////////////////////////////////////////////////////////
 
