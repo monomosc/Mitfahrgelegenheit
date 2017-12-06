@@ -23,7 +23,7 @@ def initialize_log():
     if startup==0:
         logger.removeHandler(log_handler)
     filename= "/var/log/Mitfahrgelegenheit/Mitfahrgelegenheit-"+time.strftime("%d-%m-%y")+".log"
-    log_handler=logging.FileHandler(filename)
+    log_handler=logging.TimedRotatingFileHandler(path=filename,when="D", interval=1, backupCount=0)
     log_handler.setLevel(logging.INFO)
     log_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
     logger.addHandler(log_handler)
@@ -242,7 +242,6 @@ def users():
 def authenticate_and_return_accessToken():
     "Authentication endpoint"
     logger.info('User Access Token Request')
-    if not request.is_json:
         logger.info("Invalid Request in /api/auth. header content-type is: " + request.headers['content-type'])
         return make_message_response("Missing JSON request", 400) 
     requestJSON = json.loads(request.data)
