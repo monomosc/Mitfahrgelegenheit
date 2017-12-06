@@ -243,7 +243,7 @@ def authenticate_and_return_accessToken():
     "Authentication endpoint"
     logger.info('User Access Token Request')
     if not request.is_json:
-        logger.info("Invalid Request in /api/auth. header content-type is: " + request.headers['content-type']+", request mimetype is: "+request.headers['mimetype'])
+        logger.info("Invalid Request in /api/auth. header content-type is: " + request.headers['content-type'])
         return make_message_response("Missing JSON request", 400) 
     requestJSON = json.loads(request.data)
     if 'username' not in requestJSON or 'password' not in requestJSON:
