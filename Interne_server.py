@@ -4,7 +4,7 @@ from flask import Flask, request, send_from_directory, make_response, redirect, 
 from flask_mysqldb import MySQL
 from raven.contrib.flask import Sentry
 from werkzeug import generate_password_hash, check_password_hash
-import json
+from flask import json
 import time
 from werkzeug.security import safe_str_cmp
 from flask_jwt_extended import (
@@ -243,7 +243,8 @@ def authenticate_and_return_accessToken():
     "Authentication endpoint"
     logger.info('User Access Token Request')
     if not request.is_json:
-        return make_message_response("Missing JSON request", 400)
+        logger.info("Invalid Request in /api/auth. header content-type is: " + request.headers['content-type']+", request mimetype is: "+request.headers['mimetype'])
+        return make_message_response("Missing JSON request", 400) 
     requestJSON = json.loads(request.data)
     if 'username' not in requestJSON or 'password' not in requestJSON:
         return make_message_response("Missing username or password fields", 400)
