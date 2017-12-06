@@ -6,23 +6,33 @@ from raven.contrib.flask import Sentry
 from werkzeug import generate_password_hash, check_password_hash
 from flask import json
 import time
+import atexit
+from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.triggers import cron
+
+
 from werkzeug.security import safe_str_cmp
 from flask_jwt_extended import (
     JWTManager, jwt_required, create_access_token, get_jwt_identity, get_jwt_claims, jwt_optional)
 import logging
 
+
+
 application = Flask(__name__)
 startup=1
+active_logfile=''
 jwt = JWTManager(application)
 mysql = MySQL(application)
 logger=logging.getLogger(__name__)
-
+scheduler=BackgroundScheduler()
+scheduler.start()
 
 #LOGGING INITIALIZER
 def initialize_log():
     if startup==0:
         logger.removeHandler(log_handler)
     filename= "/var/log/Mitfahrgelegenheit/Mitfahrgelegenheit-"+time.strftime("%d-%m-%y")+".log"
+    active_logfile=filename
     log_handler=logging.FileHandler(filename)
     log_handler.setLevel(logging.INFO)
     log_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
@@ -32,6 +42,12 @@ def initialize_log():
 
 if not application.debug and not application.testing:
     initialize_log()
+    scheduler.add_job(func=initialize_log,
+    trigger=cron.CronTrigger(hour=0),
+    id='Logger_Restart',
+    name='Change the logger file every day',
+    replace_existing=True)
+
 
 application.config['MYSQL_USER'] = 'flaskuser'
 application.config['MYSQL_PASSWORD'] = 'Test1234'
@@ -317,6 +333,21 @@ def optional():
         return make_message_response('Optional Protection, you had no Token', 200)
     else:
         return make_message_response('Optional Protection, you had a token', 200)
+
+
+@application.route('/api/dev/log', methods=['GET'])
+@jwt_required
+def logfile(filename):
+    if get_jwt_claims()['GlobalAdminStatus']==0:
+        return jsonify(message="Illegal Non-Admin Operation")
+    
+    latest = request.args.get('latest')
+    if lates == 'true':
+        try:
+            return send_file(active_logfile, attachment_filename='Mitfahrgelegenheit.log')
+        except Exception as e:
+            return jsonify(exception=str(e))
+   
 
 #///////////////////////////////////////////////////////////////////////////////////////////////////
 
