@@ -1,5 +1,5 @@
 # Moritz Basel - interne_server.py
-from flask import Flask, request, send_from_directory, make_response, redirect, jsonify
+from flask import Flask, request, send_from_directory, make_response, redirect, jsonify, send_file
 
 from flask_mysqldb import MySQL
 from raven.contrib.flask import Sentry
@@ -17,25 +17,28 @@ from flask_jwt_extended import (
 import logging
 
 
-
 application = Flask(__name__)
-startup=1
-active_logfile=''
+startup = 1
+active_logfile = ''
 jwt = JWTManager(application)
 mysql = MySQL(application)
-logger=logging.getLogger(__name__)
-scheduler=BackgroundScheduler()
+logger = logging.getLogger(__name__)
+scheduler = BackgroundScheduler()
 scheduler.start()
 
-#LOGGING INITIALIZER
+# LOGGING INITIALIZER
+
+
 def initialize_log():
-    if startup==0:
+    if startup == 0:
         logger.removeHandler(log_handler)
-    filename= "/var/log/Mitfahrgelegenheit/Mitfahrgelegenheit-"+time.strftime("%d-%m-%y")+".log"
-    active_logfile=filename
-    log_handler=logging.FileHandler(filename)
+    filename = "/var/log/Mitfahrgelegenheit/Mitfahrgelegenheit-" + \
+        time.strftime("%d-%m-%y") + ".log"
+    active_logfile = filename
+    log_handler = logging.FileHandler(filename)
     log_handler.setLevel(logging.INFO)
-    log_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
+    log_handler.setFormatter(logging.Formatter(
+        '%(asctime)s - %(levelname)s - %(message)s'))
     logger.addHandler(log_handler)
     logger.setLevel(logging.INFO)
 
@@ -43,10 +46,10 @@ def initialize_log():
 if not application.debug and not application.testing:
     initialize_log()
     scheduler.add_job(func=initialize_log,
-    trigger=cron.CronTrigger(hour=0),
-    id='Logger_Restart',
-    name='Change the logger file every day',
-    replace_existing=True)
+                      trigger=cron.CronTrigger(hour=0),
+                      id='Logger_Restart',
+                      name='Change the logger file every day',
+                      replace_existing=True)
 
 
 application.config['MYSQL_USER'] = 'flaskuser'
@@ -62,7 +65,7 @@ if __name__ == "__main__":
     application.run(host='127.0.0.1')
 
 
-startup=0
+startup = 0
 #CLASS: USER
 #///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -130,9 +133,8 @@ NOUSER = User(id=0, username=None, password=None, email=None,
 def signup():
     "The Endpoint URI for signing up. Takes email, username and password JSON returns 201 on success"
 
-
     logger.info("User Signup on /api/users")
-    
+
     # Check for Sortof Valid Data
     if 'content-type' in request.headers:
         if request.headers['content-type'] != 'application/json':
@@ -155,9 +157,9 @@ def signup():
         testuser = User.loadUser(username=requestJSON['username'])
         if testuser != NOUSER:
             return make_message_response("User already exists", 409)
-    except Exception:
+    except Exception as ex:
         sentry.captureException()
-        return make_message_response("Unknown Server Error, The Sentry Error Code is: " + g.sentry_event_id, 500)
+        return make_message_response("Unknown Server Error, The Sentry Error Code is: " + sentry_event_id, 500)
 
     # hash the password
     hashed_password = generate_password_hash(requestJSON['password'])
@@ -195,20 +197,18 @@ def user_profileByID(u_id):  # Profile itself NYI
         if get_jwt_identity() != u_id:
             return make_message_response('Not allowed', 403)
 
-
     logger.info("Userprofile for User: ")
     # get user data from mysql db and return it
     # this will probably take the form of a JSON list of appointments
     return make_message_response("Not yet implemented", 500)
 
 
-
 @application.route('/api/users/<string:user_name>', methods=['GET'])
 @jwt_optional
 def userByName(user_name):
     "User profile redirect Username --> UserID"
-    thisuser=User.loadUser(username=user_name)
-    if thisuser==NOUSER:
+    thisuser = User.loadUser(username=user_name)
+    if thisuser == NOUSER:
         return make_message_response("User not found", 404)
     return redirect(location='/api/users/' + str(thisuser.id))
 
@@ -225,8 +225,9 @@ def appointment_data(appointmentID):
         if (data == 0):
             return make_message_response("Either the Appointment does not exist or you are not a part of its Organization")
 
-    uclaims=get_jwt_claims()
-    logger.info("User: " + uclaims['username'] + " accessing appointment: "+str(appointmentID))
+    uclaims = get_jwt_claims()
+    logger.info("User: " + uclaims['username'] +
+                " accessing appointment: " + str(appointmentID))
     return make_message_response("Appointments not yet implemented", 500)
 
 
@@ -259,8 +260,9 @@ def authenticate_and_return_accessToken():
     "Authentication endpoint"
     logger.info('User Access Token Request')
     if not request.is_json:
-        logger.info("Invalid Request in /api/auth. header content-type is: " + request.headers['content-type'])
-        return make_message_response("Missing JSON request", 400) 
+        logger.info("Invalid Request in /api/auth. header content-type is: " +
+                    request.headers['content-type'])
+        return make_message_response("Missing JSON request", 400)
     requestJSON = json.loads(request.data)
     if 'username' not in requestJSON or 'password' not in requestJSON:
         return make_message_response("Missing username or password fields", 400)
@@ -296,16 +298,18 @@ def check_token():
 def removeUser(uname):
     # check if you are the user in question or have Administrative Privileges
 
-    uclaims=get_jwt_claims()
+    uclaims = get_jwt_claims()
     if uname != uclaims['username'] and uclaims['GlobalAdminStatus'] != 1:
-        logger.warning('User : '+ uclaims['username']+ ' tried to remove '+ uname+ '. This Endpoint should not be generally known')
+        logger.warning('User : ' + uclaims['username'] + ' tried to remove ' +
+                       uname + '. This Endpoint should not be generally known')
         return make_message_response("Can only remove self; or requires administrative priviliges. User " + str(uclaims['username']) + " trying to remove " + uname, 401)
     cur = mysql.connection.cursor()
     cur.execute("START TRANSACTION;")
     cur.execute('DELETE FROM t_Users WHERE c_ID_Users=' +
                 str(get_jwt_identity()))
     cur.execute("COMMIT;")
-    logger.warning('Removed User : '+uclaims['username']+' - Was this intended?')
+    logger.warning('Removed User : ' +
+                   uclaims['username'] + ' - Was this intended?')
     return make_response(("", 204, None))
 
 
@@ -319,17 +323,19 @@ def checkApi():
 def chc():
     return checkApi()
 
+
 @application.route('/api/dev/protected')
 @jwt_required
 def protected():
     logger.info('/api/dev/protected Test Run')
     return make_message_response('This is protected', 200)
 
+
 @application.route('/api/dev/optional')
 @jwt_optional
 def optional():
     logger.info('/api/dev/optional Test Run')
-    if get_jwt_identity()==None:
+    if get_jwt_identity() == None:
         return make_message_response('Optional Protection, you had no Token', 200)
     else:
         return make_message_response('Optional Protection, you had a token', 200)
@@ -338,18 +344,18 @@ def optional():
 @application.route('/api/dev/log', methods=['GET'])
 @jwt_required
 def logfile():
-    if get_jwt_claims()['GlobalAdminStatus']==0:
+    if get_jwt_claims()['GlobalAdminStatus'] == 0:
         return jsonify(message="Illegal Non-Admin Operation")
-    
+
     latest = request.args.get('latest')
-    if lates == 'true':
+    if latest == 'true':
         try:
             return send_file(active_logfile, attachment_filename='Mitfahrgelegenheit.log')
-        except Exception as e:
-            return jsonify(exception=str(e))
-   
+        except Exception as ex:
+            return jsonify(exception=str(ex))
 
-#///////////////////////////////////////////////////////////////////////////////////////////////////
+
+#//////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 def make_message_response(string, status):
@@ -371,6 +377,7 @@ def internal_server_error(error):
     return make_json_response({"message": "General Server Error", "Event ID": str(sentry.event_id)}, 500)
 #/////////////////////////////////////////////////////////////////////////////////////////////////
 # Error 404 general handler
+
 
 @application.errorhandler(404)
 def resource_not_found_error(error):
