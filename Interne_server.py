@@ -344,9 +344,11 @@ def optional():
 @application.route('/api/dev/log', methods=['GET'])
 @jwt_required
 def logfile():
+    logger.info('Logfile Request from User: ' + get_jwt_claims()['Username'])
     if get_jwt_claims()['GlobalAdminStatus'] == 0:
         return jsonify(message="Illegal Non-Admin Operation")
 
+    logger.info('Sending Logfile: ' + active_logfile)
     latest = request.args.get('latest')
     if latest == 'true':
         try:
