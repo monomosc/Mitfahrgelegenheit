@@ -10,7 +10,6 @@ from werkzeug.security import safe_str_cmp
 from flask_jwt_extended import (
     JWTManager, jwt_required, create_access_token, get_jwt_identity, get_jwt_claims, jwt_optional)
 import logging
-from logging import TimedRotatingFileHandler
 
 application = Flask(__name__)
 startup=1
@@ -24,8 +23,7 @@ def initialize_log():
     if startup==0:
         logger.removeHandler(log_handler)
     filename= "/var/log/Mitfahrgelegenheit/Mitfahrgelegenheit-"+time.strftime("%d-%m-%y")+".log"
-
-    log_handler=TimedRotatingFileHandler(path=filename,when="D", interval=1, backupCount=0)
+    log_handler=logging.FileHandler(filename)
     log_handler.setLevel(logging.INFO)
     log_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
     logger.addHandler(log_handler)
