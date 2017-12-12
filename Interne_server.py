@@ -33,7 +33,7 @@ log_handler=None
 def initialize_log():
     filename = "/var/log/Mitfahrgelegenheit/Mitfahrgelegenheit-" + \
         time.strftime("%d-%m-%y") + ".log"
-    if not log_handler==None:
+    if not log_handler is None:
         logger.removeHandler(log_handler)
     log_handler = logging.FileHandler(filename)
     log_handler.setLevel(logging.INFO)
