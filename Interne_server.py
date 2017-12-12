@@ -33,8 +33,11 @@ log_handler=None
 def initialize_log():
     filename = "/var/log/Mitfahrgelegenheit/Mitfahrgelegenheit-" + \
         time.strftime("%d-%m-%y") + ".log"
-    if not log_handler is None:
+    try:
         logger.removeHandler(log_handler)
+    except UnboundLocalError as e:
+        pass
+    
     log_handler = logging.FileHandler(filename)
     log_handler.setLevel(logging.INFO)
     log_handler.setFormatter(logging.Formatter(
