@@ -381,13 +381,15 @@ def make_json_response(jsonDictionary, status):
 
 @application.errorhandler(500)
 def internal_server_error(error):
-    return make_json_response({"message": "General Server Error", "Event ID": str(sentry.event_id)}, 500)
+    logger.error("Internal Server Error: "+error)
+    return jsonify(message="Internal Server Error")
 #/////////////////////////////////////////////////////////////////////////////////////////////////
 # Error 404 general handler
 
 
 @application.errorhandler(404)
 def resource_not_found_error(error):
+    logger.warning("404: "+error)
     return make_message_response("Resource does not exist", 404)
 
 
@@ -411,11 +413,13 @@ def user_identity_lookup(user):
 
 @jwt.claims_verification_failed_loader
 def claims_verification_failed_loader():
+    logger.warning("User Claims Verification Failed")
     return make_message_response("User Claims Verification Failed - Probably an Illegal Token", 400)
 
 
 @jwt.expired_token_loader
 def expired_token_loader():
+    logger.info("Someone used an expired Token")
     return jsonify(message="Token Expired")
 
 
@@ -426,14 +430,17 @@ def needs_fresh_token_loader():
 
 @jwt.invalid_token_loader
 def invalid_token_loader(msgstring):
+    logger.warning("Invalid Token: "+msgstring)
     return make_message_response(msgstring, 401)
 
 
 @jwt.revoked_token_loader
 def revoked_token_loader():
+    logger.warning("Someone used a revoked Token")
     return make_message_response("Token has been revoked", 401)
 
 
 @jwt.unauthorized_loader
 def unauthorized_loader(msg):
+    logger.info("Unauthorized Request: "+msg)
     return make_json_response(msg, 401)
