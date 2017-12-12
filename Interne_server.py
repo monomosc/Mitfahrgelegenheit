@@ -389,7 +389,7 @@ def internal_server_error(error):
 
 @application.errorhandler(404)
 def resource_not_found_error(error):
-    logger.warning("404: "+error)
+    logger.warning("404: error")
     return make_message_response("Resource does not exist", 404)
 
 
