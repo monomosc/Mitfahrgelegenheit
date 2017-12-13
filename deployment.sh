@@ -8,6 +8,6 @@
 
 
 
-systemctl daemon-reload
-systemctl restart uwsgi_Mitfahrgelegenheit
-systemctl restart nginx
+sudo systemctl daemon-reload
+sudo systemctl restart uwsgi_Mitfahrgelegenheit
+sudo systemctl restart nginx
