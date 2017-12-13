@@ -1,4 +1,5 @@
 # Moritz Basel - interne_server.py
+# Version 0.0.1
 from flask import Flask, request, send_from_directory, make_response, redirect, jsonify, send_file
 
 from flask_mysqldb import MySQL
