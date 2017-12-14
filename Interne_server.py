@@ -26,9 +26,8 @@ logger = logging.getLogger(__name__)
 scheduler = BackgroundScheduler()
 scheduler.start()
 
-log_handler=None
+log_handler = None
 # LOGGING INITIALIZER
-
 
 
 def initialize_log():
@@ -38,7 +37,7 @@ def initialize_log():
         logger.removeHandler(log_handler)
     except UnboundLocalError as e:
         pass
-    
+
     log_handler = logging.FileHandler(filename)
     log_handler.setLevel(logging.INFO)
     log_handler.setFormatter(logging.Formatter(
@@ -66,7 +65,6 @@ if __name__ == "__main__":
     sentry = Sentry(
         application, dsn='https://6ac6c6188eb6499fa2967475961a03ca:2f617eada90f478bb489cd4cf2c50663@sentry.io/232283')
     application.run(host='127.0.0.1')
-
 
 
 #CLASS: USER
@@ -131,6 +129,8 @@ NOUSER = User(id=0, username=None, password=None, email=None,
 
 #CLASS: APPOINTMENT
 #///////////////////////////////////////////////////////////////////////////////////////////////////
+
+
 class Appointment(object):
     "Object to Entity Appointment in Database"
     # Fields:
@@ -139,8 +139,8 @@ class Appointment(object):
     #endLocation: string
     #time : datetime            // TBD
     #repeatPeriodDays : int
-    #owningOrganization  : int       //Foreign (unused) key to an organizaztion
-    #userDriverDic : dict            // JSON Dict, syntax:
+    # owningOrganization  : int       //Foreign (unused) key to an organizaztion
+    # userDriverDic : dict            // JSON Dict, syntax:
     # "Guaranteed Drivers" :
     # [id, id, id, id, ...],
     # "Possible Drivers" :
@@ -148,39 +148,34 @@ class Appointment(object):
     # "Passengers :
     # [id, id, id, id, ..]
 
-
     def __init__(self, id, startLocation, endLocation, time, repeatPeriodDays, owningOrganization, userDriverDict):
-        self.id=id
-        self.startLocation=startLocation
-        self.endLocation=endLocation
-        self.time=time
-        self.repeatPeriodDays=repeatPeriodDays
-        self.owningOrganization=owningOrganization
-        self.userDriverDict=userDriverDict
+        self.id = id
+        self.startLocation = startLocation
+        self.endLocation = endLocation
+        self.time = time
+        self.repeatPeriodDays = repeatPeriodDays
+        self.owningOrganization = owningOrganization
+        self.userDriverDict = userDriverDict
 
     @staticmethod
-    def loadAppointment(id)
-    cur=mysql.connection.cursor()
-    cur.execute (
-        "SELECT * FROM t_Appointments WHERE c_id_Appointments ? '" + id +"';"
-    )
-    data=cur.fetchall()
-    startLocation=data[0][1]
-    endLocation=data[0][2]
-    time=data[0][3]
-    repeatPeriodDays=data[0][4]
-    userDriverDict={}
-    
-    cur.execute (
-        "SELECT * FROM t_relation_Users_TakesPart_Appointments  \
-        JOIN t_Users ON (t_relation_Users_TakesPart_Appointments.c_ID_users = t_Users.c_ID_Users) \
-        WHERE c_ID_appointments = '"+id+""';"
-    )
+    def loadAppointment(id):
+        cur = mysql.connection.cursor()
+        cur.execute(
+            "SELECT * FROM t_Appointments WHERE c_id_Appointments ? '" + id + "';"
+            )
+        data = cur.fetchall()
+        startLocation = data[0][1]
+        endLocation = data[0][2]
+        time = data[0][3]
+        repeatPeriodDays = data[0][4]
+        userDriverDict = {}
 
-
-
-
-
+        cur.execute(
+            "SELECT * FROM t_relation_Users_TakesPart_Appointments  \
+            JOIN t_Users ON (t_relation_Users_TakesPart_Appointments.c_ID_users = t_Users.c_ID_Users) \
+            WHERE c_ID_appointments = '" + id + ""'
+            "
+        )
 
 
 # DYNAMIC PART - REST-API
@@ -253,7 +248,7 @@ def user_profileByID(u_id):  # Profile itself NYI
         if get_jwt_identity() != u_id:
             return jsonify(message="Not allowed", status=401)
 
-    user=loadUser(u_id)
+    user = loadUser(u_id)
     logger.info("Userprofile for User: " + user.username)
 
     # get user data from mysql db and return it
@@ -288,7 +283,10 @@ def appointment_data(appointmentID):
                 " accessing appointment: " + str(appointmentID))
     return make_message_response("Appointments not yet implemented", 500)
 
+
 14
+
+
 @application.route('/api/users', methods=['GET'])  # TODO: Write Test
 @jwt_required
 def users():
@@ -436,7 +434,7 @@ def make_json_response(jsonDictionary, status):
 
 @application.errorhandler(500)
 def internal_server_error(error):
-    logger.error("Internal Server Error: "+error)
+    logger.error("Internal Server Error: " + error)
     return jsonify(message="Internal Server Error")
 #/////////////////////////////////////////////////////////////////////////////////////////////////
 # Error 404 general handler
@@ -485,7 +483,7 @@ def needs_fresh_token_loader():
 
 @jwt.invalid_token_loader
 def invalid_token_loader(msgstring):
-    logger.warning("Invalid Token: "+msgstring)
+    logger.warning("Invalid Token: " + msgstring)
     return make_message_response(msgstring, 401)
 
 
@@ -497,5 +495,5 @@ def revoked_token_loader():
 
 @jwt.unauthorized_loader
 def unauthorized_loader(msg):
-    logger.info("Unauthorized Request: "+msg)
+    logger.info("Unauthorized Request: " + msg)
     return make_json_response(msg, 401)
