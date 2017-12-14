@@ -173,9 +173,7 @@ class Appointment(object):
         cur.execute(
             "SELECT * FROM t_relation_Users_TakesPart_Appointments  \
             JOIN t_Users ON (t_relation_Users_TakesPart_Appointments.c_ID_users = t_Users.c_ID_Users) \
-            WHERE c_ID_appointments = '" + id + ""'
-            "
-        )
+            WHERE c_ID_appointments = '" + id + "'")
 
 
 # DYNAMIC PART - REST-API
