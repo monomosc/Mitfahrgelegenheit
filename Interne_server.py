@@ -129,6 +129,59 @@ class User(object):
 NOUSER = User(id=0, username=None, password=None, email=None,
               phoneNumber=None, globalAdminStatus=None)
 
+#CLASS: APPOINTMENT
+#///////////////////////////////////////////////////////////////////////////////////////////////////
+class Appointment(object):
+    "Object to Entity Appointment in Database"
+    # Fields:
+    #id : int
+    #startLocation : string
+    #endLocation: string
+    #time : datetime            // TBD
+    #repeatPeriodDays : int
+    #owningOrganization  : int       //Foreign (unused) key to an organizaztion
+    #userDriverDic : dict            // JSON Dict, syntax:
+    # "Guaranteed Drivers" :
+    # [id, id, id, id, ...],
+    # "Possible Drivers" :
+    # [id, id, id, id, id, ....],
+    # "Passengers :
+    # [id, id, id, id, ..]
+
+
+    def __init__(self, id, startLocation, endLocation, time, repeatPeriodDays, owningOrganization, userDriverDict):
+        self.id=id
+        self.startLocation=startLocation
+        self.endLocation=endLocation
+        self.time=time
+        self.repeatPeriodDays=repeatPeriodDays
+        self.owningOrganization=owningOrganization
+        self.userDriverDict=userDriverDict
+
+    @staticmethod
+    def loadAppointment(id)
+    cur=mysql.connection.cursor()
+    cur.execute (
+        "SELECT * FROM t_Appointments WHERE c_id_Appointments ? '" + id +"';"
+    )
+    data=cur.fetchall()
+    startLocation=data[0][1]
+    endLocation=data[0][2]
+    time=data[0][3]
+    repeatPeriodDays=data[0][4]
+    userDriverDict={}
+    
+    cur.execute (
+        "SELECT * FROM t_relation_Users_TakesPart_Appointments  \
+        JOIN t_Users ON (t_relation_Users_TakesPart_Appointments.c_ID_users = t_Users.c_ID_Users) \
+        WHERE c_ID_appointments = '"+id+""';"
+    )
+
+
+
+
+
+
 
 # DYNAMIC PART - REST-API
 #///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -198,12 +251,14 @@ def user_profileByID(u_id):  # Profile itself NYI
         return make_message_response("Cannot be accessed by Anon User", 401)
     if (get_jwt_claims()['GlobalAdminStatus'] != 1):
         if get_jwt_identity() != u_id:
-            return make_message_response('Not allowed', 403)
+            return jsonify(message="Not allowed", status=401)
 
-    logger.info("Userprofile for User: ")
+    user=loadUser(u_id)
+    logger.info("Userprofile for User: " + user.username)
+
     # get user data from mysql db and return it
     # this will probably take the form of a JSON list of appointments
-    return make_message_response("Not yet implemented", 500)
+    return jsonify(message="Not yet Implemented")
 
 
 @application.route('/api/users/<string:user_name>', methods=['GET'])
