@@ -28,6 +28,7 @@ wheels/
 .installed.cfg
 *.egg
 
+
 # PyInstaller
 #  Usually these files are written by a python script from a template
 #  before PyInstaller builds the exe, so as to inject date/other infos into it.
@@ -433,3 +434,5 @@ modules.xml
 # End of https://www.gitignore.io/api/python,windows,visualstudiocode
 .idea/vcs.xml
 .vscode/settings.json
+
+testfile.py
