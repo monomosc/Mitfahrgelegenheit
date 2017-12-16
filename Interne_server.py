@@ -409,10 +409,11 @@ def logfile():
     latest = request.args.get('latest')
     if latest == 'true':
         try:
-            return send_file(filename, attachment_filename='Mitfahrgelegenheit.log')
+            str = open(filename, 'r').read()
+            return jsonify(log=str, status=200)
         except Exception as ex:
             return jsonify(exception=str(ex))
-    return make_message_response("Only ?latest=true allowed", 422)
+    return jsonify(message="Only ?latest=true allowed", status=422)
 
 #//////////////////////////////////////////////////////////////////////////////////////////////////
 
