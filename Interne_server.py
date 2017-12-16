@@ -247,7 +247,7 @@ def user_profileByID(u_id):  # Profile itself NYI
         if get_jwt_identity() != u_id:
             return jsonify(message="Not allowed", status=401)
 
-    user = loadUser(u_id)
+    user = User.loadUser(u_id)
     logger.info("Userprofile for User: " + user.username)
 
     # get user data from mysql db and return it
@@ -275,7 +275,7 @@ def appointment_data(appointmentID):
                     get_jwt_identity() + "' AND 'c_ID_Organizations' = '" + appointmentID + "';")
         data = cur.fetchall()
         if (data == 0):
-            return make_message_response("Either the Appointment does not exist or you are not a part of its Organization")
+            return make_message_response("Either the Appointment does not exist or you are not a part of its Organization", status=404)
 
     uclaims = get_jwt_claims()
     logger.info("User: " + uclaims['username'] +
