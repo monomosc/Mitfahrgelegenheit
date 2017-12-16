@@ -232,7 +232,7 @@ def signup():
     cursor.execute("COMMIT;")
 
     # Respond 201 CREATED
-    return make_response("User " + requestJSON['username'] + " created", 201,  {'content-type': 'application/json', 'Location': ['/api/auth', '/api/users/' + requestJSON['username']]})
+    return jsonify(message="User " + requestJSON['username'] + " created", status_code=201)
 
 
 @application.route('/api/users/<int:u_id>', methods=['GET'])
@@ -409,8 +409,8 @@ def logfile():
     latest = request.args.get('latest')
     if latest == 'true':
         try:
-            str = open(filename, 'r').read()
-            return jsonify(log=str, time = time.strftime("%d-%m-%y"), status=200)
+            logstr = open(filename, 'r').read()
+            return jsonify(log=logstr, time = time.strftime("%d-%m-%y"), status=200)
         except Exception as ex:
             return jsonify(exception=str(ex))
     return jsonify(message="Only ?latest=true allowed", status=422)
