@@ -10,7 +10,7 @@ import time
 import atexit
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers import cron
-from flask_cors import CORS
+#from flask_cors import CORS
 
 from werkzeug.security import safe_str_cmp
 from flask_jwt_extended import (
@@ -19,7 +19,7 @@ import logging
 
 
 application = Flask(__name__)
-CORS(application)
+#CORS(application)
 
 jwt = JWTManager(application)
 mysql = MySQL(application)
