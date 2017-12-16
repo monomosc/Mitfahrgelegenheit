@@ -19,7 +19,7 @@ import logging
 
 
 application = Flask(__name__)
-CORS(app)
+CORS(application)
 
 jwt = JWTManager(application)
 mysql = MySQL(application)
