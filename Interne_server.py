@@ -327,8 +327,8 @@ def authenticate_and_return_accessToken():
         if check_password_hash(thisuser.password, requestJSON['password']):
             # authentication OK!
             logger.info('Access token created for ' + requestJSON['username'])
-            access_token = create_access_token(identity=thisuser)
-            return make_json_response({'access_token': access_token}, 200)
+            token = create_access_token(identity=thisuser)
+            jsonify(access_token = token, username = thisuser.username, email = thisuser.email, globalAdminStatus = thisuser.globalAdminStatus, phoneNumber = thisuser.phoneNumber, status_code = 200)
         else:
             return make_message_response("Invalid Username or Password", 401)
     else:
