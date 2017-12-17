@@ -23,7 +23,10 @@ Dennoch besteht die Möglichkeit, dass einzelne Spezialfälle (noch) nicht abged
 \subsection{Terminologie}
 \textbf{Endpoints} bezeichnen eine spezifische (z.b. \url{/api/check_api} oder gruppierte (z.B. \url{/api/users/<uid>}) URIs
 \subsection{Allgemeines}
-Alle Endpunkte lesen und schreiben ausschließlich JSON. Der Content-Type in jedem Http-Request-Header muss als 'application/json' vorliegen.
+Alle Endpunkte lesen und schreiben ausschließlich JSON. Der Content-Type in jedem Http-Request-Header muss als 'application/json' vorliegen.\\
+Für Endpunkte, bei denen Autorisierung nötig ist, wird diese erbracht, indem der Http-Header 'Authorization' gesetzt ist und den Access-Token der von \url{/api/auth} erhalten wurde, in folgender Form enthält\\
+'Authorization' : 'Bearer ey................', z.B.:\\
+'Authorization' : 'Bearer eyJhbGciOiJI.3u4zudusua.asudfuu23'
 
 \section{User-Management}
 \subsection{Überblick}
