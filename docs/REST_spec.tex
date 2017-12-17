@@ -49,7 +49,8 @@ Nötige JSON-Einträge:
 \subsection{\textbf{GET} /api/users/<UID>}
 Agiert wie erwartet. Nur der Benutzer selbst sowie Globale Administratoren haben Zugriffsrechte.
 \subsection{\textbf{POST} /api/auth}
-Gibt den Login-Token im JSON-Eintrag 'access\_token' zurück. Dieser muss bei Zugriffen auf geschützte http-Endpunkte im Header-Feld 'Authorization' in allen Requests mitgegeben werden.
+Gibt den Login-Token im JSON-Eintrag 'access\_token' zurück. Dieser muss bei Zugriffen auf geschützte http-Endpunkte im Header-Feld 'Authorization' in allen Requests mitgegeben werden.\\
+Außerdem werden alle Nutzerdaten in den Feldern 'username', 'email', 'phoneNumber', 'globalAdminStatus' versendet. Dies wird nur zur Unterstützung getan, da im JWT Body alle Felder in Base64 vorhanden sind.
 \section{Appointment-Funktionalitäten}
 \subsection{Überblick}
 \begin{tabular}{|c|c|}
