@@ -328,7 +328,7 @@ def authenticate_and_return_accessToken():
             # authentication OK!
             logger.info('Access token created for ' + requestJSON['username'])
             token = create_access_token(identity=thisuser)
-            jsonify(access_token = token, username = thisuser.username, email = thisuser.email, globalAdminStatus = thisuser.globalAdminStatus, phoneNumber = thisuser.phoneNumber, status_code = 200)
+            return jsonify(access_token = token, username = thisuser.username, email = thisuser.email, globalAdminStatus = thisuser.globalAdminStatus, phoneNumber = thisuser.phoneNumber, status_code = 200)
         else:
             return make_message_response("Invalid Username or Password", 401)
     else:
