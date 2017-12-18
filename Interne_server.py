@@ -10,7 +10,7 @@ import time
 import atexit
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers import cron
-#from flask_cors import CORS
+
 
 from werkzeug.security import safe_str_cmp
 from flask_jwt_extended import (
@@ -19,7 +19,7 @@ import logging
 
 
 application = Flask(__name__)
-#CORS(application)
+
 
 jwt = JWTManager(application)
 mysql = MySQL(application)
@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 scheduler = BackgroundScheduler()
 scheduler.start()
 
-log_handler = None
+log_handler = logging.FileHandler('/var/log/Emergency_Logging.log')
 # LOGGING INITIALIZER
 
 
@@ -36,7 +36,7 @@ def initialize_log():
         time.strftime("%d-%m-%y") + ".log"
     try:
         logger.removeHandler(log_handler)
-    except UnboundLocalError as e:
+    except UnboundLocalError:
         pass
 
     log_handler = logging.FileHandler(filename)
@@ -45,7 +45,7 @@ def initialize_log():
         '%(asctime)s - %(levelname)s - %(message)s'))
     logger.addHandler(log_handler)
     logger.setLevel(logging.INFO)
-    logger.info("Initialized logging to "+filename+".")
+    logger.info("Initialized logging to " + filename + ".")
 
 
 if not application.debug and not application.testing:
@@ -58,10 +58,11 @@ if not application.debug and not application.testing:
                       replace_existing=True)
 
 
-if application.debug or application.testing:                            #Testing somehow, loading config from working directory
+if application.debug or application.testing:  # Testing somehow, loading config from working directory
     application.config.from_object('./Mitfahrgelegenheit.debug.conf')
 else:
-    application.config.from_envvar('MITFAHRGELEGENHEIT_SETTINGS')       #Not Testing ot Debugging, loading config from Environment variable
+    # Not Testing ot Debugging, loading config from Environment variable
+    application.config.from_envvar('MITFAHRGELEGENHEIT_SETTINGS')
 
 
 if __name__ == "__main__":
@@ -84,8 +85,8 @@ class User(object):
     # phoneNumber            //Phone Number
     # globalAdminStatus      //Global Admin Status, currently 0 or 1
 
-    def __init__(self, id, username, password, email, phoneNumber, globalAdminStatus):
-        self.id = id
+    def __init__(self, uid, username, password, email, phoneNumber, globalAdminStatus):
+        self.id = uid
         self.username = username
         self.password = password
         self.email = email
@@ -127,7 +128,7 @@ class User(object):
 
 
 # Generic Return Code that is checked against indicating failure
-NOUSER = User(id=0, username=None, password=None, email=None,
+NOUSER = User(uid=0, username=None, password=None, email=None,
               phoneNumber=None, globalAdminStatus=None)
 
 #CLASS: APPOINTMENT
@@ -161,11 +162,11 @@ class Appointment(object):
         self.userDriverDict = userDriverDict
 
     @staticmethod
-    def loadAppointment(id):
+    def loadAppointment(aid):
         cur = mysql.connection.cursor()
         cur.execute(
-            "SELECT * FROM t_Appointments WHERE c_id_Appointments ? '" + id + "';"
-            )
+            "SELECT * FROM t_Appointments WHERE c_id_Appointments ? '" + aid + "';"
+        )
         data = cur.fetchall()
         startLocation = data[0][1]
         endLocation = data[0][2]
@@ -176,7 +177,7 @@ class Appointment(object):
         cur.execute(
             "SELECT * FROM t_relation_Users_TakesPart_Appointments  \
             JOIN t_Users ON (t_relation_Users_TakesPart_Appointments.c_ID_users = t_Users.c_ID_Users) \
-            WHERE c_ID_appointments = '" + id + "'")
+            WHERE c_ID_appointments = '" + aid + "'")
 
 
 # DYNAMIC PART - REST-API
@@ -330,7 +331,7 @@ def authenticate_and_return_accessToken():
             # authentication OK!
             logger.info('Access token created for ' + requestJSON['username'])
             token = create_access_token(identity=thisuser)
-            return jsonify(access_token = token, username = thisuser.username, email = thisuser.email, globalAdminStatus = thisuser.globalAdminStatus, phoneNumber = thisuser.phoneNumber, status_code = 200)
+            return jsonify(access_token=token, username=thisuser.username, email=thisuser.email, globalAdminStatus=thisuser.globalAdminStatus, phoneNumber=thisuser.phoneNumber, status_code=200)
         else:
             return make_message_response("Invalid Username or Password", 401)
     else:
@@ -412,7 +413,7 @@ def logfile():
     if latest == 'true':
         try:
             logstr = open(filename, 'r').read()
-            return jsonify(log=logstr, time = time.strftime("%d-%m-%y"), status=200)
+            return jsonify(log=logstr, time=time.strftime("%d-%m-%y"), status=200)
         except Exception as ex:
             return jsonify(exception=str(ex))
     return jsonify(message="Only ?latest=true allowed", status=422)
