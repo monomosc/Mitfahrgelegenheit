@@ -58,10 +58,10 @@ if not application.debug and not application.testing:
                       replace_existing=True)
 
 
-if application.debug or application.testing:
+if application.debug or application.testing:                            #Testing somehow, loading config from working directory
     application.config.from_object('./Mitfahrgelegenheit.debug.conf')
 else:
-    application.config.from_envvar('MITFAHRGELEGENHEIT_SETTINGS')
+    application.config.from_envvar('MITFAHRGELEGENHEIT_SETTINGS')       #Not Testing ot Debugging, loading config from Environment variable
 
 
 if __name__ == "__main__":
