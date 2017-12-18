@@ -45,12 +45,14 @@ def initialize_log():
         '%(asctime)s - %(levelname)s - %(message)s'))
     logger.addHandler(log_handler)
     logger.setLevel(logging.INFO)
+    logger.info("Initialized logging to "+filename+".")
 
 
 if not application.debug and not application.testing:
     initialize_log()
+    logger.info('Initialized Log after Startup, setting CronTrigger')
     scheduler.add_job(func=initialize_log,
-                      trigger=cron.CronTrigger(hour=0),
+                      trigger=cron.CronTrigger(hour=1),
                       id='Logger_Restart',
                       name='Change the logger file every day',
                       replace_existing=True)
