@@ -56,7 +56,7 @@ if not application.debug and not application.testing:
     logger.info('Initialized Log after Startup, setting CronTrigger')
     today=datetime.datetime.today()
     tomorrow=today+datetime+timedelta(days=1)
-    scheduler.add_job(func=initialize_log,
+    scheduler.add_job(initialize_log,
                       'datetime',
                       run_date=datetime.combine(date=tomorrow, time=time(hour=0, minute=0, second=1, microsecond=0)))
 
