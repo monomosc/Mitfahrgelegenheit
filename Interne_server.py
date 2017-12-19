@@ -6,8 +6,7 @@ from flask_mysqldb import MySQL
 from raven.contrib.flask import Sentry
 from werkzeug import generate_password_hash, check_password_hash
 from flask import json
-import time, datetime
-import atexit
+from datetime import time, timedelta, datetime
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers import cron
 
@@ -48,7 +47,7 @@ def initialize_log():
     logger.info("Initialized logging to " + filename + ".")
     scheduler.add_job(initialize_log,
                       'datetime',
-                      run_date=datetime.combine(date=tomorrow, time=time(hour=0, minute=0, second=1, microsecond=0)))
+                      run_date=tomorrow.combine(date=tomorrow, time=datetime.time(hour=0, minute=0, second=1, microsecond=0)))
 
 
 if not application.debug and not application.testing:
@@ -58,7 +57,7 @@ if not application.debug and not application.testing:
     tomorrow=today+datetime+timedelta(days=1)
     scheduler.add_job(initialize_log,
                       'datetime',
-                      run_date=datetime.combine(date=tomorrow, time=time(hour=0, minute=0, second=1, microsecond=0)))
+                      run_date=tomorrow.combine(date=tomorrow, time=time(hour=0, minute=0, second=1, microsecond=0)))
 
 
 
