@@ -7,6 +7,7 @@ from raven.contrib.flask import Sentry
 from werkzeug import generate_password_hash, check_password_hash
 from flask import json
 from datetime import time, timedelta, datetime
+from time import strftime
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers import cron
 
@@ -411,7 +412,7 @@ def logfile():
         return jsonify(message="Illegal Non-Admin Operation")
 
     filename = "/var/log/Mitfahrgelegenheit/Mitfahrgelegenheit-" + \
-        time.strftime(format="%d-%m-%y", t=datetime.now()) + ".log"
+        time.strftime('%d-%m-%y') + ".log"
     logger.info('Sending Logfile: ' + filename)
     latest = request.args.get('latest')
     if latest == 'true':
