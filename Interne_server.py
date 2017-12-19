@@ -210,7 +210,7 @@ def signup():
         testuser = User.loadUser(username=requestJSON['username'])
         if testuser != NOUSER:
             return make_message_response("User already exists", 409)
-    except Exception as ex:
+    except Exception:
         sentry.captureException()
         return make_message_response("Unknown Server Error, The Sentry Error Code is: " + sentry_event_id, 500)
 
@@ -275,7 +275,7 @@ def appointment_data(appointmentID):
         uid = get_jwt_identity()
         cur = mysql.connection.cursor()
         cur.execute("SELECT EXISTS(SELECT 1 FROM t_relation_Users_isAPartOf_Organization WHERE 'c_ID_Users' = '" +
-                    get_jwt_identity() + "' AND 'c_ID_Organizations' = '" + appointmentID + "';")
+                    uid + "' AND 'c_ID_Organizations' = '" + appointmentID + "';")
         data = cur.fetchall()
         if (data == 0):
             return make_message_response("Either the Appointment does not exist or you are not a part of its Organization", status=404)
@@ -310,7 +310,7 @@ def users():
     for i in (0, amount - 1):
         returnList[i] = {'id': data[i][5], 'username': data[i]
                          [0], 'email': data[i][2], 'phoneNumber': data[i][3]}
-    return make_json_response(returnList, 200)
+    return jsonify(returnList, status_code=200)
 
 
 @application.route('/api/auth', methods=['POST'])  # complete, Test Complete
