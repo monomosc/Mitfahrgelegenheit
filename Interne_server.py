@@ -46,6 +46,8 @@ def initialize_log():
     logger.addHandler(log_handler)
     logger.setLevel(logging.INFO)
     logger.info("Initialized logging to " + filename + ".")
+    today=datetime.datetime.today()
+    tomorrow=today+datetime+timedelta(days=1)
     scheduler.add_job(initialize_log,
                       'datetime',
                       run_date=tomorrow.combine(date=tomorrow, time=datetime.time(hour=0, minute=0, second=1, microsecond=0)))
