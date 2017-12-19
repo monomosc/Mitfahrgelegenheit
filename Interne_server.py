@@ -419,7 +419,7 @@ def logfile():
     if latest == 'true':
         try:
             logstr = open(filename, 'r').read()
-            return jsonify(log=logstr, time=time.strftime("%d-%m-%y"), status=200)
+            return jsonify(log=logstr, time=now.strftime("%d-%m-%y"), status=200)
         except Exception as ex:
             return jsonify(exception=str(ex))
     return jsonify(message="Only ?latest=true allowed", status=422)
