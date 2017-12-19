@@ -9,5 +9,5 @@
 
 
 sudo systemctl daemon-reload
-sudo systemctl restart uwsgi_Mitfahrgelegenheit
+touch /tmp/uwsgi_reload
 sudo systemctl restart nginx
