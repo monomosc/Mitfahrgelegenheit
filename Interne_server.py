@@ -182,6 +182,30 @@ class Appointment(object):
 
 # DYNAMIC PART - REST-API
 #///////////////////////////////////////////////////////////////////////////////////////////////////
+@application.route('/api/users', methods=['GET'])  # TODO: Write Test
+@jwt_required
+def users():
+    if get_jwt_claims()['GlobalAdminStatus'] != 1:
+        return make_message_response("Not allowed", 403)
+
+    offset = 1
+    amount = 10
+    if 'offset' in request.args:
+        offset = request.args['offset']
+    if 'amount' in request.args:
+        amount = request.args['amount']
+
+    cursor = mysql.connection.cursor()
+    cursor.execute("SELECT * FROM t_Users LIMIT " +
+                   str(offset), "," + str(amount) + ";")
+    logger.info('Selecting all users from N'+str(offset)+', numbering '+str(amount))
+    data = cursor.fetchall()
+    returnList = []
+    for i in (0, amount - 1):
+        returnList[i] = {'id': data[i][5], 'username': data[i]
+                         [0], 'email': data[i][2], 'phoneNumber': data[i][3]}
+    return jsonify(returnList, status_code=200)
+
 @application.route('/api/users', methods=['POST'])  # Complete, Test complete
 def signup():
     "The Endpoint URI for signing up. Takes email, username and password JSON returns 201 on success"
@@ -285,32 +309,6 @@ def appointment_data(appointmentID):
                 " accessing appointment: " + str(appointmentID))
     return make_message_response("Appointments not yet implemented", 500)
 
-
-14
-
-
-@application.route('/api/users', methods=['GET'])  # TODO: Write Test
-@jwt_required
-def users():
-    if get_jwt_claims()['GlobalAdminStatus'] != 1:
-        return make_message_response("Not allowed", 403)
-
-    offset = 1
-    amount = 10
-    if 'offset' in request.args:
-        offset = request.args['offset']
-    if 'amount' in request.args:
-        amount = request.args['amount']
-
-    cursor = mysql.connection.cursor()
-    cursor.execute("SELECT * FROM t_Users LIMIT " +
-                   str(offset), "," + str(amount) + ";")
-    data = cursor.fetchall()
-    returnList = []
-    for i in (0, amount - 1):
-        returnList[i] = {'id': data[i][5], 'username': data[i]
-                         [0], 'email': data[i][2], 'phoneNumber': data[i][3]}
-    return jsonify(returnList, status_code=200)
 
 
 @application.route('/api/auth', methods=['POST'])  # complete, Test Complete
