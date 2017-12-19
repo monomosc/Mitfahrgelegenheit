@@ -57,7 +57,7 @@ if not application.debug and not application.testing:
     today=datetime.datetime.today()
     tomorrow=today+datetime+timedelta(days=1)
     scheduler.add_job(func=initialize_log,
-                      'date',
+                      'datetime',
                       run_date=datetime.combine(date=tomorrow, time=time(hour=0, minute=0, second=1, microsecond=0)))
 
 
