@@ -411,7 +411,7 @@ def logfile():
         return jsonify(message="Illegal Non-Admin Operation")
 
     filename = "/var/log/Mitfahrgelegenheit/Mitfahrgelegenheit-" + \
-        time.strftime("%d-%m-%y") + ".log"
+        time.strftime(format="%d-%m-%y", t=datetime.now()) + ".log"
     logger.info('Sending Logfile: ' + filename)
     latest = request.args.get('latest')
     if latest == 'true':
