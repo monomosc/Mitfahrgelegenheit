@@ -71,7 +71,9 @@ else:
     # Not Testing ot Debugging, loading config from Environment variable
     application.config.from_envvar('MITFAHRGELEGENHEIT_SETTINGS')
 
-
+logger.info('-------- STARTING UP --------')
+logger.info('Appliction is in ' + ('TEST' if application.testing else 'NON-TEST') + 'mode')
+logger.info('Application is in ' + ('DEBUG' if application.debug else 'NON-DEBUG') + 'mode')
 if __name__ == "__main__":
     sentry = Sentry(
         application, dsn='https://6ac6c6188eb6499fa2967475961a03ca:2f617eada90f478bb489cd4cf2c50663@sentry.io/232283')
