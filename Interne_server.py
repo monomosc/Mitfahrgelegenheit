@@ -7,6 +7,7 @@ from raven.contrib.flask import Sentry
 from werkzeug import generate_password_hash, check_password_hash
 from flask import json
 from datetime import time, timedelta, datetime
+from time import strftime
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers import cron
 
@@ -70,7 +71,9 @@ else:
     # Not Testing ot Debugging, loading config from Environment variable
     application.config.from_envvar('MITFAHRGELEGENHEIT_SETTINGS')
 
-
+logger.info('-------- STARTING UP --------')
+logger.info('Appliction is in ' + ('TEST' if application.testing else 'NON-TEST') + ' mode')
+logger.info('Application is in ' + ('DEBUG' if application.debug else 'NON-DEBUG') + ' mode')
 if __name__ == "__main__":
     sentry = Sentry(
         application, dsn='https://6ac6c6188eb6499fa2967475961a03ca:2f617eada90f478bb489cd4cf2c50663@sentry.io/232283')
@@ -410,14 +413,15 @@ def logfile():
     if get_jwt_claims()['GlobalAdminStatus'] == 0:
         return jsonify(message="Illegal Non-Admin Operation")
 
+    now=datetime.now()
     filename = "/var/log/Mitfahrgelegenheit/Mitfahrgelegenheit-" + \
-        time.strftime("%d-%m-%y") + ".log"
+        now.strftime('%d-%m-%y') + ".log"
     logger.info('Sending Logfile: ' + filename)
     latest = request.args.get('latest')
     if latest == 'true':
         try:
             logstr = open(filename, 'r').read()
-            return jsonify(log=logstr, time=time.strftime("%d-%m-%y"), status=200)
+            return jsonify(log=logstr, time=now.strftime("%d-%m-%y"), status=200)
         except Exception as ex:
             return jsonify(exception=str(ex))
     return jsonify(message="Only ?latest=true allowed", status=422)
