@@ -46,20 +46,20 @@ def initialize_log():
     logger.addHandler(log_handler)
     logger.setLevel(logging.INFO)
     logger.info("Initialized logging to " + filename + ".")
-    today=datetime.datetime.today()
-    tomorrow=today+datetime+timedelta(days=1)
+    today=datetime.today()
+    tomorrow=today+timedelta(days=1)
     scheduler.add_job(initialize_log,
-                      'datetime',
-                      run_date=tomorrow.combine(date=tomorrow, time=datetime.time(hour=0, minute=0, second=1, microsecond=0)))
+                      'date',
+                      run_date=tomorrow.combine(date=tomorrow, time=time(hour=0, minute=0, second=1, microsecond=0)))
 
 
 if not application.debug and not application.testing:
     initialize_log()
     logger.info('Initialized Log after Startup, setting CronTrigger')
-    today=datetime.datetime.today()
-    tomorrow=today+datetime+timedelta(days=1)
+    today=datetime.today()
+    tomorrow=today+timedelta(days=1)
     scheduler.add_job(initialize_log,
-                      'datetime',
+                      'date',
                       run_date=tomorrow.combine(date=tomorrow, time=time(hour=0, minute=0, second=1, microsecond=0)))
 
 
