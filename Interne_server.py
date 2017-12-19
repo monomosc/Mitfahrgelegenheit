@@ -6,7 +6,7 @@ from flask_mysqldb import MySQL
 from raven.contrib.flask import Sentry
 from werkzeug import generate_password_hash, check_password_hash
 from flask import json
-import time
+import time, datetime
 import atexit
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers import cron
@@ -46,16 +46,20 @@ def initialize_log():
     logger.addHandler(log_handler)
     logger.setLevel(logging.INFO)
     logger.info("Initialized logging to " + filename + ".")
+    scheduler.add_job(func=initialize_log,
+                      'date',
+                      run_date=datetime.combine(date=tomorrow, time=time(hour=0, minute=0, second=1, microsecond=0)))
 
 
 if not application.debug and not application.testing:
     initialize_log()
     logger.info('Initialized Log after Startup, setting CronTrigger')
+    today=datetime.datetime.today()
+    tomorrow=today+datetime+timedelta(days=1)
     scheduler.add_job(func=initialize_log,
-                      trigger=cron.CronTrigger(hour=1),
-                      id='Logger_Restart',
-                      name='Change the logger file every day',
-                      replace_existing=True)
+                      'date',
+                      run_date=datetime.combine(date=tomorrow, time=time(hour=0, minute=0, second=1, microsecond=0)))
+
 
 
 if application.debug or application.testing:  # Testing somehow, loading config from working directory
