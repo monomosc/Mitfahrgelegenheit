@@ -411,8 +411,9 @@ def logfile():
     if get_jwt_claims()['GlobalAdminStatus'] == 0:
         return jsonify(message="Illegal Non-Admin Operation")
 
+    now=datetime.now()
     filename = "/var/log/Mitfahrgelegenheit/Mitfahrgelegenheit-" + \
-        time.strftime('%d-%m-%y') + ".log"
+        now.strftime('%d-%m-%y') + ".log"
     logger.info('Sending Logfile: ' + filename)
     latest = request.args.get('latest')
     if latest == 'true':
