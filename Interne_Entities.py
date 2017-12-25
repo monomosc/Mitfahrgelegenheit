@@ -20,10 +20,10 @@ class User(SQLBase):
     # globalAdminStatus      //Global Admin Status, currently 0 or 1
     __tablename__ = 'users'
     id = Column(Integer, primary_key = True)
-    username = Column(String)
-    password = Column(String)
-    email = Column(String)
-    phoneNumber = Column(String)
+    username = Column(String(50))
+    password = Column(String(255))
+    email = Column(String(100))
+    phoneNumber = Column(String(40))
     globalAdminStatus = Column(Integer)
     appointments = relationship("User_Appointment_Rel", back_populates="user",
                                 cascade = "all, delete, delete-orphan")
