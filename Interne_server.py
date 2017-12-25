@@ -23,23 +23,14 @@ from flask_jwt_extended import (
     JWTManager, jwt_required, create_access_token, get_jwt_identity, get_jwt_claims, jwt_optional)
 import logging
 
-
+# GLOBALS:
 application = Flask(__name__)
-
-if __name__ == "__main__":
-    application.debug = True
-
 jwt = JWTManager(application)
 mysql = 123
 logger = logging.getLogger(__name__)
 scheduler = BackgroundScheduler()
-scheduler.start()
 
-log_handler = logging.FileHandler('/var/log/Emergency_Logging.log')
-
-# LOGGING INITIALIZER
-
-
+# LOG INITIALIZER
 def initialize_log():
     now=datetime.now()
     filename = "/var/log/Mitfahrgelegenheit/Mitfahrgelegenheit-" + \
@@ -54,7 +45,8 @@ def initialize_log():
     log_handler.setFormatter(logging.Formatter(
         '%(asctime)s - %(levelname)s - %(message)s'))
     logger.addHandler(log_handler)
-    logger.setLevel(logging.INFO)
+
+    logger.setLevel(application.config['LogLevel'])
     logger.info("Initialized logging to " + filename + ".")
     logging.getLogger('apscheduler').addHandler(log_handler)
     logging.getLogger('apscheduler').setLevel(logging.DEBUG)
@@ -62,111 +54,65 @@ def initialize_log():
     logging.getLogger('sqlalchemy').setLevel(logging.DEBUG)
 
 
-# LOGGING INITIALIZATION ON STARTUP
-initialize_log()
+# init function to be called from within here (Debug client), PyTest (Test Framework) or wsgi.py (Prod)
+def initialize_everything()
+    
+    if __name__ == "__main__":
+        application.debug = True
+    application.config['LogLevel'] = logging.DEBUG
+    prod = False
+    if not application.debug and not application.testing:
+        prod = True
+        application.config['LogLevel'] = logging.INFO
+    
+    initialize_log()            # Important logger initialization
+    
+    # LOADING CONFIG
+    if prod:  # Testing somehow, loading config from working directory
+        application.config.from_envvar('MITFAHRGELEGENHEIT_SETTINGS')
+    else:
+        application.config['JWT_SECRET_KEY'] = 'SECRET'
+        application.config['SQLAlchemyEngine'] = 'sqlite:///:memory:'
+        #TODO: ADD MYSQL CONFIG HERE OR IN SETTINGS FILE IN /etc/Mitfahrgelegnehit.conf
+    
+    logger.info('-------- STARTING UP --------')
+    logger.info('Appliction is in ' + ('TEST' if application.testing else 'NON-TEST') + ' mode')
+    logger.info('Application is in ' + ('DEBUG' if application.debug else 'NON-DEBUG') + ' mode')
+    logger.info('Application is in ' + ('Prod' if prod else 'NON-Prod') + ' mode')
 
-# DEFINING THE Scheduled Trigger for Log Rollover IF NOT TESTING
-if not application.debug and not application.testing:
-    logger.info('Setting Log Rollover CronTrigger')
-    scheduler = BackgroundScheduler()
-    scheduler.start()
-    scheduler.add_job(initialize_log,
-            'cron',
-            second=0)
-    atexit.register(lambda: scheduler.shutdown())
+    #SQLALCHEMY SETUP
+    engine= create_engine(application.config['SQLAlchemyEngine'], echo=True)
+    logger.info('Creating SQLAlchemy Engine with engine param: '+application.config['SQLAlchemyEngine'])
+    SQLBase = declarative_base()
+    Session = sessionmaker(bind = engine)
+    
+    if prod == True:
+        scheduler.start()
+        # DEFINING THE Scheduled Trigger for Log Rollover IF NOT TESTING
+        logger.info('Setting Log Rollover CronTrigger')
+        scheduler.add_job(  initialize_log,
+                            'cron',
+                            second=0)
+        atexit.register(lambda: scheduler.shutdown())
 
-# LOADING CONFIG
-if application.debug or application.testing:  # Testing somehow, loading config from working directory
-    application.config['JWT_SECRET_KEY'] = 'SECRET'
-    application.config['SQLAlchemyEngine'] = 'sqlite:///:memory:'
-else:
-    # Not Testing ot Debugging, loading config from Environment variable
-    application.config.from_envvar('MITFAHRGELEGENHEIT_SETTINGS')
-    #TODO: ADD MYSQL CONFIG HERE OR IN SETTINGS FILE IN /etc/Mitfahrgelegnehit.conf
+    
 
 
-logger.info('-------- STARTING UP --------')
-logger.info('Appliction is in ' + ('TEST' if application.testing else 'NON-TEST') + ' mode')
-logger.info('Application is in ' + ('DEBUG' if application.debug else 'NON-DEBUG') + ' mode')
+
+
+
+
+
 if __name__ == "__main__":
+    initialize_everythin()
     application.run(host='127.0.0.1', debug=True)
 
 
-#SQLALCHEMY SETUP
-engine= create_engine(application.config['SQLAlchemyEngine'], echo=True)
-logger.info('Creating SQLAlchemy Engine with engine param: '+application.config['SQLAlchemyEngine'])
-SQLBase = declarative_base()
-Session = sessionmaker(bind = engine)
+
 
 #SENTRY SETUP
-
 #empty, TODO: Find out why?
-#CLASS: USER
-#///////////////////////////////////////////////////////////////////////////////////////////////////
 
-
-    
-class User(SQLBase):
-    "The User class represents the User Object as well as the object relational mapping in the Database"
-    # Fields:
-    # id                     //The MySQL autoincreasing ID
-    #username               //Username
-    # password               //Hashed Password
-    # email                  //Email Address
-    # phoneNumber            //Phone Number
-    # globalAdminStatus      //Global Admin Status, currently 0 or 1
-    __tablename__ = 'users'
-    id = Column(Integer, primary_key = True)
-    username = Column(String)
-    password = Column(String)
-    email = Column(String)
-    phonenumber = Column(String)
-    globalAdminStatus = Column(Integer)
-
-    appointments = relationship("User_Appointment_Rel", back_populates="user")
-
-    def getAsJSON(self):
-        "Returns a JSON representation of a User"
-        return { 'id' : self.id, 'username' : self.username, 'email' : self.email, 'phonenumber' : self.phonenumber,
-             'globalAdminStatus' : self.globalAdminStatus}
-
-
-#CLASS: APPOINTMENT
-#///////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-class Appointment(SQLBase):
-    "Object to Entity Appointment in Database"
-    # Fields:
-    #id : int
-    #startLocation : string
-    #endLocation: string
-    #time : datetime            // TBD
-    #repeatPeriodDays : int
-    # owningOrganization  : int       //Foreign (unused) key to an organizaztion
-    # userDriverDic : dict            // JSON Dict, syntax:
-    # "Guaranteed Drivers" :
-    # [id, id, id, id, ...],
-    # "Possible Drivers" :
-    # [id, id, id, id, id, ....],
-    # "Passengers :
-    # [id, id, id, id, ..]
-    __tablename__='appointments'
-    id = Column (Integer, primary_key = True)
-    users = relationship("User_Appointment_Rel", back_populates="appointment")
-
-
-class User_Appointment_Rel(SQLBase):
-    __tablename__ = 'user_takesPart_appointment'
-    user_id = Column(Integer, ForeignKey('users.id'), primary_key=True)
-    appointment_id = Column(Integer, ForeignKey('appointments.id'), primary_key = True)
-    drivingLevel = Column(Integer)
-    appointment = relationship("Appointment", back_populates = "users")
-    user = relationship("User", back_populates = "appointments")
-
-# CREATE THE TABLES IF NONEXISTENT
-
-SQLBase.metadata.create_all(engine)
 
 
 # DYNAMIC PART - REST-API
