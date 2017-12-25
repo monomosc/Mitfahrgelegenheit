@@ -3,8 +3,11 @@
 from flask import Flask, request, make_response, redirect, jsonify
 
 
-from sqlalchemy import create_engine, Column, Integer, String
+from sqlalchemy import create_engine, Column, Integer, String, Table, Text, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker, relationship
+
+
 from raven.contrib.flask import Sentry
 from werkzeug import generate_password_hash, check_password_hash
 from flask import json
@@ -62,7 +65,7 @@ def initialize_log():
 # LOGGING INITIALIZATION ON STARTUP
 initialize_log()
 
-# DEFINING THE Scheduled Trigger for LOg Rollover IF NOT TESTING
+# DEFINING THE Scheduled Trigger for Log Rollover IF NOT TESTING
 if not application.debug and not application.testing:
     logger.info('Setting Log Rollover CronTrigger')
     scheduler = BackgroundScheduler()
@@ -75,7 +78,7 @@ if not application.debug and not application.testing:
 # LOADING CONFIG
 if application.debug or application.testing:  # Testing somehow, loading config from working directory
     application.config['JWT_SECRET_KEY'] = 'SECRET'
-    application.config['SQLAlchemyEngine'] = 'sqlite:///:memory'
+    application.config['SQLAlchemyEngine'] = 'sqlite:///:memory:'
 else:
     # Not Testing ot Debugging, loading config from Environment variable
     application.config.from_envvar('MITFAHRGELEGENHEIT_SETTINGS')
@@ -92,11 +95,16 @@ if __name__ == "__main__":
 
 #SQLALCHEMY SETUP
 engine= create_engine(application.config['SQLAlchemyEngine'], echo=True)
+logger.info('Creating SQLAlchemy Engine with engine param: '+application.config['SQLAlchemyEngine'])
 SQLBase = declarative_base()
+Session = sessionmaker(bind = engine)
+
+#SENTRY SETUP
 #CLASS: USER
 #///////////////////////////////////////////////////////////////////////////////////////////////////
 
 
+    
 class User(SQLBase):
     "The User class represents the User Object as well as the object relational mapping in the Database"
     # Fields:
@@ -111,8 +119,16 @@ class User(SQLBase):
     username = Column(String)
     password = Column(String)
     email = Column(String)
-    phoneNumber = Column(String)
+    phonenumber = Column(String)
     globalAdminStatus = Column(Integer)
+
+    appointments = relationship("User_Appointment_Rel", back_populates("user"))
+
+    def getAsJSON(self):
+        "Returns a JSON representation of a User"
+        return { 'id' : self.id, 'username' : self.username, 'email' : self.email, 'phonenumber' : self.phonenumber,
+             'globalAdminStatus' : self.globalAdminStatus}
+
 
 #CLASS: APPOINTMENT
 #///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -136,9 +152,17 @@ class Appointment(SQLBase):
     # [id, id, id, id, ..]
     __tablename__='appointments'
     id = Column (Integer, primary_key = True)
+    users = relationship("User_Appointment_Rel", back_populates("appointment"))
 
 
-    
+class User_Appointment_Rel(Base):
+    __tablename__ = 'user_takesPart_appointment'
+    user_id = Column(Integer, ForeignKey('users.id'), primary_key=True)
+    appointment_id = Column(Integer, ForeignKey('right.id'), primary_key = True)
+    drivingLevel = Column(Integer)
+    appointment = relationship("Appointment", back_populates = "users")
+    user = relationship("User", back_populates = "appointments")
+
 
 
 # DYNAMIC PART - REST-API
@@ -227,30 +251,18 @@ def signup():
 @jwt_optional
 def user_profileByID(u_id):  # Profile itself NYI
     "User Profile Endpoint - ID"
-    # check for authorization: Only a global Admin or the User itself can access this resource
-    activeUserID = get_jwt_identity()
-    if activeUserID == None:
-        return make_message_response("Cannot be accessed by Anon User", 401)
-    if (get_jwt_claims()['GlobalAdminStatus'] != 1):
-        if get_jwt_identity() != u_id:
-            return jsonify(message="Not allowed"), 401
-
-    user = User.loadUser(u_id)
-    logger.info("Userprofile for User: " + user.username)
-
-    # get user data from mysql db and return it
-    # this will probably take the form of a JSON list of appointments
-    return jsonify(message="Not yet Implemented"), 404
+    session = Session()
+    user = session.query(User).filter_by(id = u_id).first()
+    return jsonify(user.getAsJSON()), 200
 
 
 @application.route('/api/users/<string:user_name>', methods=['GET'])
 @jwt_optional
 def userByName(user_name):
     "User profile redirect Username --> UserID"
-    thisuser = User.loadUser(username=user_name)
-    if thisuser == NOUSER:
-        return make_message_response("User not found", 404)
-    return redirect(location='/api/users/' + str(thisuser.id))
+    session = Session()
+    user = session.query(User).filter_by(username = user_name).first()
+    return redirect('/api/users/'+user.id)
 
 
 @application.route('/api/appointments/<appointmentID>')  # Not yet implemented
@@ -284,17 +296,20 @@ def authenticate_and_return_accessToken():
     if 'username' not in requestJSON or 'password' not in requestJSON:
         return make_message_response("Missing username or password fields", 400)
 
-    thisuser = User.loadUser(username=requestJSON['username'])
-    if thisuser != NOUSER:
-        if check_password_hash(thisuser.password, requestJSON['password']):
-            # authentication OK!
-            logger.info('Access token created for ' + requestJSON['username'])
-            token = create_access_token(identity=thisuser)
-            return jsonify(access_token=token, username=thisuser.username, email=thisuser.email, globalAdminStatus=thisuser.globalAdminStatus, phoneNumber=thisuser.phoneNumber), 200
-        else:
-            return make_message_response("Invalid Username or Password", 401)
+    session = Session()
+    users = session.query(User).filter(User.username == requestJSON['username'])
+    if users.count() == 0:
+        logger.info('Invalid Access Token Request (Username '+requestJSON['username']+' does not exist')
+        return jsonify(message = 'Invalid Username or Password'), 404
+    thisuser = users.first()
+    if check_password_hash(thisuser.password, requestJSON['password']):
+        logger.info('Creating Access Token for '+ requestJSON['username'])
+        token = create_access_token(identity = thisuser)
+        return jsonify(access_token=token, username=thisuser.username, email=thisuser.email, globalAdminStatus=thisuser.globalAdminStatus, phoneNumber=thisuser.phoneNumber), 200
     else:
-        return make_message_response("User does not exist", 401)
+        logger.info
+        return jsonify(message='Invalid Username or Password')
+    
 
 
 # DYNAMIC PART - REST-DEV-API
