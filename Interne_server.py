@@ -47,7 +47,7 @@ def initialize_log():
         '%(asctime)s - %(levelname)s - %(message)s'))
     logger.addHandler(log_handler)
     logger.setLevel(logging.INFO)
-    logger.info("Initialized logging to " + filename + "."))
+    logger.info("Initialized logging to " + filename + ".")
 
 
 
