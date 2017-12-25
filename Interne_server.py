@@ -3,6 +3,7 @@
 from flask import Flask, request, send_from_directory, make_response, redirect, jsonify, send_file
 
 from flask_mysqldb import MySQL
+from sqlalchemy import create_engine
 from raven.contrib.flask import Sentry
 from werkzeug import generate_password_hash, check_password_hash
 from flask import json
@@ -26,6 +27,7 @@ mysql = MySQL(application)
 logger = logging.getLogger(__name__)
 scheduler = BackgroundScheduler()
 scheduler.start()
+engine = create_engine('mysql://flask_testuser@monomo.solutions')
 
 log_handler = logging.FileHandler('/var/log/Emergency_Logging.log')
 # LOGGING INITIALIZER
