@@ -162,7 +162,9 @@ class User_Appointment_Rel(Base):
     appointment = relationship("Appointment", back_populates = "users")
     user = relationship("User", back_populates = "appointments")
 
+# CREATE THE TABLES IF NONEXISTENT
 
+Base.MetaData.create_all()
 
 # DYNAMIC PART - REST-API
 #///////////////////////////////////////////////////////////////////////////////////////////////////
