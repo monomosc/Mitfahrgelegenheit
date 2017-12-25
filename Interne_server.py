@@ -195,22 +195,16 @@ def users():
                          [0], 'email': data[i][2], 'phoneNumber': data[i][3]}
     return jsonify(returnList), 200
 
+
 @application.route('/api/users', methods=['POST'])  # Complete, Test complete
 def signup():
     "The Endpoint URI for signing up. Takes email, username and password JSON returns 201 on success"
 
     logger.info("User Signup on /api/users")
 
-    # Check for Sortof Valid Data
-    if 'content-type' in request.headers:
-        if request.headers['content-type'] != 'application/json':
-            return make_message_response("Expecting application/json. Request Content-type was: " + request.headers['content-type'], 415)
-    else:
-        return make_message_response("No Content Type", 400)
-    try:
-        requestJSON = json.loads(request.data)
-    except json.JSONDecodeError:
-        return make_message_response("Malformed JSON in Request Body", 400)
+    if not request.is_json:
+        return jsonify(message='Expect JSON Request'), 400
+    requestJSON = json.loads(request.data)
 
     # check for JSON keys
     if 'email' not in requestJSON or 'password' not in requestJSON:
@@ -236,17 +230,12 @@ def signup():
         return make_message_response("Bad Term in Request Body", 404)
 
     # build the sql request
-    sqlReq = "INSERT INTO t_Users (`c_name_Users`, `c_globalAdmin_Users`, `c_email_Users`, `c_phoneNumber_Users`, `c_passwordHash_Users`) "
-    sqlReq = sqlReq + "VALUES ('" + requestJSON['username'] + "', '0', '" + \
-        requestJSON['email'] + "', '" + requestJSON['phoneNumber'] + "', '" +\
-        hashed_password + "');"
-
-    # execute it
-    cursor = mysql.connection.cursor()
-    cursor.execute("START TRANSACTION;")
-    cursor.execute(sqlReq)
-    cursor.execute("COMMIT;")
-
+    newuser = User( username=requestJSON['username'], email = requestJSON['email'],
+                    phonenumber = requestJSON['phoneNumber'], globalAdminStatus = 0,
+                    password = hashed_password)
+    session = Session()
+    session.add(newuser)
+    session.commit()
     # Respond 201 CREATED
     return jsonify(message="User " + requestJSON['username'] + " created"), 201
 
