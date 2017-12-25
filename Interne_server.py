@@ -89,7 +89,6 @@ logger.info('-------- STARTING UP --------')
 logger.info('Appliction is in ' + ('TEST' if application.testing else 'NON-TEST') + ' mode')
 logger.info('Application is in ' + ('DEBUG' if application.debug else 'NON-DEBUG') + ' mode')
 if __name__ == "__main__":
-    initialize_log()
     application.run(host='127.0.0.1', debug=True)
 
 
