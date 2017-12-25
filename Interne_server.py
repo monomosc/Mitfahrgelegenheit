@@ -25,8 +25,6 @@ application = Flask(__name__)
 jwt = JWTManager(application)
 mysql = MySQL(application)
 logger = logging.getLogger(__name__)
-scheduler = BackgroundScheduler()
-scheduler.start()
 
 log_handler = logging.FileHandler('/var/log/Emergency_Logging.log')
 # LOGGING INITIALIZER
@@ -56,6 +54,8 @@ def initialize_log():
 if not application.debug and not application.testing:
     initialize_log()
     logger.info('Initialized Startup Logging, setting CronTrigger')
+    scheduler = BackgroundScheduler()
+    scheduler.start()
     scheduler.add_job(initialize_log,
             'cron',
             second=0)
