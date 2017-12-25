@@ -12,8 +12,10 @@ class InterneServerTestCase(unittest.TestCase):
     "Defines the Test-Case Class for the 'Interne Mitfahrgelegenheit' Backend Flask Webservice"
 
     def setUp(self):
+        Interne_server.application.debug = False
+        Interne_server.application.testing = True
         self.app = Interne_server.application.test_client()
-        self.app.testing = True
+
         
         putData = {}
         putData['username'] = 'UnitTest'
@@ -23,7 +25,7 @@ class InterneServerTestCase(unittest.TestCase):
         putData['Organization'] = 'Test Organization'
         print("Creating TestUser:")
         print(json.dumps(putData))
-        self.app.post('/apu/users', data=json.dumps(putData), headers={'content-type': 'application/json'})
+        self.app.post('/api/users', data=json.dumps(putData), headers={'content-type': 'application/json'})
 
         print("Running Test method" + self._testMethodName)
         return
@@ -111,7 +113,9 @@ class InterneServerTestCase(unittest.TestCase):
             token == None, msg="Login temptest+1234 Failure (test-based account)")
 
         responseCheck = self.app.get(
-            '/api/dev/check_token', data="{}", headers={'content-type': 'application/json', 'Authorization': "JWT " + token}, follow_redirects=False)
+            '/api/dev/check_token', data="{}", 
+            headers={'content-type': 'application/json', 'Authorization': "JWT " + token}, 
+            follow_redirects=False)
         self.assertTrue(len(responseCheck.data) > 0,
                         msg="/api/check_token returned no Data")
 

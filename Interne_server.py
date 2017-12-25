@@ -1,11 +1,10 @@
 # Moritz Basel - interne_server.py
 # Version 0.0.1
 from flask import Flask, request, make_response, redirect, jsonify
+from Interne_Entities import Appointment, User, User_Appointment_Rel
 
-
-from sqlalchemy import create_engine, Column, Integer, String, Table, Text, ForeignKey
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, relationship
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 
 
 from raven.contrib.flask import Sentry
@@ -54,7 +53,7 @@ def initialize_log():
     logging.getLogger('sqlalchemy').setLevel(logging.DEBUG)
 
 
-# init function to be called from within here (Debug client), PyTest (Test Framework) or wsgi.py (Prod)
+#init function to be called from within here (Debug client), PyTest (Test Framework) or wsgi.py (Prod)
 def initialize_everything()
     
     if __name__ == "__main__":
@@ -83,7 +82,6 @@ def initialize_everything()
     #SQLALCHEMY SETUP
     engine= create_engine(application.config['SQLAlchemyEngine'], echo=True)
     logger.info('Creating SQLAlchemy Engine with engine param: '+application.config['SQLAlchemyEngine'])
-    SQLBase = declarative_base()
     Session = sessionmaker(bind = engine)
     
     if prod == True:
@@ -104,7 +102,7 @@ def initialize_everything()
 
 
 if __name__ == "__main__":
-    initialize_everythin()
+    initialize_everything()
     application.run(host='127.0.0.1', debug=True)
 
 
