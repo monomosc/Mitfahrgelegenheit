@@ -59,6 +59,9 @@ class Appointment(SQLBase):
     users = relationship("User_Appointment_Rel", back_populates="appointment",
                             cascade= "all, delete, delete-orphan")
 
+    def getAsJSON(self):
+        return {'id' : self.id}
+
 
 class User_Appointment_Rel(SQLBase):
     __tablename__ = 'user_takesPart_appointment'
