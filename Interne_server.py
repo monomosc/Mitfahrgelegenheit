@@ -99,6 +99,8 @@ SQLBase = declarative_base()
 Session = sessionmaker(bind = engine)
 
 #SENTRY SETUP
+
+#empty, TODO: Find out why?
 #CLASS: USER
 #///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -121,7 +123,7 @@ class User(SQLBase):
     phonenumber = Column(String)
     globalAdminStatus = Column(Integer)
 
-    appointments = relationship("User_Appointment_Rel", back_populates("user"))
+    appointments = relationship("User_Appointment_Rel", back_populates="user")
 
     def getAsJSON(self):
         "Returns a JSON representation of a User"
@@ -151,20 +153,21 @@ class Appointment(SQLBase):
     # [id, id, id, id, ..]
     __tablename__='appointments'
     id = Column (Integer, primary_key = True)
-    users = relationship("User_Appointment_Rel", back_populates("appointment"))
+    users = relationship("User_Appointment_Rel", back_populates="appointment")
 
 
-class User_Appointment_Rel(Base):
+class User_Appointment_Rel(SQLBase):
     __tablename__ = 'user_takesPart_appointment'
     user_id = Column(Integer, ForeignKey('users.id'), primary_key=True)
-    appointment_id = Column(Integer, ForeignKey('right.id'), primary_key = True)
+    appointment_id = Column(Integer, ForeignKey('appointments.id'), primary_key = True)
     drivingLevel = Column(Integer)
     appointment = relationship("Appointment", back_populates = "users")
     user = relationship("User", back_populates = "appointments")
 
 # CREATE THE TABLES IF NONEXISTENT
 
-Base.MetaData.create_all()
+SQLBase.metadata.create_all(engine)
+
 
 # DYNAMIC PART - REST-API
 #///////////////////////////////////////////////////////////////////////////////////////////////////
