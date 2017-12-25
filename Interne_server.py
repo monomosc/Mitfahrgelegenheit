@@ -58,8 +58,7 @@ def initialize_log():
 
 
 if not application.debug and not application.testing:
-    initialize_log()
-    logger.info('Initialized Startup Logging, setting CronTrigger')
+    logger.info('Setting Log Rollover CronTrigger')
     scheduler = BackgroundScheduler()
     scheduler.start()
     scheduler.add_job(initialize_log,
@@ -73,10 +72,12 @@ else:
     # Not Testing ot Debugging, loading config from Environment variable
     application.config.from_envvar('MITFAHRGELEGENHEIT_SETTINGS')
 
+initialize_log()
 logger.info('-------- STARTING UP --------')
 logger.info('Appliction is in ' + ('TEST' if application.testing else 'NON-TEST') + ' mode')
 logger.info('Application is in ' + ('DEBUG' if application.debug else 'NON-DEBUG') + ' mode')
 if __name__ == "__main__":
+    initialize_log()
     application.run(host='127.0.0.1', debug=True)
 
 
