@@ -21,13 +21,15 @@ import logging
 
 application = Flask(__name__)
 
+if __name__ == "__main__":
+    application.debug = True
 
 jwt = JWTManager(application)
-mysql = MySQL(application)
+mysql = 123
 logger = logging.getLogger(__name__)
 scheduler = BackgroundScheduler()
 scheduler.start()
-engine = create_engine('mysql://flask_testuser@monomo.solutions')
+engine = create_engine('mysql+mysqldb://flask_testuser@monomo.solutions')
 
 log_handler = logging.FileHandler('/var/log/Emergency_Logging.log')
 # LOGGING INITIALIZER
@@ -68,7 +70,7 @@ if not application.debug and not application.testing:
 
 
 if application.debug or application.testing:  # Testing somehow, loading config from working directory
-    application.config.from_object('./Mitfahrgelegenheit.debug.conf')
+    application.config['JWT_SECRET_KEY'] = 'SECRET'
 else:
     # Not Testing ot Debugging, loading config from Environment variable
     application.config.from_envvar('MITFAHRGELEGENHEIT_SETTINGS')
@@ -77,9 +79,7 @@ logger.info('-------- STARTING UP --------')
 logger.info('Appliction is in ' + ('TEST' if application.testing else 'NON-TEST') + ' mode')
 logger.info('Application is in ' + ('DEBUG' if application.debug else 'NON-DEBUG') + ' mode')
 if __name__ == "__main__":
-    sentry = Sentry(
-        application, dsn='https://6ac6c6188eb6499fa2967475961a03ca:2f617eada90f478bb489cd4cf2c50663@sentry.io/232283')
-    application.run(host='127.0.0.1')
+    application.run(host='127.0.0.1', debug=True)
 
 
 #CLASS: USER
