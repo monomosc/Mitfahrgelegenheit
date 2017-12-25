@@ -9,9 +9,10 @@ from werkzeug import generate_password_hash, check_password_hash
 from flask import json
 from datetime import time, timedelta, datetime
 from time import strftime
+
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers import cron
-
+import atexit
 
 from werkzeug.security import safe_str_cmp
 from flask_jwt_extended import (
@@ -45,29 +46,26 @@ def initialize_log():
         pass
 
     log_handler = logging.FileHandler(filename)
-    log_handler.setLevel(logging.INFO)
+    log_handler.setLevel(logging.DEBUG)
     log_handler.setFormatter(logging.Formatter(
         '%(asctime)s - %(levelname)s - %(message)s'))
     logger.addHandler(log_handler)
     logger.setLevel(logging.INFO)
     logger.info("Initialized logging to " + filename + ".")
-    today=datetime.today()
-    tomorrow=today+timedelta(days=1)
-    scheduler.add_job(initialize_log,
-                      'date',
-                      run_date=tomorrow.combine(date=tomorrow, time=time(hour=0, minute=0, second=1, microsecond=0)))
+    logging.getLogger('apscheduler').addHandler(log_handler)
+    logging.getLogger('apscheduler').setLevel(logging.DEBUG)
+
 
 
 if not application.debug and not application.testing:
     initialize_log()
-    logger.info('Initialized Log after Startup, setting CronTrigger')
-    today=datetime.today()
-    tomorrow=today+timedelta(days=1)
+    logger.info('Initialized Startup Logging, setting CronTrigger')
+    scheduler = BackgroundScheduler()
+    scheduler.start()
     scheduler.add_job(initialize_log,
-                      'date',
-                      run_date=tomorrow.combine(date=tomorrow, time=time(hour=0, minute=0, second=1, microsecond=0)))
-
-
+            'cron',
+            second=0)
+    atexit.register(lambda: scheduler.shutdown())
 
 if application.debug or application.testing:  # Testing somehow, loading config from working directory
     application.config['JWT_SECRET_KEY'] = 'SECRET'
