@@ -5,7 +5,7 @@ from Interne_Entities import Appointment, User, User_Appointment_Rel, SQLBase
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-
+from sqlalchemy.sql import exists
 
 from raven.contrib.flask import Sentry
 from werkzeug import generate_password_hash, check_password_hash
@@ -76,7 +76,7 @@ def initialize_everything():
         sentry.init_app(application)
     else:
         application.config['JWT_SECRET_KEY'] = 'SECRET'
-        application.config['SQLAlchemyEngine'] = 'sqlite:///:memory:'
+        application.config['SQLAlchemyEngine'] = 'mysql://flask_testuser:weak@monomo.solutions/Mitfahrgelegenheit'
         #TODO: ADD MYSQL CONFIG HERE OR IN SETTINGS FILE IN /etc/Mitfahrgelegnehit.conf
     
     logger.info('-------- STARTING UP --------')
@@ -85,7 +85,7 @@ def initialize_everything():
     logger.info('Application is in ' + ('Prod' if prod else 'NON-Prod') + ' mode')
 
     #SQLALCHEMY SETUP
-    engine= create_engine(application.config['SQLAlchemyEngine'], echo= False if prod else True)
+    engine=create_engine(application.config['SQLAlchemyEngine'], echo= False if prod else True)
     logger.info('Creating SQLAlchemy Engine with engine param: '+application.config['SQLAlchemyEngine'])
     Session.configure(bind = engine)
     SQLBase.metadata.create_all(engine)
@@ -97,7 +97,7 @@ def initialize_everything():
         scheduler.add_job(  initialize_log,
                             'cron',
                             second=0)
-        atexit.register(lambda: scheduler.shutdown())
+        atexit.register(scheduler.shutdown())
 
     
 
@@ -125,7 +125,7 @@ if __name__ == "__main__":
 @jwt_required
 def users():
     if get_jwt_claims()['GlobalAdminStatus'] != 1:
-        return make_message_response("Not allowed", 403)
+        return jsonify(message="Not allowed as Non-Admin"), 403
 
     offset = 1
     amount = 10
@@ -134,23 +134,15 @@ def users():
     if 'amount' in request.args:
         amount = request.args['amount']
 
-    cursor = mysql.connection.cursor()
-    cursor.execute("SELECT * FROM t_Users LIMIT " +
-                   str(offset), "," + str(amount) + ";")
-    logger.info('Selecting all users from N'+str(offset)+', numbering '+str(amount))
-    data = cursor.fetchall()
-    returnList = []
-    for i in (0, amount - 1):
-        returnList[i] = {'id': data[i][5], 'username': data[i]
-                         [0], 'email': data[i][2], 'phoneNumber': data[i][3]}
-    return jsonify(returnList), 200
+    session = Session()
+    
 
 
 @application.route('/api/users', methods=['POST'])  # Complete, Test complete
 def signup():
     "The Endpoint URI for signing up. Takes email, username and password JSON returns 201 on success"
 
-    logger.info("User Signup on /api/users")
+    logger.info("User Signup on POST /api/users")
 
     if not request.is_json:
         return jsonify(message='Expect JSON Request'), 400
@@ -188,7 +180,10 @@ def signup():
 def user_profileByID(u_id):  # Profile itself NYI
     "User Profile Endpoint - ID"
     session = Session()
-    user = session.query(User).filter_by(id = u_id).first()
+    users = session.query(User).filter(User.id == u_id)
+    if users.count() == 0:
+        return jsonify(message='User does not exist'), 404
+    user = users.first()
     return jsonify(user.getAsJSON()), 200
 
 
@@ -197,26 +192,27 @@ def user_profileByID(u_id):  # Profile itself NYI
 def userByName(user_name):
     "User profile redirect Username --> UserID"
     session = Session()
-    user = session.query(User).filter_by(username = user_name).first()
+    users = session.query(User).filter(User.username == user_name)
+    if users.count() == 0:
+        return jsonify(message='User does not exist'), 404
+    user = users.first()
     return redirect('/api/users/'+user.id)
 
 
 @application.route('/api/appointments/<appointmentID>')  # Not yet implemented
 @jwt_required
 def appointment_data(appointmentID):
-    if get_jwt_claims()['GlobalAdminStatus'] != 1:
-        uid = get_jwt_identity()
-        cur = mysql.connection.cursor()
-        cur.execute("SELECT EXISTS(SELECT 1 FROM t_relation_Users_isAPartOf_Organization WHERE 'c_ID_Users' = '" +
-                    uid + "' AND 'c_ID_Organizations' = '" + appointmentID + "';")
-        data = cur.fetchall()
-        if (data == 0):
-            return make_message_response("Either the Appointment does not exist or you are not a part of its Organization", status=404)
-
+    "Appointment functionailty"
     uclaims = get_jwt_claims()
     logger.info("User: " + uclaims['username'] +
                 " accessing appointment: " + str(appointmentID))
-    return make_message_response("Appointments not yet implemented", 500)
+    session = Session()
+    appointments = session.query(Appointment).filter(Appointment.id == appointmentID)
+    if appointments.count() == 0:
+        return jsonify(message="Appointment does not exist"), 404
+    appointment = appointments.first()
+
+    return jsonify(appointment.getAsJSON()), 200
 
 
 
@@ -284,7 +280,7 @@ def removeUser(uname):
     thisuser = users.first()
     session.delete(thisuser)
     session.commit()
-    
+
     logger.warning('Removed User : ' +
                    uclaims['username'] + ' - Was this intended?')
     return make_response(("", 204, None))
