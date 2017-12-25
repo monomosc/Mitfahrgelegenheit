@@ -23,14 +23,14 @@ class User(SQLBase):
     username = Column(String)
     password = Column(String)
     email = Column(String)
-    phonenumber = Column(String)
+    phoneNumber = Column(String)
     globalAdminStatus = Column(Integer)
-
-    appointments = relationship("User_Appointment_Rel", back_populates="user")
+    appointments = relationship("User_Appointment_Rel", back_populates="user",
+                                cascade = "all, delete, delete-orphan")
 
     def getAsJSON(self):
         "Returns a JSON representation of a User"
-        return { 'id' : self.id, 'username' : self.username, 'email' : self.email, 'phonenumber' : self.phonenumber,
+        return { 'id' : self.id, 'username' : self.username, 'email' : self.email, 'phoneNumber' : self.phoneNumber,
              'globalAdminStatus' : self.globalAdminStatus}
 
 
@@ -56,7 +56,8 @@ class Appointment(SQLBase):
     # [id, id, id, id, ..]
     __tablename__='appointments'
     id = Column (Integer, primary_key = True)
-    users = relationship("User_Appointment_Rel", back_populates="appointment")
+    users = relationship("User_Appointment_Rel", back_populates="appointment",
+                            cascade= "all, delete, delete-orphan")
 
 
 class User_Appointment_Rel(SQLBase):

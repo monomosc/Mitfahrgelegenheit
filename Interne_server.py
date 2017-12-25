@@ -1,7 +1,7 @@
 # Moritz Basel - interne_server.py
 # Version 0.0.1
 from flask import Flask, request, make_response, redirect, jsonify
-from Interne_Entities import Appointment, User, User_Appointment_Rel
+from Interne_Entities import Appointment, User, User_Appointment_Rel, SQLBase
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -28,6 +28,10 @@ jwt = JWTManager(application)
 mysql = 123
 logger = logging.getLogger(__name__)
 scheduler = BackgroundScheduler()
+sentry = Sentry(
+    dsn='https://6ac6c6188eb6499fa2967475961a03ca:2f617eada90f478bb489cd4cf2c50663@sentry.io/232283')
+Session = sessionmaker()
+
 
 # LOG INITIALIZER
 def initialize_log():
@@ -44,18 +48,18 @@ def initialize_log():
     log_handler.setFormatter(logging.Formatter(
         '%(asctime)s - %(levelname)s - %(message)s'))
     logger.addHandler(log_handler)
-
+    sql_handler = logging.FileHandler('/var/log/Mitfahrgelegenheit/SQLAlchemy.log')
     logger.setLevel(application.config['LogLevel'])
     logger.info("Initialized logging to " + filename + ".")
     logging.getLogger('apscheduler').addHandler(log_handler)
     logging.getLogger('apscheduler').setLevel(logging.DEBUG)
-    logging.getLogger('sqlalchemy').addHandler(log_handler)
+    logging.getLogger('sqlalchemy').addHandler(sql_handler)
     logging.getLogger('sqlalchemy').setLevel(logging.DEBUG)
 
 
 #init function to be called from within here (Debug client), PyTest (Test Framework) or wsgi.py (Prod)
-def initialize_everything()
-    
+def initialize_everything():
+    "Initializes EVERYTHING"
     if __name__ == "__main__":
         application.debug = True
     application.config['LogLevel'] = logging.DEBUG
@@ -69,6 +73,7 @@ def initialize_everything()
     # LOADING CONFIG
     if prod:  # Testing somehow, loading config from working directory
         application.config.from_envvar('MITFAHRGELEGENHEIT_SETTINGS')
+        sentry.init_app(application)
     else:
         application.config['JWT_SECRET_KEY'] = 'SECRET'
         application.config['SQLAlchemyEngine'] = 'sqlite:///:memory:'
@@ -80,11 +85,12 @@ def initialize_everything()
     logger.info('Application is in ' + ('Prod' if prod else 'NON-Prod') + ' mode')
 
     #SQLALCHEMY SETUP
-    engine= create_engine(application.config['SQLAlchemyEngine'], echo=True)
+    engine= create_engine(application.config['SQLAlchemyEngine'], echo= False if prod else True)
     logger.info('Creating SQLAlchemy Engine with engine param: '+application.config['SQLAlchemyEngine'])
-    Session = sessionmaker(bind = engine)
+    Session.configure(bind = engine)
+    SQLBase.metadata.create_all(engine)
     
-    if prod == True:
+    if prod:
         scheduler.start()
         # DEFINING THE Scheduled Trigger for Log Rollover IF NOT TESTING
         logger.info('Setting Log Rollover CronTrigger')
@@ -156,14 +162,7 @@ def signup():
     if 'phoneNumber' not in requestJSON or 'username' not in requestJSON:
         return make_message_response("Signup must contain (username, phoneNumber) JSON Keys", 400)
 
-    # Check if User already exists
-    try:
-        testuser = User.loadUser(username=requestJSON['username'])
-        if testuser != NOUSER:
-            return make_message_response("User already exists", 409)
-    except Exception:
-        sentry.captureException()
-        return make_message_response("Unknown Server Error, The Sentry Error Code is: " + sentry_event_id, 500)
+
 
     # hash the password
     hashed_password = generate_password_hash(requestJSON['password'])
@@ -175,7 +174,7 @@ def signup():
 
     # build the sql request
     newuser = User( username=requestJSON['username'], email = requestJSON['email'],
-                    phonenumber = requestJSON['phoneNumber'], globalAdminStatus = 0,
+                    phoneNumber = requestJSON['phoneNumber'], globalAdminStatus = 0,
                     password = hashed_password)
     session = Session()
     session.add(newuser)
@@ -242,6 +241,7 @@ def authenticate_and_return_accessToken():
     if check_password_hash(thisuser.password, requestJSON['password']):
         logger.info('Creating Access Token for '+ requestJSON['username'])
         token = create_access_token(identity = thisuser)
+        logger.debug('Access Token: Bearer '+token)
         return jsonify(access_token=token, username=thisuser.username, email=thisuser.email, globalAdminStatus=thisuser.globalAdminStatus, phoneNumber=thisuser.phoneNumber), 200
     else:
         logger.info
@@ -266,17 +266,25 @@ def check_token():
 @jwt_required
 def removeUser(uname):
     # check if you are the user in question or have Administrative Privileges
-
-    uclaims = get_jwt_claims()
-    if uname != uclaims['username'] and uclaims['GlobalAdminStatus'] != 1:
-        logger.warning('User : ' + uclaims['username'] + ' tried to remove ' +
-                       uname + '. This Endpoint should not be generally known')
-        return make_message_response("Can only remove self; or requires administrative priviliges. User " + str(uclaims['username']) + " trying to remove " + uname, 401)
-    cur = mysql.connection.cursor()
-    cur.execute("START TRANSACTION;")
-    cur.execute('DELETE FROM t_Users WHERE c_ID_Users=' +
-                str(get_jwt_identity()))
-    cur.execute("COMMIT;")
+    try:
+        uclaims = get_jwt_claims()
+        if uname != uclaims['username'] and uclaims['GlobalAdminStatus'] != 1:
+            logger.warning('User : ' + uclaims['username'] + ' tried to remove ' +
+                        uname + '. This Endpoint should not be generally known')
+            return make_message_response("Can only remove self; or requires administrative priviliges. User " + str(uclaims['username']) + " trying to remove " + uname, 401)
+    except KeyError as e:
+        logger.error('An invalid Key got into RemoveUser!: KeyError on JWTClaims: '+ str(e))
+        return jsonify(message='An Error has occured. This is the programmers fault'), 500
+    
+    session = Session()
+    users = session.query(User).filter(User.username == uname)
+    if users.count() == 0:
+        logger.info('Invalid User Removal Request: (Username '+uname+' does not exist')
+        return jsonify(message = 'Invalid Username or Password'), 404
+    thisuser = users.first()
+    session.delete(thisuser)
+    session.commit()
+    
     logger.warning('Removed User : ' +
                    uclaims['username'] + ' - Was this intended?')
     return make_response(("", 204, None))
@@ -367,10 +375,12 @@ def resource_not_found_error(error):
 @jwt.user_claims_loader
 def add_claims_to_access_token(user):
     "Defines all fields to be remembered and recovered in the JSON Token"
-    return {'Username': user.username,
-            'Email': user.email,
-            'PhoneNumber': user.phoneNumber,
-            'GlobalAdminStatus': user.globalAdminStatus}
+    return {
+            'id': user.id,
+            'username': user.username,
+            'email': user.email,
+            'phoneNumber': user.phoneNumber,
+            'globalAdminStatus': user.globalAdminStatus}
 
 
 @jwt.user_identity_loader
