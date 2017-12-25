@@ -1,9 +1,10 @@
 # Moritz Basel - interne_server.py
 # Version 0.0.1
-from flask import Flask, request, send_from_directory, make_response, redirect, jsonify, send_file
+from flask import Flask, request, make_response, redirect, jsonify
 
-from flask_mysqldb import MySQL
-from sqlalchemy import create_engine
+
+from sqlalchemy import create_engine, Column, Integer, String
+from sqlalchemy.ext.declarative import declarative_base
 from raven.contrib.flask import Sentry
 from werkzeug import generate_password_hash, check_password_hash
 from flask import json
@@ -30,9 +31,9 @@ mysql = 123
 logger = logging.getLogger(__name__)
 scheduler = BackgroundScheduler()
 scheduler.start()
-engine = create_engine('mysql+mysqldb://flask_testuser@monomo.solutions')
 
 log_handler = logging.FileHandler('/var/log/Emergency_Logging.log')
+
 # LOGGING INITIALIZER
 
 
@@ -54,9 +55,14 @@ def initialize_log():
     logger.info("Initialized logging to " + filename + ".")
     logging.getLogger('apscheduler').addHandler(log_handler)
     logging.getLogger('apscheduler').setLevel(logging.DEBUG)
+    logging.getLogger('sqlalchemy').addHandler(log_handler)
+    logging.getLogger('sqlalchemy').setLevel(logging.DEBUG)
 
 
+# LOGGING INITIALIZATION ON STARTUP
+initialize_log()
 
+# DEFINING THE Scheduled Trigger for LOg Rollover IF NOT TESTING
 if not application.debug and not application.testing:
     logger.info('Setting Log Rollover CronTrigger')
     scheduler = BackgroundScheduler()
@@ -66,13 +72,16 @@ if not application.debug and not application.testing:
             second=0)
     atexit.register(lambda: scheduler.shutdown())
 
+# LOADING CONFIG
 if application.debug or application.testing:  # Testing somehow, loading config from working directory
     application.config['JWT_SECRET_KEY'] = 'SECRET'
+    application.config['SQLAlchemyEngine'] = 'sqlite:///:memory'
 else:
     # Not Testing ot Debugging, loading config from Environment variable
     application.config.from_envvar('MITFAHRGELEGENHEIT_SETTINGS')
+    #TODO: ADD MYSQL CONFIG HERE OR IN SETTINGS FILE IN /etc/Mitfahrgelegnehit.conf
 
-initialize_log()
+
 logger.info('-------- STARTING UP --------')
 logger.info('Appliction is in ' + ('TEST' if application.testing else 'NON-TEST') + ' mode')
 logger.info('Application is in ' + ('DEBUG' if application.debug else 'NON-DEBUG') + ' mode')
@@ -81,11 +90,14 @@ if __name__ == "__main__":
     application.run(host='127.0.0.1', debug=True)
 
 
+#SQLALCHEMY SETUP
+engine= create_engine(application.config['SQLAlchemyEngine'], echo=True)
+SQLBase = declarative_base()
 #CLASS: USER
 #///////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-class User(object):
+class User(SQLBase):
     "The User class represents the User Object as well as the object relational mapping in the Database"
     # Fields:
     # id                     //The MySQL autoincreasing ID
@@ -94,58 +106,19 @@ class User(object):
     # email                  //Email Address
     # phoneNumber            //Phone Number
     # globalAdminStatus      //Global Admin Status, currently 0 or 1
-
-    def __init__(self, uid, username, password, email, phoneNumber, globalAdminStatus):
-        self.id = uid
-        self.username = username
-        self.password = password
-        self.email = email
-        self.phoneNumber = phoneNumber
-        self.globalAdminStatus = globalAdminStatus
-
-    def __str__(self):
-        return "User(id=%s)" % self.id
-
-    @staticmethod
-    def loadUser(uid=None, username=None):
-        "returns the corresponding user. If both parameters are given returns NOUSER if they do not match. Returns NOUSER on nonexisting"
-        if username == None and uid == None:
-            return NOUSER
-        if uid:
-            # Start MYSQL connection
-            cur = mysql.connection.cursor()
-            cur.execute(
-                "SELECT * FROM t_Users WHERE c_ID_Users='" + str(uid) + "';")
-            data = cur.fetchall()
-            if len(data) > 0:
-                if username != None:
-                    if str(data[0][0] != username):
-                        return NOUSER
-                return User(int(data[0][5]), str(data[0][0]), str(data[0][4]), str(data[0][2]), str(data[0][3]), int(data[0][1]))
-                #              ID              Username       Hashed Password       Email           Phone Number    Global Admin Status
-            else:
-                return NOUSER
-        if username:
-            cur = mysql.connection.cursor()
-            cur.execute(
-                "SELECT * FROM t_Users WHERE c_name_Users= '" + username + "';")
-            data = cur.fetchall()
-            if len(data) > 0:
-                return User(int(data[0][5]), str(data[0][0]), str(data[0][4]), str(data[0][2]), str(data[0][3]), int(data[0][1]))
-                #              ID              Username       Hashed Password       Email           Phone Number    Global Admin Status
-            else:
-                return NOUSER
-
-
-# Generic Return Code that is checked against indicating failure
-NOUSER = User(uid=0, username=None, password=None, email=None,
-              phoneNumber=None, globalAdminStatus=None)
+    __tablename__ = 'users'
+    id = Column(Integer, primary_key = True)
+    username = Column(String)
+    password = Column(String)
+    email = Column(String)
+    phoneNumber = Column(String)
+    globalAdminStatus = Column(Integer)
 
 #CLASS: APPOINTMENT
 #///////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-class Appointment(object):
+class Appointment(SQLBase):
     "Object to Entity Appointment in Database"
     # Fields:
     #id : int
@@ -161,33 +134,11 @@ class Appointment(object):
     # [id, id, id, id, id, ....],
     # "Passengers :
     # [id, id, id, id, ..]
+    __tablename__='appointments'
+    id = Column (Integer, primary_key = True)
 
-    def __init__(self, id, startLocation, endLocation, time, repeatPeriodDays, owningOrganization, userDriverDict):
-        self.id = id
-        self.startLocation = startLocation
-        self.endLocation = endLocation
-        self.time = time
-        self.repeatPeriodDays = repeatPeriodDays
-        self.owningOrganization = owningOrganization
-        self.userDriverDict = userDriverDict
 
-    @staticmethod
-    def loadAppointment(aid):
-        cur = mysql.connection.cursor()
-        cur.execute(
-            "SELECT * FROM t_Appointments WHERE c_id_Appointments ? '" + aid + "';"
-        )
-        data = cur.fetchall()
-        startLocation = data[0][1]
-        endLocation = data[0][2]
-        time = data[0][3]
-        repeatPeriodDays = data[0][4]
-        userDriverDict = {}
-
-        cur.execute(
-            "SELECT * FROM t_relation_Users_TakesPart_Appointments  \
-            JOIN t_Users ON (t_relation_Users_TakesPart_Appointments.c_ID_users = t_Users.c_ID_Users) \
-            WHERE c_ID_appointments = '" + aid + "'")
+    
 
 
 # DYNAMIC PART - REST-API
@@ -214,7 +165,7 @@ def users():
     for i in (0, amount - 1):
         returnList[i] = {'id': data[i][5], 'username': data[i]
                          [0], 'email': data[i][2], 'phoneNumber': data[i][3]}
-    return jsonify(returnList, status_code=200)
+    return jsonify(returnList), 200
 
 @application.route('/api/users', methods=['POST'])  # Complete, Test complete
 def signup():
@@ -269,7 +220,7 @@ def signup():
     cursor.execute("COMMIT;")
 
     # Respond 201 CREATED
-    return jsonify(message="User " + requestJSON['username'] + " created", status_code=201)
+    return jsonify(message="User " + requestJSON['username'] + " created"), 201
 
 
 @application.route('/api/users/<int:u_id>', methods=['GET'])
@@ -282,14 +233,14 @@ def user_profileByID(u_id):  # Profile itself NYI
         return make_message_response("Cannot be accessed by Anon User", 401)
     if (get_jwt_claims()['GlobalAdminStatus'] != 1):
         if get_jwt_identity() != u_id:
-            return jsonify(message="Not allowed", status=401)
+            return jsonify(message="Not allowed"), 401
 
     user = User.loadUser(u_id)
     logger.info("Userprofile for User: " + user.username)
 
     # get user data from mysql db and return it
     # this will probably take the form of a JSON list of appointments
-    return jsonify(message="Not yet Implemented")
+    return jsonify(message="Not yet Implemented"), 404
 
 
 @application.route('/api/users/<string:user_name>', methods=['GET'])
@@ -339,7 +290,7 @@ def authenticate_and_return_accessToken():
             # authentication OK!
             logger.info('Access token created for ' + requestJSON['username'])
             token = create_access_token(identity=thisuser)
-            return jsonify(access_token=token, username=thisuser.username, email=thisuser.email, globalAdminStatus=thisuser.globalAdminStatus, phoneNumber=thisuser.phoneNumber, status_code=200)
+            return jsonify(access_token=token, username=thisuser.username, email=thisuser.email, globalAdminStatus=thisuser.globalAdminStatus, phoneNumber=thisuser.phoneNumber), 200
         else:
             return make_message_response("Invalid Username or Password", 401)
     else:
@@ -412,7 +363,7 @@ def optional():
 def logfile():
     logger.info('Logfile Request from User: ' + get_jwt_claims()['Username'])
     if get_jwt_claims()['GlobalAdminStatus'] == 0:
-        return jsonify(message="Illegal Non-Admin Operation")
+        return jsonify(message="Illegal Non-Admin Operation"), 401
 
     now=datetime.now()
     filename = "/var/log/Mitfahrgelegenheit/Mitfahrgelegenheit-" + \
@@ -422,10 +373,10 @@ def logfile():
     if latest == 'true':
         try:
             logstr = open(filename, 'r').read()
-            return jsonify(log=logstr, time=now.strftime("%d-%m-%y"), status=200)
+            return jsonify(log=logstr, time=now.strftime("%d-%m-%y"))
         except Exception as ex:
-            return jsonify(exception=str(ex))
-    return jsonify(message="Only ?latest=true allowed", status=422)
+            return jsonify(exception=str(ex)), 500
+    return jsonify(message="Only ?latest=true allowed"), 422
 
 #//////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -447,7 +398,7 @@ def make_json_response(jsonDictionary, status):
 @application.errorhandler(500)
 def internal_server_error(error):
     logger.error("Internal Server Error: " + error)
-    return jsonify(message="Internal Server Error")
+    return jsonify(message="Internal Server Error"), 500
 #/////////////////////////////////////////////////////////////////////////////////////////////////
 # Error 404 general handler
 
@@ -455,7 +406,7 @@ def internal_server_error(error):
 @application.errorhandler(404)
 def resource_not_found_error(error):
     logger.warning("404: error")
-    return make_message_response("Resource does not exist", 404)
+    return jsonify(message='Resource does not exist'),404
 
 
 #//////////////////////////////////////////////////////////////////////////////////////////////////
@@ -485,7 +436,7 @@ def claims_verification_failed_loader():
 @jwt.expired_token_loader
 def expired_token_loader():
     logger.info("Someone used an expired Token")
-    return jsonify(message="Token Expired")
+    return jsonify(message="Token Expired"), 401
 
 
 @jwt.needs_fresh_token_loader
