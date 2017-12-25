@@ -8,6 +8,7 @@ from werkzeug import generate_password_hash, check_password_hash
 from flask import json
 from datetime import time, timedelta, datetime
 from time import strftime
+
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers import cron
 
@@ -46,24 +47,19 @@ def initialize_log():
         '%(asctime)s - %(levelname)s - %(message)s'))
     logger.addHandler(log_handler)
     logger.setLevel(logging.INFO)
-    logger.info("Initialized logging to " + filename + ".")
-    today=datetime.today()
-    tomorrow=today+timedelta(days=1)
-    scheduler.add_job(initialize_log,
-                      'date',
-                      run_date=tomorrow.combine(date=tomorrow, time=time(hour=0, minute=0, second=1, microsecond=0)))
+    logger.info("Initialized logging to " + filename + "."))
+
+
 
 
 if not application.debug and not application.testing:
     initialize_log()
-    logger.info('Initialized Log after Startup, setting CronTrigger')
+    logger.info('Initialized Startup Logging, setting CronTrigger')
     today=datetime.today()
     tomorrow=today+timedelta(days=1)
     scheduler.add_job(initialize_log,
-                      'date',
-                      run_date=tomorrow.combine(date=tomorrow, time=time(hour=0, minute=0, second=1, microsecond=0)))
-
-
+            'cron',
+            second=0)
 
 if application.debug or application.testing:  # Testing somehow, loading config from working directory
     application.config.from_object('./Mitfahrgelegenheit.debug.conf')
