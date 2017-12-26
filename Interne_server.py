@@ -275,7 +275,7 @@ def removeUser(uname):
     # check if you are the user in question or have Administrative Privileges
     try:
         uclaims = get_jwt_claims()
-        if uname != uclaims['username'] and uclaims['GlobalAdminStatus'] != 1:
+        if uname != uclaims['username'] and uclaims['globalAdminStatus'] != 1:
             logger.warning('User : ' + uclaims['username'] + ' tried to remove ' +
                         uname + '. This Endpoint should not be generally known')
             return make_message_response("Can only remove self; or requires administrative priviliges. User " + str(uclaims['username']) + " trying to remove " + uname, 401)
@@ -329,7 +329,7 @@ def optional():
 @jwt_required
 def logfile():
     logger.info('Logfile Request from User: ' + get_jwt_claims()['username'])
-    if get_jwt_claims()['GlobalAdminStatus'] == 0:
+    if get_jwt_claims()['globalAdminStatus'] == 0:
         return jsonify(message="Illegal Non-Admin Operation"), 401
 
     now=datetime.now()
