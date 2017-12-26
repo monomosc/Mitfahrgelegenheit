@@ -104,7 +104,8 @@ def initialize_everything():
         logger.info('Setting Log Rollover CronTrigger')
         scheduler.add_job(initialize_log,
                           'cron',
-                          hour=0)
+                          hour=0,
+                          id = 'Log Rollover')
         atexit.register(lambda: scheduler.shutdown())
         sentry.init_app(application)
 
