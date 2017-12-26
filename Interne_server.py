@@ -106,6 +106,7 @@ def initialize_everything():
                           'cron',
                           hour=0)
         atexit.register(lambda: scheduler.shutdown())
+        sentry.init_app(application)
 
 
 
