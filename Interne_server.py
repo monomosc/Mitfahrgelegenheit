@@ -86,7 +86,7 @@ def initialize_everything():
     for key, val in application.config.items():
         logger.debug(key+'  :  ' + str(val))
     #SQLALCHEMY SETUP
-    engine=create_engine(application.config['SQL_ALCHEMY_ENGINE'], echo= False if prod else True)
+    engine=create_engine(application.config['SQL_ALCHEMY_ENGINE'], echo= False if prod else True,  pool_recycle=3200)
     logger.info('Creating SQLAlchemy Engine with engine param: '+application.config['SQL_ALCHEMY_ENGINE'])
     Session.configure(bind = engine)
     SQLBase.metadata.create_all(engine)
@@ -139,6 +139,7 @@ def users():
     for instance in session.query(User):
         returnJSON.append(instance.getAsJSON())
     
+    session.close()
     return jsonify(returnJSON), 200
 
 
@@ -176,12 +177,14 @@ def signup():
     session = Session()
     check_for_duplicates = session.query(User).filter(User.username == requestJSON['username'])
     if check_for_duplicates.count() > 0:
+        session.close()
         return jsonify(message = "User "+requestJSON['username']+' already exists'), 409
     newuser = User( username=requestJSON['username'], email = requestJSON['email'],
                     phoneNumber = requestJSON['phoneNumber'], globalAdminStatus = 0,
                     password = hashed_password)
     session.add(newuser)
     session.commit()
+    session.close()
     # Respond 201 CREATED
     return jsonify(message="User " + requestJSON['username'] + " created"), 201
 
@@ -193,8 +196,10 @@ def user_profileByID(u_id):  # Profile itself NYI
     session = Session()
     users = session.query(User).filter(User.id == u_id)
     if users.count() == 0:
+        session.close()
         return jsonify(message='User does not exist'), 404
     user = users.first()
+    session.close()
     return jsonify(user.getAsJSON()), 200
 
 
@@ -205,8 +210,10 @@ def userByName(user_name):
     session = Session()
     users = session.query(User).filter(User.username == user_name)
     if users.count() == 0:
+        session.close()
         return jsonify(message='User does not exist'), 404
     user = users.first()
+    session.close()
     return redirect('/api/users/'+user.id)
 
 
@@ -220,9 +227,10 @@ def appointment_data(appointmentID):
     session = Session()
     appointments = session.query(Appointment).filter(Appointment.id == appointmentID)
     if appointments.count() == 0:
+        session.close()
         return jsonify(message="Appointment does not exist"), 404
     appointment = appointments.first()
-
+    session.close()
     return jsonify(appointment.getAsJSON()), 200
 
 
@@ -243,15 +251,17 @@ def authenticate_and_return_accessToken():
     users = session.query(User).filter(User.username == requestJSON['username'])
     if users.count() == 0:
         logger.info('Invalid Access Token Request (Username '+requestJSON['username']+' does not exist')
+        session.close()
         return jsonify(message = 'Invalid Username or Password'), 404
     thisuser = users.first()
     if check_password_hash(thisuser.password, requestJSON['password']):
         logger.info('Creating Access Token for '+ requestJSON['username'])
         token = create_access_token(identity = thisuser)
         logger.debug('Access Token: Bearer '+token)
+        session.close()
         return jsonify(access_token=token, username=thisuser.username, email=thisuser.email, globalAdminStatus=thisuser.globalAdminStatus, phoneNumber=thisuser.phoneNumber), 200
     else:
-        logger.info
+        session.close()
         return jsonify(message='Invalid Username or Password')
     
 
@@ -291,10 +301,10 @@ def removeUser(uname):
     thisuser = users.first()
     session.delete(thisuser)
     session.commit()
-
+    session.close()
     logger.warning('Removed User : ' +
                    uclaims['username'] + ' - Was this intended?')
-    return make_response(("", 204, None))
+    return 204
 
 
 @application.route('/api/dev/check_api')
