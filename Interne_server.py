@@ -101,8 +101,7 @@ def initialize_everything():
 
 
 
-if application.debug or application.testing:
-    initialize_everything()
+initialize_everything()
 
 
 
