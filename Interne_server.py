@@ -328,7 +328,7 @@ def optional():
 @application.route('/api/dev/log', methods=['GET'])
 @jwt_required
 def logfile():
-    logger.info('Logfile Request from User: ' + get_jwt_claims()['Username'])
+    logger.info('Logfile Request from User: ' + get_jwt_claims()['username'])
     if get_jwt_claims()['GlobalAdminStatus'] == 0:
         return jsonify(message="Illegal Non-Admin Operation"), 401
 
