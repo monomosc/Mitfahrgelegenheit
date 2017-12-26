@@ -87,7 +87,7 @@ def initialize_everything():
         logger.info(key+'  :  ' + str(val))
     #SQLALCHEMY SETUP
     engine=create_engine(application.config['SQL_ALCHEMY_ENGINE'], echo= False if prod else True)
-    logger.info('Creating SQLAlchemy Engine with engine param: '+application.config['SQLAlchemyEngine'])
+    logger.info('Creating SQLAlchemy Engine with engine param: '+application.config['SQL_ALCHEMY_ENGINE'])
     Session.configure(bind = engine)
     SQLBase.metadata.create_all(engine)
     
