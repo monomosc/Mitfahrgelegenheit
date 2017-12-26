@@ -74,7 +74,7 @@ def initialize_everything():
         application.config.from_envvar('MITFAHRGELEGENHEIT_SETTINGS')
     else:
         application.config['JWT_SECRET_KEY'] = 'SECRET'
-        application.config['SQLAlchemyEngine'] = 'mysql://flask_testuser:weak@monomo.solutions/Mitfahrgelegenheit'
+        application.config['SQL_Alchemy_Engine'] = 'mysql://flask_testuser:weak@monomo.solutions/Mitfahrgelegenheit'
         #TODO: ADD MYSQL CONFIG HERE OR IN SETTINGS FILE IN /etc/Mitfahrgelegnehit.conf
     
     logger.info('-------- STARTING UP --------')
@@ -83,7 +83,7 @@ def initialize_everything():
     logger.info('Application is in ' + ('Prod' if prod else 'NON-Prod') + ' mode')
 
     #SQLALCHEMY SETUP
-    engine=create_engine(application.config['SQLAlchemyEngine'], echo= False if prod else True)
+    engine=create_engine(application.config['SQL_Alchemy_Engine'], echo= False if prod else True)
     logger.info('Creating SQLAlchemy Engine with engine param: '+application.config['SQLAlchemyEngine'])
     Session.configure(bind = engine)
     SQLBase.metadata.create_all(engine)
