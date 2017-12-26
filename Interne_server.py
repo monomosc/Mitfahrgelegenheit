@@ -34,7 +34,7 @@ Session = sessionmaker()
 
 # LOG INITIALIZER
 def initialize_log():
-    now=datetime.now()
+    now = datetime.now()
     filename = "/var/log/Mitfahrgelegenheit/Mitfahrgelegenheit-" + \
         now.strftime("%d-%m-%y") + ".log"
     try:
@@ -47,7 +47,8 @@ def initialize_log():
     log_handler.setFormatter(logging.Formatter(
         '%(asctime)s - %(levelname)s - %(message)s'))
     logger.addHandler(log_handler)
-    sql_handler = logging.FileHandler('/var/log/Mitfahrgelegenheit/SQLAlchemy.log')
+    sql_handler = logging.FileHandler(
+        '/var/log/Mitfahrgelegenheit/SQLAlchemy.log')
     logger.setLevel(application.config['LogLevel'])
     logger.info("Initialized logging to " + filename + ".")
     logging.getLogger('apscheduler').addHandler(log_handler)
@@ -56,7 +57,7 @@ def initialize_log():
     logging.getLogger('sqlalchemy').setLevel(logging.DEBUG)
 
 
-#init function to be called from within here (Debug client), PyTest (Test Framework) or wsgi.py (Prod)
+# init function to be called from within here (Debug client), PyTest (Test Framework) or wsgi.py (Prod)
 def initialize_everything():
     "Initializes EVERYTHING"
     if __name__ == "__main__":
@@ -66,57 +67,55 @@ def initialize_everything():
     if not application.debug and not application.testing:
         prod = True
         application.config['LogLevel'] = logging.INFO
-    
+
     initialize_log()            # Important logger initialization
-    
+
     # LOADING CONFIG
     if prod:  # Testing somehow, loading config from working directory
         application.config.from_envvar('MITFAHRGELEGENHEIT_SETTINGS')
     else:
         application.config['JWT_SECRET_KEY'] = 'SECRET'
         application.config['SQL_ALCHEMY_ENGINE'] = 'mysql://flask_testuser:weak@monomo.solutions/Mitfahrgelegenheit'
-        #TODO: ADD MYSQL CONFIG HERE OR IN SETTINGS FILE IN /etc/Mitfahrgelegnehit.conf
-    
-    logger.info('-------- STARTING UP --------')
-    logger.info('Appliction is in ' + ('TEST' if application.testing else 'NON-TEST') + ' mode')
-    logger.info('Application is in ' + ('DEBUG' if application.debug else 'NON-DEBUG') + ' mode')
-    logger.info('Application is in ' + ('Prod' if prod else 'NON-Prod') + ' mode')
+        # TODO: ADD MYSQL CONFIG HERE OR IN SETTINGS FILE IN /etc/Mitfahrgelegnehit.conf
 
-    logger.info('Config Values:')
+    logger.info('-------- STARTING UP --------')
+    logger.info('Appliction is in ' +
+                ('TEST' if application.testing else 'NON-TEST') + ' mode')
+    logger.info('Application is in ' +
+                ('DEBUG' if application.debug else 'NON-DEBUG') + ' mode')
+    logger.info('Application is in ' +
+                ('Prod' if prod else 'NON-Prod') + ' mode')
+
+    logger.debug('Config Values:')
     for key, val in application.config.items():
-        logger.debug(key+'  :  ' + str(val))
-    #SQLALCHEMY SETUP
-    engine=create_engine(application.config['SQL_ALCHEMY_ENGINE'], echo= False if prod else True,  pool_recycle=3200)
-    logger.info('Creating SQLAlchemy Engine with engine param: '+application.config['SQL_ALCHEMY_ENGINE'])
-    Session.configure(bind = engine)
+        logger.debug(key + '  :  ' + str(val))
+    # SQLALCHEMY SETUP
+    engine = create_engine(
+        application.config['SQL_ALCHEMY_ENGINE'], echo=False if prod else True,  pool_recycle=3200)
+    logger.info('Creating SQLAlchemy Engine with engine param: ' +
+                application.config['SQL_ALCHEMY_ENGINE'])
+    Session.configure(bind=engine)
     SQLBase.metadata.create_all(engine)
-    
+
     if prod:
         scheduler.start()
         # DEFINING THE Scheduled Trigger for Log Rollover IF NOT TESTING
         logger.info('Setting Log Rollover CronTrigger')
-        scheduler.add_job(  initialize_log,
-                            'cron',
-                            second=0)
-        atexit.register(scheduler.shutdown())
-
-    
-
+        scheduler.add_job(initialize_log,
+                          'cron',
+                          second=0)
+        atexit.register(lambda: scheduler.shutdown())
 
 
 initialize_everything()
-
 
 
 if __name__ == "__main__":
     application.run(host='127.0.0.1', debug=True)
 
 
-
-
-#SENTRY SETUP
-#empty, TODO: Find out why?
-
+# SENTRY SETUP
+# empty, TODO: Find out why?
 
 
 # DYNAMIC PART - REST-API
@@ -138,7 +137,7 @@ def users():
     session = Session()
     for instance in session.query(User):
         returnJSON.append(instance.getAsJSON())
-    
+
     session.close()
     return jsonify(returnJSON), 200
 
@@ -162,8 +161,6 @@ def signup():
     if 'phoneNumber' not in requestJSON or 'username' not in requestJSON:
         return make_message_response("Signup must contain (username, phoneNumber) JSON Keys", 400)
 
-
-
     # hash the password
     hashed_password = generate_password_hash(requestJSON['password'])
 
@@ -172,16 +169,15 @@ def signup():
     if 'DROP' in checkall or 'DELETE' in checkall or 'INSERT' in checkall or 'ALTER' in checkall or 'SELECT' in checkall:
         return make_message_response("Bad Term in Request Body", 404)
 
-    
-    
     session = Session()
-    check_for_duplicates = session.query(User).filter(User.username == requestJSON['username'])
+    check_for_duplicates = session.query(User).filter(
+        User.username == requestJSON['username'])
     if check_for_duplicates.count() > 0:
         session.close()
-        return jsonify(message = "User "+requestJSON['username']+' already exists'), 409
-    newuser = User( username=requestJSON['username'], email = requestJSON['email'],
-                    phoneNumber = requestJSON['phoneNumber'], globalAdminStatus = 0,
-                    password = hashed_password)
+        return jsonify(message="User " + requestJSON['username'] + ' already exists'), 409
+    newuser = User(username=requestJSON['username'], email=requestJSON['email'],
+                   phoneNumber=requestJSON['phoneNumber'], globalAdminStatus=0,
+                   password=hashed_password)
     session.add(newuser)
     session.commit()
     session.close()
@@ -214,7 +210,7 @@ def userByName(user_name):
         return jsonify(message='User does not exist'), 404
     user = users.first()
     session.close()
-    return redirect('/api/users/'+user.id)
+    return redirect('/api/users/' + user.id)
 
 
 @application.route('/api/appointments/<appointmentID>')  # Not yet implemented
@@ -225,14 +221,14 @@ def appointment_data(appointmentID):
     logger.info("User: " + uclaims['username'] +
                 " accessing appointment: " + str(appointmentID))
     session = Session()
-    appointments = session.query(Appointment).filter(Appointment.id == appointmentID)
+    appointments = session.query(Appointment).filter(
+        Appointment.id == appointmentID)
     if appointments.count() == 0:
         session.close()
         return jsonify(message="Appointment does not exist"), 404
     appointment = appointments.first()
     session.close()
     return jsonify(appointment.getAsJSON()), 200
-
 
 
 @application.route('/api/auth', methods=['POST'])  # complete, Test Complete
@@ -248,22 +244,23 @@ def authenticate_and_return_accessToken():
         return make_message_response("Missing username or password fields", 400)
 
     session = Session()
-    users = session.query(User).filter(User.username == requestJSON['username'])
+    users = session.query(User).filter(
+        User.username == requestJSON['username'])
     if users.count() == 0:
-        logger.info('Invalid Access Token Request (Username '+requestJSON['username']+' does not exist')
+        logger.info('Invalid Access Token Request (Username ' +
+                    requestJSON['username'] + ' does not exist')
         session.close()
-        return jsonify(message = 'Invalid Username or Password'), 404
+        return jsonify(message='Invalid Username or Password'), 404
     thisuser = users.first()
     if check_password_hash(thisuser.password, requestJSON['password']):
-        logger.info('Creating Access Token for '+ requestJSON['username'])
-        token = create_access_token(identity = thisuser)
-        logger.debug('Access Token: Bearer '+token)
+        logger.info('Creating Access Token for ' + requestJSON['username'])
+        token = create_access_token(identity=thisuser)
+        logger.debug('Access Token: Bearer ' + token)
         session.close()
         return jsonify(access_token=token, username=thisuser.username, email=thisuser.email, globalAdminStatus=thisuser.globalAdminStatus, phoneNumber=thisuser.phoneNumber), 200
     else:
         session.close()
         return jsonify(message='Invalid Username or Password')
-    
 
 
 # DYNAMIC PART - REST-DEV-API
@@ -287,17 +284,19 @@ def removeUser(uname):
         uclaims = get_jwt_claims()
         if uname != uclaims['username'] and uclaims['globalAdminStatus'] != 1:
             logger.warning('User : ' + uclaims['username'] + ' tried to remove ' +
-                        uname + '. This Endpoint should not be generally known')
+                           uname + '. This Endpoint should not be generally known')
             return make_message_response("Can only remove self; or requires administrative priviliges. User " + str(uclaims['username']) + " trying to remove " + uname, 401)
     except KeyError as e:
-        logger.error('An invalid Key got into RemoveUser!: KeyError on JWTClaims: '+ str(e))
+        logger.error(
+            'An invalid Key got into RemoveUser!: KeyError on JWTClaims: ' + str(e))
         return jsonify(message='An Error has occured. This is the programmers fault'), 500
-    
+
     session = Session()
     users = session.query(User).filter(User.username == uname)
     if users.count() == 0:
-        logger.info('Invalid User Removal Request: (Username '+uname+' does not exist')
-        return jsonify(message = 'Invalid Username or Password'), 404
+        logger.info('Invalid User Removal Request: (Username ' +
+                    uname + ' does not exist')
+        return jsonify(message='Invalid Username or Password'), 404
     thisuser = users.first()
     session.delete(thisuser)
     session.commit()
@@ -342,7 +341,7 @@ def logfile():
     if get_jwt_claims()['globalAdminStatus'] == 0:
         return jsonify(message="Illegal Non-Admin Operation"), 401
 
-    now=datetime.now()
+    now = datetime.now()
     filename = "/var/log/Mitfahrgelegenheit/Mitfahrgelegenheit-" + \
         now.strftime('%d-%m-%y') + ".log"
     logger.info('Sending Logfile: ' + filename)
@@ -383,7 +382,7 @@ def internal_server_error(error):
 @application.errorhandler(404)
 def resource_not_found_error(error):
     logger.warning("404: error")
-    return jsonify(message='Resource does not exist'),404
+    return jsonify(message='Resource does not exist'), 404
 
 
 #//////////////////////////////////////////////////////////////////////////////////////////////////
@@ -393,11 +392,11 @@ def resource_not_found_error(error):
 def add_claims_to_access_token(user):
     "Defines all fields to be remembered and recovered in the JSON Token"
     return {
-            'id': user.id,
-            'username': user.username,
-            'email': user.email,
-            'phoneNumber': user.phoneNumber,
-            'globalAdminStatus': user.globalAdminStatus}
+        'id': user.id,
+        'username': user.username,
+        'email': user.email,
+        'phoneNumber': user.phoneNumber,
+        'globalAdminStatus': user.globalAdminStatus}
 
 
 @jwt.user_identity_loader
