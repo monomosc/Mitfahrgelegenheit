@@ -25,7 +25,6 @@ import logging
 # GLOBALS:
 application = Flask(__name__)
 jwt = JWTManager(application)
-mysql = 123
 logger = logging.getLogger(__name__)
 scheduler = BackgroundScheduler()
 sentry = Sentry(
@@ -73,7 +72,6 @@ def initialize_everything():
     # LOADING CONFIG
     if prod:  # Testing somehow, loading config from working directory
         application.config.from_envvar('MITFAHRGELEGENHEIT_SETTINGS')
-        sentry.init_app(application)
     else:
         application.config['JWT_SECRET_KEY'] = 'SECRET'
         application.config['SQLAlchemyEngine'] = 'mysql://flask_testuser:weak@monomo.solutions/Mitfahrgelegenheit'
@@ -103,12 +101,12 @@ def initialize_everything():
 
 
 
-
+if application.debug or application.testing:
+    initialize_everything()
 
 
 
 if __name__ == "__main__":
-    initialize_everything()
     application.run(host='127.0.0.1', debug=True)
 
 
@@ -124,7 +122,7 @@ if __name__ == "__main__":
 @application.route('/api/users', methods=['GET'])  # TODO: Write Test
 @jwt_required
 def users():
-    if get_jwt_claims()['GlobalAdminStatus'] != 1:
+    if get_jwt_claims()['globalAdminStatus'] != 1:
         return jsonify(message="Not allowed as Non-Admin"), 403
 
     offset = 1
@@ -134,8 +132,12 @@ def users():
     if 'amount' in request.args:
         amount = request.args['amount']
 
+    returnJSON = []
     session = Session()
+    for instance in session.query(User):
+        returnJSON.append(instance.getAsJSON())
     
+    return jsonify(returnJSON)
 
 
 @application.route('/api/users', methods=['POST'])  # Complete, Test complete
@@ -146,7 +148,10 @@ def signup():
 
     if not request.is_json:
         return jsonify(message='Expect JSON Request'), 400
-    requestJSON = json.loads(request.data)
+    try:
+        requestJSON = json.loads(request.data)
+    except json.JSONDecoder.JSONDecodeError:
+        return jsonify(message="Malformed JSON"), 400
 
     # check for JSON keys
     if 'email' not in requestJSON or 'password' not in requestJSON:
@@ -164,11 +169,15 @@ def signup():
     if 'DROP' in checkall or 'DELETE' in checkall or 'INSERT' in checkall or 'ALTER' in checkall or 'SELECT' in checkall:
         return make_message_response("Bad Term in Request Body", 404)
 
-    # build the sql request
+    
+    
+    session = Session()
+    check_for_duplicates = session.query(User).filter(User.username == requestJSON['username'])
+    if check_for_duplicates.count() > 0:
+        return jsonify(message = "User "+requestJSON['username']+' already exists'), 409
     newuser = User( username=requestJSON['username'], email = requestJSON['email'],
                     phoneNumber = requestJSON['phoneNumber'], globalAdminStatus = 0,
                     password = hashed_password)
-    session = Session()
     session.add(newuser)
     session.commit()
     # Respond 201 CREATED
