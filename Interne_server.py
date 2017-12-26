@@ -1,23 +1,23 @@
 # Moritz Basel - interne_server.py
 # Version 0.0.1
-from flask import Flask, request, make_response, redirect, jsonify
+import atexit
+from flask import Flask, request, make_response, redirect, jsonify, before_first_request
 from Interne_Entities import Appointment, User, User_Appointment_Rel, SQLBase
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.sql import exists
 
 from raven.contrib.flask import Sentry
 from werkzeug import generate_password_hash, check_password_hash
+from werkzeug.security import safe_str_cmp
 from flask import json
 from datetime import time, timedelta, datetime
 from time import strftime
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers import cron
-import atexit
 
-from werkzeug.security import safe_str_cmp
+
 from flask_jwt_extended import (
     JWTManager, jwt_required, create_access_token, get_jwt_identity, get_jwt_claims, jwt_optional)
 import logging
@@ -58,6 +58,7 @@ def initialize_log():
 
 
 # init function to be called from within here (Debug client), PyTest (Test Framework) or wsgi.py (Prod)
+@application.before_first_request
 def initialize_everything():
     "Initializes EVERYTHING"
     if __name__ == "__main__":
@@ -103,11 +104,10 @@ def initialize_everything():
         logger.info('Setting Log Rollover CronTrigger')
         scheduler.add_job(initialize_log,
                           'cron',
-                          second=0)
+                          hour=0)
         atexit.register(lambda: scheduler.shutdown())
 
 
-initialize_everything()
 
 
 if __name__ == "__main__":
