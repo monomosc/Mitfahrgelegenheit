@@ -137,7 +137,7 @@ def users():
     for instance in session.query(User):
         returnJSON.append(instance.getAsJSON())
     
-    return jsonify(returnJSON)
+    return jsonify(returnJSON), 200
 
 
 @application.route('/api/users', methods=['POST'])  # Complete, Test complete
