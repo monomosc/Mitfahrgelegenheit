@@ -16,7 +16,7 @@ from time import strftime
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers import cron
-
+from apscheduler.jobstores.aqlalchemy import SQLAlchemyJobstore
 
 from flask_jwt_extended import (
     JWTManager, jwt_required, create_access_token, get_jwt_identity, get_jwt_claims, jwt_optional)
@@ -99,6 +99,7 @@ def initialize_everything():
     SQLBase.metadata.create_all(engine)
 
     if prod:
+        scheduler.configure(jobstores = {'default' : SQLAlchemyJobstore(engine = engine, tablename = 'APScheduler', tableschema= 'Mitfahrgelegenheit')})
         scheduler.start()
         # DEFINING THE Scheduled Trigger for Log Rollover IF NOT TESTING
         logger.info('Setting Log Rollover CronTrigger')
