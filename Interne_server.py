@@ -98,7 +98,8 @@ def initialize_everything():
     SQLBase.metadata.create_all(engine)
 
     if prod:
-        scheduler.configure(jobstores = {'default' : SQLAlchemyJobStore(engine = engine, tablename = 'APScheduler', tableschema= 'Mitfahrgelegenheit')})
+        apscheduleSqliteEngine = create_engine('sqlite:////var/WebSrv/APSchedule.db', echo = False)
+        scheduler.configure(jobstores = {'default' : SQLAlchemyJobStore(engine = apscheduleSqliteEngine})
         scheduler.start()
         # DEFINING THE Scheduled Trigger for Log Rollover IF NOT TESTING
         logger.info('Setting Log Rollover CronTrigger')
