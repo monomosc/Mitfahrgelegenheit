@@ -111,8 +111,7 @@ def initialize_everything():
 
 
 
-if application.testing or application.debug:
-    initialize_everything()
+initialize_everything()
 if __name__ == "__main__":
     application.run(host='127.0.0.1', debug=True)
 
