@@ -66,7 +66,7 @@ def initialize_everything():
     prod = False
     if not application.debug and not application.testing:
         prod = True
-        application.config['LogLevel'] = logging.INFO
+        application.config['LogLevel'] = logging.DEBUG
 
     initialize_log()            # Important logger initialization
 
@@ -98,7 +98,7 @@ def initialize_everything():
     SQLBase.metadata.create_all(engine)
 
     if prod:
-        apscheduleSqliteEngine = create_engine('sqlite:////var/WebSrv/APSchedule.db', echo = False)
+        apscheduleSqliteEngine = create_engine('sqlite:////var/WebSrv/APSchedule.db', echo = True)
         scheduler.configure(jobstores = {'default' : SQLAlchemyJobStore(engine = apscheduleSqliteEngine})
         scheduler.start()
         # DEFINING THE Scheduled Trigger for Log Rollover IF NOT TESTING
