@@ -58,7 +58,6 @@ def initialize_log():
 
 
 # init function to be called from within here (Debug client), PyTest (Test Framework) or wsgi.py (Prod)
-@application.before_first_request
 def initialize_everything():
     "Initializes EVERYTHING"
     if __name__ == "__main__":
@@ -112,7 +111,8 @@ def initialize_everything():
 
 
 
-
+if application.testing or application.debug:
+    initialize_everything()
 if __name__ == "__main__":
     application.run(host='127.0.0.1', debug=True)
 
