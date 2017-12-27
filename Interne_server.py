@@ -16,7 +16,7 @@ from time import strftime
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers import cron
-from apscheduler.jobstores.aqlalchemy import SQLAlchemyJobstore
+from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobstore
 
 from flask_jwt_extended import (
     JWTManager, jwt_required, create_access_token, get_jwt_identity, get_jwt_claims, jwt_optional)
@@ -236,7 +236,7 @@ def appointment_data(appointmentID):
 
 @application.route('/api/auth', methods=['POST'])  # complete, Test Complete
 def authenticate_and_return_accessToken():
-    "Authentication endpoint"
+    "Authentication endpoint, returns 200 {access_token : xyz} on success"
     logger.info('User Access Token Request')
     if not request.is_json:
         logger.info("Invalid Request in /api/auth. header content-type is: " +
