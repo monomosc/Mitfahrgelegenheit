@@ -16,7 +16,7 @@ from time import strftime
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers import cron
-from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobstore
+from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 
 from flask_jwt_extended import (
     JWTManager, jwt_required, create_access_token, get_jwt_identity, get_jwt_claims, jwt_optional)
