@@ -3,7 +3,7 @@
 
 import json
 import unittest
-
+import os.environ
 
 import Interne_server
 
@@ -12,9 +12,10 @@ class InterneServerTestCase(unittest.TestCase):
     "Defines the Test-Case Class for the 'Interne Mitfahrgelegenheit' Backend Flask Webservice"
 
     def setUp(self):
+        os.environ['MITFAHRGELEGENHEIT_SETTINGS'] = './Mitfahrgelegenheit.debug.conf'
         Interne_server.application.debug = False
         Interne_server.application.testing = True
-        Interne_server.initialize_everything()
+        self.app-testing = True
         self.app = Interne_server.application.test_client()
 
         putData = {}

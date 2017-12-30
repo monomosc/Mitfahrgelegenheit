@@ -74,12 +74,9 @@ def initialize_everything():
     initialize_log()            # Important logger initialization
 
     # LOADING CONFIG
-    if prod:  # Testing somehow, loading config from working directory
-        application.config.from_envvar('MITFAHRGELEGENHEIT_SETTINGS')
-    else:
-        application.config['JWT_SECRET_KEY'] = 'SECRET'
-        application.config['SQL_ALCHEMY_ENGINE'] = 'sqlite://Test_DB.db'
-        # TODO: ADD MYSQL CONFIG HERE OR IN SETTINGS FILE IN /etc/Mitfahrgelegnehit.conf
+    application.config.from_envvar('MITFAHRGELEGENHEIT_SETTINGS')   # is set to /etc/Mitfahrgelegenheit.conf on production
+
+    # TODO: ADD MYSQL CONFIG HERE OR IN SETTINGS FILE IN /etc/Mitfahrgelegenheit.conf
 
     logger.info('-------- STARTING UP --------')
     logger.info('Appliction is in ' +
