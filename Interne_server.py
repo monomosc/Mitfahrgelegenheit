@@ -39,7 +39,7 @@ log_handler = None
 def initialize_log():
     global log_handler
     now = datetime.now()
-    filename = "/var/log/Mitfahrgelegenheit/Mitfahrgelegenheit-" + \
+    filename = application.config['MITFAHRGELEGENHEIT_LOG'] +'Mitfahrgelegenheit-'+ \
         now.strftime("%d-%m-%y") + ".log"
     try:
         logger.removeHandler(log_handler)
@@ -81,11 +81,13 @@ def initialize_everything():
             application.config['LogLevel'] = logging.INFO
         else:
             application.testing = True
-    initialize_log()            # Important logger initialization
+    
 
     # LOADING CONFIG
     application.config.from_envvar('MITFAHRGELEGENHEIT_SETTINGS')   # is set to /etc/Mitfahrgelegenheit.conf on productionf
 
+    initialize_log()            # Important logger initialization
+    
     logger.info('-------- STARTING UP --------')
     logger.info('Appliction is in ' +
                 ('TEST' if application.testing else 'NON-TEST') + ' mode')
@@ -414,8 +416,8 @@ def logfile():
         return jsonify(message="Illegal Non-Admin Operation"), 401
 
     now = datetime.now()
-    filename = "/var/log/Mitfahrgelegenheit/Mitfahrgelegenheit-" + \
-        now.strftime('%d-%m-%y') + ".log"
+    filename = application.config['MITFAHRGELEGENHEIT_LOG'] +'Mitfahrgelegenheit-'+ \
+        now.strftime("%d-%m-%y") + ".log"
     logger.info('Sending Logfile: ' + filename)
     latest = request.args.get('latest')
     if latest == 'true':
