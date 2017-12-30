@@ -44,19 +44,26 @@ def initialize_log():
         logger.removeHandler(log_handler)
     except UnboundLocalError:
         pass
-
+    try:
+        logging.getLogger('apscheduler').removeHandler(log_handler)
+    except UnboundLocalError:
+        pass
+    try:
+        logging.getLogger('sqlalchemy').removeHandler(log_handler)
+    except UnboundLocalError:
+        pass
+    
     log_handler = logging.FileHandler(filename)
     log_handler.setLevel(logging.DEBUG)
     log_handler.setFormatter(logging.Formatter(
         '%(asctime)s - %(levelname)s - %(message)s'))
     logger.addHandler(log_handler)
-    sql_handler = logging.FileHandler(
-        '/var/log/Mitfahrgelegenheit/SQLAlchemy.log')
+
     logger.setLevel(application.config['LogLevel'])
     logger.info("Initialized logging to " + filename + ".")
     logging.getLogger('apscheduler').addHandler(log_handler)
     logging.getLogger('apscheduler').setLevel(logging.DEBUG)
-    logging.getLogger('sqlalchemy').addHandler(sql_handler)
+    logging.getLogger('sqlalchemy').addHandler(log_handler)
     logging.getLogger('sqlalchemy').setLevel(logging.DEBUG)
 
 
@@ -89,14 +96,14 @@ def initialize_everything():
         logger.debug(key + '  :  ' + str(val))
     # SQLALCHEMY SETUP
     engine = create_engine(
-        application.config['SQL_ALCHEMY_ENGINE'], echo=False if prod else True,  pool_recycle=3200)
+        application.config['SQL_ALCHEMY_ENGINE'], echo=False,  pool_recycle=3200)
     logger.info('Creating SQLAlchemy Engine with engine param: ' +
                 application.config['SQL_ALCHEMY_ENGINE'])
     Session.configure(bind=engine)
     SQLBase.metadata.create_all(engine)
 
     if prod:
-        apscheduleSqliteEngine = create_engine('sqlite:///APSchedule.db', echo = True)
+        apscheduleSqliteEngine = create_engine('sqlite:///APSchedule.db', echo = False)
         scheduler.configure(jobstores = {'default' : SQLAlchemyJobStore(engine = apscheduleSqliteEngine)})
         scheduler.start()
         # DEFINING THE Scheduled Trigger for Log Rollover IF NOT TESTING

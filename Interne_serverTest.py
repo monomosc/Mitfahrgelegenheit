@@ -3,7 +3,9 @@
 
 import json
 import unittest
-import os.environ
+import os
+
+os.environ['MITFAHRGELEGENHEIT_SETTINGS'] = './Mitfahrgelegenheit.debug.conf'
 
 import Interne_server
 
@@ -12,11 +14,11 @@ class InterneServerTestCase(unittest.TestCase):
     "Defines the Test-Case Class for the 'Interne Mitfahrgelegenheit' Backend Flask Webservice"
 
     def setUp(self):
-        os.environ['MITFAHRGELEGENHEIT_SETTINGS'] = './Mitfahrgelegenheit.debug.conf'
+        
+        self.application = Interne_server.application
         Interne_server.application.debug = False
         Interne_server.application.testing = True
-        self.app-testing = True
-        self.app = Interne_server.application.test_client()
+        app = self.application.test_client()
 
         putData = {}
         putData['username'] = 'UnitTest'
@@ -26,7 +28,7 @@ class InterneServerTestCase(unittest.TestCase):
         putData['Organization'] = 'Test Organization'
         print("Creating TestUser:")
         print(json.dumps(putData))
-        self.app.post('/api/users', data=json.dumps(putData),
+        app.post('/api/users', data=json.dumps(putData),
                       headers={'content-type': 'application/json'})
 
         print("Running Test method" + self._testMethodName)
@@ -38,7 +40,7 @@ class InterneServerTestCase(unittest.TestCase):
         if token == None:
             return
 
-        self.app.delete('/api/dev/removeUser/UnitTest', data="", headers={
+        app.delete('/api/dev/removeUser/UnitTest', data="", headers={
                         'content-type': 'application/json', 'Authorization': token})
         return
 
@@ -47,7 +49,7 @@ class InterneServerTestCase(unittest.TestCase):
         reqData["username"] = username
         reqData["password"] = password
 
-        responseLogin = self.app.post('/api/auth', data=json.dumps(reqData),
+        responseLogin = app.post('/api/auth', data=json.dumps(reqData),
                                       headers={'content-type': 'application/json'}, follow_redirects=True)
         try:
             responseJSON = json.loads(responseLogin.data)
@@ -66,7 +68,7 @@ class InterneServerTestCase(unittest.TestCase):
         self.assertFalse(token == None, msg="Login monomo+monomomo Failure")
         responseJSON = {}
         try:
-            responseCheck = self.app.get(
+            responseCheck = app.get(
                 '/api/dev/check_token', data="{}", headers={'Authorization': token}, follow_redirects=True)
             responseJSON = json.loads(responseCheck.data)
         except Exception:
@@ -82,7 +84,7 @@ class InterneServerTestCase(unittest.TestCase):
         self.assertTrue(
             token == None, msg="Login thisuserdoesnotexist+nope returned a Token")
 
-        responseCheck = self.app.post(
+        responseCheck = app.post(
             '/api/check-token', data="{}", headers={'content-type': 'application/json', 'Authorization': "Bearer wrong_token.bad_claims.illegal_signature"})
         self.assertFalse(responseCheck.status == 200,
                          msg="JWT Wrong Token returned HTTP 200 OK")
@@ -98,7 +100,7 @@ class InterneServerTestCase(unittest.TestCase):
         putData['phoneNumber'] = '093710000000'
         putData['Organization'] = 'Test Organization'
 
-        rq = self.app.post('/api/users', data=json.dumps(putData),
+        rq = app.post('/api/users', data=json.dumps(putData),
                            headers={'content-type': 'application/json'})
 
         if rq.status_code != 409:  # 409 : User already exists; not an error
@@ -114,7 +116,7 @@ class InterneServerTestCase(unittest.TestCase):
         self.assertFalse(
             token == None, msg="Login temptest+1234 Failure (test-based account)")
 
-        responseCheck = self.app.get(
+        responseCheck = app.get(
             '/api/dev/check_token', data="{}",
             headers={'content-type': 'application/json',
                      'Authorization': token},
@@ -132,7 +134,7 @@ class InterneServerTestCase(unittest.TestCase):
         self.assertTrue(responseJSON['username'] == 'temptest',
                         msg='Authorization Failure: temptest+1234')
 
-        response = self.app.delete(
+        response = app.delete(
             '/api/dev/removeUser/temptest', headers={'Authorization': token})
         if response.status_code != 204:
             print("/api/dev/removeUser/" + str(id) +
