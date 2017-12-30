@@ -190,6 +190,7 @@ def signup():
     session.commit()
     session.close()
     # Respond 201 CREATED
+    logger.info('User '+requestJSON['username'] + ' created')
     return jsonify(message="User " + requestJSON['username'] + " created"), 201
 
 
