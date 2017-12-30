@@ -18,6 +18,8 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers import cron
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 
+from validate_email import validate_email
+
 from flask_jwt_extended import (
     JWTManager, jwt_required, create_access_token, get_jwt_identity, get_jwt_claims, jwt_optional)
 import logging
@@ -30,10 +32,11 @@ scheduler = BackgroundScheduler()
 sentry = Sentry(
     dsn='https://6ac6c6188eb6499fa2967475961a03ca:2f617eada90f478bb489cd4cf2c50663@sentry.io/232283')
 Session = sessionmaker()
-
+log_handler = None
 
 # LOG INITIALIZER
 def initialize_log():
+    global log_handler
     now = datetime.now()
     filename = "/var/log/Mitfahrgelegenheit/Mitfahrgelegenheit-" + \
         now.strftime("%d-%m-%y") + ".log"
@@ -62,11 +65,11 @@ def initialize_everything():
     "Initializes EVERYTHING"
     if __name__ == "__main__":
         application.debug = True
-    application.config['LogLevel'] = logging.DEBUG
+    application.config['LogLevel'] = logging.INFO
     prod = False
     if not application.debug and not application.testing:
         prod = True
-        application.config['LogLevel'] = logging.DEBUG
+        application.config['LogLevel'] = logging.INFO
 
     initialize_log()            # Important logger initialization
 
@@ -98,7 +101,7 @@ def initialize_everything():
     SQLBase.metadata.create_all(engine)
 
     if prod:
-        apscheduleSqliteEngine = create_engine('sqlite:////var/WebSrv/APSchedule.db', echo = True)
+        apscheduleSqliteEngine = create_engine('sqlite:///APSchedule.db', echo = True)
         scheduler.configure(jobstores = {'default' : SQLAlchemyJobStore(engine = apscheduleSqliteEngine)})
         scheduler.start()
         # DEFINING THE Scheduled Trigger for Log Rollover IF NOT TESTING
@@ -126,7 +129,7 @@ if __name__ == "__main__":
 @application.route('/api/users', methods=['GET'])  # TODO: Write Test
 @jwt_required
 def users():
-    if get_jwt_claims()['globalAdminStatus'] != 1:
+    if get_jwt_claims()['globalAdminStatus'] < 1:
         return jsonify(message="Not allowed as Non-Admin"), 403
 
     offset = 1
@@ -215,6 +218,13 @@ def userByName(user_name):
     session.close()
     return redirect('/api/users/' + user.id)
 
+@application.route('/api/users/int:user_id', methods = ['PUT'])
+@jwt_required
+def patchUser(user_id):
+    if not request.is_json:
+        return jsonify(message='Malformed JSON or Wrong headers (expect applcation/json)'), 400
+    requestJSON = json.loads(request.data)
+    
 
 @application.route('/api/appointments/<appointmentID>')  # Not yet implemented
 @jwt_required
@@ -243,15 +253,18 @@ def authenticate_and_return_accessToken():
                     request.headers['content-type'])
         return make_message_response("Missing JSON request", 400)
     requestJSON = json.loads(request.data)
-    if 'username' not in requestJSON or 'password' not in requestJSON:
-        return make_message_response("Missing username or password fields", 400)
+    if ('username' not in requestJSON and 'email' not in requestJSON) or 'password' not in requestJSON:
+        return make_message_response("Missing username/email or password fields", 400)
 
     session = Session()
-    users = session.query(User).filter(
-        User.username == requestJSON['username'])
+    
+    users = session.query(User).filter((
+        User.username == requestJSON['username']) 
+        if ('users' in requestJSON) 
+        else (User.email == requestJSON['email']))
     if users.count() == 0:
         logger.info('Invalid Access Token Request (Username ' +
-                    requestJSON['username'] + ' does not exist')
+                    requestJSON['username'] if 'username' in requestJSON else requestJSON['email'] + ' does not exist')
         session.close()
         return jsonify(message='Invalid Username or Password'), 404
     thisuser = users.first()
@@ -285,7 +298,7 @@ def removeUser(uname):
     # check if you are the user in question or have Administrative Privileges
     try:
         uclaims = get_jwt_claims()
-        if uname != uclaims['username'] and uclaims['globalAdminStatus'] != 1:
+        if uname != uclaims['username'] and uclaims['globalAdminStatus'] < 1:
             logger.warning('User : ' + uclaims['username'] + ' tried to remove ' +
                            uname + '. This Endpoint should not be generally known')
             return make_message_response("Can only remove self; or requires administrative priviliges. User " + str(uclaims['username']) + " trying to remove " + uname, 401)
@@ -341,7 +354,7 @@ def optional():
 @jwt_required
 def logfile():
     logger.info('Logfile Request from User: ' + get_jwt_claims()['username'])
-    if get_jwt_claims()['globalAdminStatus'] == 0:
+    if get_jwt_claims()['globalAdminStatus'] < 1:
         return jsonify(message="Illegal Non-Admin Operation"), 401
 
     now = datetime.now()
@@ -358,7 +371,6 @@ def logfile():
     return jsonify(message="Only ?latest=true allowed"), 422
 
 #//////////////////////////////////////////////////////////////////////////////////////////////////
-
 
 def make_message_response(string, status):
     return make_json_response('{"message" : "' + string + '"}', status)
