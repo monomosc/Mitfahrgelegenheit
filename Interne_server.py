@@ -262,7 +262,7 @@ def authenticate_and_return_accessToken():
     
     users = session.query(User).filter((
         User.username == requestJSON['username']) 
-        if ('users' in requestJSON) 
+        if ('username' in requestJSON) 
         else (User.email == requestJSON['email']))
     if users.count() == 0:
         logger.info('Invalid Access Token Request (Username ' +
