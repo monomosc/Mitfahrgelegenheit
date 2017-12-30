@@ -221,15 +221,62 @@ def userByName(user_name):
     session.close()
     return redirect('/api/users/' + user.id)
 
-@application.route('/api/users/int:user_id', methods = ['PUT'])
+@application.route('/api/users/int:user_id', methods = ['PUT', 'UPDATE'])
 @jwt_required
 def patchUser(user_id):
+    uclaims = get_jwt_claims()
+    logger.info('User Patch Request by '+ uclaims['username']+' on UserID '+user_id)
     if not request.is_json:
         return jsonify(message='Malformed JSON or Wrong headers (expect applcation/json)'), 400
     requestJSON = json.loads(request.data)
+
+    # check if user is allowed to change requested user profile
+    if uclaims['globalAdminStatus' < 1]:
+        if get_jwt_identity()!=user_id:
+            logger.warn('User '+ uclaims['username'] + '(Non-Admin) tried to patch user other than himself')
+            return jsonify(message='Not allowed'), 401
+    if 'globalAdminStatus' in requestJSON:
+        try:
+            if int(requestJSON['globalAdminStatus']) > uclaims['globalAdminStatus']:
+                logger.warn('User '+ uclaims['username'] + 'illegaly attempts to elevate Admin Privileges to '+ requestJSON['globalAdminStatus'])
+                return jsonify(message='Not allowed'),404
+        except ValueError:
+            return jsonify(message='Illegal Type in field "globalAdminStatus"'), 422
+    if 'username' in requestJSON:
+        logger.info('Username change is not allowed')
+        return jsonify(message='Username change is not allowed'), 403
+    # end permission checks
+
+    session = Session()
+    users = session.query(User).filter(User.id == user_id)
+    if users.count()==0:
+        session.close()
+        logger.info('User '+ user_id+' does not exist. No Change executed')
+        return jsonify('User '+user_id+' does not exist'), 404
+    thisuser = users.first()
+    logstring = ''
+    if 'globalAdminStatus' in requestJSON:
+        logstring = logstring + 'globalAdminStatus: '+str(requestJSON['globalAdminStatus'])+', '
+        thisuser.globalAdminStatus = requestJSON['globalAdminStatus']
+    if 'email' in requestJSON:
+        logstring = logstring +'email: ' + str(requestJSON['email'])+', '
+        thisuser.email = requestJSON['email']
+    if 'phoneNumber' in requestJSON:
+        logstring = logstring + 'phoneNumber: ' + str(requestJSON['phoneNumber']) + ', '
+        thisuser.phoneNumber = requestJSON['phoneNumber']
+    if 'password' in requestJSON:
+        hashed_password = generate_password_hash(requestJSON['password'])
+        logger.info('Set new Password on User ' +  thisuser.username)
+        thisuser.password = hashed_password
+    
+    session.commit()
+    session.close()
+    logger.info('Changed User '+thisuser.username+'. Changed Keys: '+logstring)
+    return json.dumps(thisuser.getAsJSON()), 200
+
     
 
-@application.route('/api/appointments/<appointmentID>')  # Not yet implemented
+@application.route('/api/appointments/<appointmentID>', methods=['GET'])  # Not yet implemented
 @jwt_required
 def appointment_data(appointmentID):
     "Appointment functionailty"
