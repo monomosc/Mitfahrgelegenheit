@@ -3,6 +3,7 @@
 import atexit
 from flask import Flask, request, make_response, redirect, jsonify
 from Interne_Entities import Appointment, User, User_Appointment_Rel, SQLBase
+import os
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -62,9 +63,9 @@ def initialize_log():
     logger.setLevel(application.config['LogLevel'])
     logger.info("Initialized logging to " + filename + ".")
     logging.getLogger('apscheduler').addHandler(log_handler)
-    logging.getLogger('apscheduler').setLevel(logging.DEBUG)
+    logging.getLogger('apscheduler').setLevel(logging.WARN)
     logging.getLogger('sqlalchemy').addHandler(log_handler)
-    logging.getLogger('sqlalchemy').setLevel(logging.DEBUG)
+    logging.getLogger('sqlalchemy').setLevel(logging.WARN)
 
 
 # init function to be called from within here (Debug client), PyTest (Test Framework) or wsgi.py (Prod)
@@ -74,10 +75,12 @@ def initialize_everything():
         application.debug = True
     application.config['LogLevel'] = logging.INFO
     prod = False
-    if not application.debug and not application.testing:
-        prod = True
-        application.config['LogLevel'] = logging.INFO
-
+    if (not application.debug and not application.testing):
+        if not 'MITFAHRGELEGENHEIT_TEST' in os.environ:
+            prod = True
+            application.config['LogLevel'] = logging.INFO
+        else:
+            application.testing = True
     initialize_log()            # Important logger initialization
 
     # LOADING CONFIG
@@ -317,7 +320,7 @@ def authenticate_and_return_accessToken():
         else (User.email == requestJSON['email']))
     if users.count() == 0:
         logger.info('Invalid Access Token Request (Username ' +
-                    requestJSON['username'] if 'username' in requestJSON else requestJSON['email'] + ' does not exist')
+                    requestJSON['username'] if 'username' in requestJSON else requestJSON['email'] + ' does not exist)')
         session.close()
         return jsonify(message='Invalid Username or Password'), 404
     thisuser = users.first()
@@ -372,7 +375,7 @@ def removeUser(uname):
     session.close()
     logger.warning('Removed User : ' +
                    uclaims['username'] + ' - Was this intended?')
-    return 204
+    return ('',204)
 
 
 @application.route('/api/dev/check_api')
