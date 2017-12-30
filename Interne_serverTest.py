@@ -6,7 +6,7 @@ import unittest
 import os
 
 os.environ['MITFAHRGELEGENHEIT_SETTINGS'] = './Mitfahrgelegenheit.debug.conf'
-
+os.environ['MITFAHRGELEGENHEIT_TEST'] = '1'
 import Interne_server
 
 
@@ -18,20 +18,19 @@ class InterneServerTestCase(unittest.TestCase):
         self.application = Interne_server.application
         Interne_server.application.debug = False
         Interne_server.application.testing = True
-        app = self.application.test_client()
+        self.app = self.application.test_client()
 
         putData = {}
         putData['username'] = 'UnitTest'
         putData['email'] = 'testemail@test.test'
         putData['password'] = '1234'
         putData['phoneNumber'] = '093710000000'
-        putData['Organization'] = 'Test Organization'
         print("Creating TestUser:")
         print(json.dumps(putData))
-        app.post('/api/users', data=json.dumps(putData),
+        self.app.post('/api/users', data=json.dumps(putData),
                       headers={'content-type': 'application/json'})
 
-        print("Running Test method" + self._testMethodName)
+        print("Running Test method " + self._testMethodName)
         return
 
     def tearDown(self):
@@ -40,8 +39,8 @@ class InterneServerTestCase(unittest.TestCase):
         if token == None:
             return
 
-        app.delete('/api/dev/removeUser/UnitTest', data="", headers={
-                        'content-type': 'application/json', 'Authorization': token})
+        self.app.delete('/api/dev/removeUser/UnitTest', data="", \
+                        headers={'content-type': 'application/json', 'Authorization': token})
         return
 
     def login(self, username, password):
@@ -49,7 +48,7 @@ class InterneServerTestCase(unittest.TestCase):
         reqData["username"] = username
         reqData["password"] = password
 
-        responseLogin = app.post('/api/auth', data=json.dumps(reqData),
+        responseLogin = self.app.post('/api/auth', data=json.dumps(reqData),
                                       headers={'content-type': 'application/json'}, follow_redirects=True)
         try:
             responseJSON = json.loads(responseLogin.data)
@@ -68,7 +67,7 @@ class InterneServerTestCase(unittest.TestCase):
         self.assertFalse(token == None, msg="Login monomo+monomomo Failure")
         responseJSON = {}
         try:
-            responseCheck = app.get(
+            responseCheck = self.app.get(
                 '/api/dev/check_token', data="{}", headers={'Authorization': token}, follow_redirects=True)
             responseJSON = json.loads(responseCheck.data)
         except Exception:
@@ -77,20 +76,20 @@ class InterneServerTestCase(unittest.TestCase):
                   "{Authorization : " + token + " | Data: " + "{}")
             print("Returned: ")
             print(responseCheck.data)
-        self.assertTrue(responseJSON['Username'] == 'monomo',
+        self.assertTrue(responseJSON['username'] == 'monomo',
                         msg='Authorization Failure: monomo+monomomo')
 
         token = self.login('thisuserdoesnotexist', 'nope')
         self.assertTrue(
             token == None, msg="Login thisuserdoesnotexist+nope returned a Token")
 
-        responseCheck = app.post(
+        responseCheck = self.app.post(
             '/api/check-token', data="{}", headers={'content-type': 'application/json', 'Authorization': "Bearer wrong_token.bad_claims.illegal_signature"})
         self.assertFalse(responseCheck.status == 200,
                          msg="JWT Wrong Token returned HTTP 200 OK")
 
     def test_signup(self):
-        "Tests Signup on /api/users/uname, login on the new account on /api/auth, checks the token, then deletes the new account on /api/dev/removeUser/<id>"
+        "Tests Signup on /api/users/, login on the new account on /api/auth, checks the token, then deletes the new account on /api/dev/removeUser/<id>"
 
         putData = {}
 
@@ -98,9 +97,8 @@ class InterneServerTestCase(unittest.TestCase):
         putData['email'] = 'testemail@test.test'
         putData['password'] = '1234'
         putData['phoneNumber'] = '093710000000'
-        putData['Organization'] = 'Test Organization'
 
-        rq = app.post('/api/users', data=json.dumps(putData),
+        rq = self.app.post('/api/users', data=json.dumps(putData),
                            headers={'content-type': 'application/json'})
 
         if rq.status_code != 409:  # 409 : User already exists; not an error
@@ -116,7 +114,7 @@ class InterneServerTestCase(unittest.TestCase):
         self.assertFalse(
             token == None, msg="Login temptest+1234 Failure (test-based account)")
 
-        responseCheck = app.get(
+        responseCheck = self.app.get(
             '/api/dev/check_token', data="{}",
             headers={'content-type': 'application/json',
                      'Authorization': token},
@@ -134,7 +132,7 @@ class InterneServerTestCase(unittest.TestCase):
         self.assertTrue(responseJSON['username'] == 'temptest',
                         msg='Authorization Failure: temptest+1234')
 
-        response = app.delete(
+        response = self.app.delete(
             '/api/dev/removeUser/temptest', headers={'Authorization': token})
         if response.status_code != 204:
             print("/api/dev/removeUser/" + str(id) +
