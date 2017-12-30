@@ -106,6 +106,8 @@ def initialize_everything():
         scheduler.start()
         # DEFINING THE Scheduled Trigger for Log Rollover IF NOT TESTING
         logger.info('Setting Log Rollover CronTrigger')
+
+        scheduler.remove_all_jobs()
         scheduler.add_job(initialize_log,
                           'cron',
                           hour=0,
