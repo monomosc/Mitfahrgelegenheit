@@ -74,9 +74,7 @@ def initialize_everything():
     initialize_log()            # Important logger initialization
 
     # LOADING CONFIG
-    application.config.from_envvar('MITFAHRGELEGENHEIT_SETTINGS')   # is set to /etc/Mitfahrgelegenheit.conf on production
-
-    # TODO: ADD MYSQL CONFIG HERE OR IN SETTINGS FILE IN /etc/Mitfahrgelegenheit.conf
+    application.config.from_envvar('MITFAHRGELEGENHEIT_SETTINGS')   # is set to /etc/Mitfahrgelegenheit.conf on productionf
 
     logger.info('-------- STARTING UP --------')
     logger.info('Appliction is in ' +
