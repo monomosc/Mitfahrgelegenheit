@@ -224,6 +224,7 @@ def userByName(user_name):
 @application.route('/api/users/int:user_id', methods = ['PUT', 'UPDATE'])
 @jwt_required
 def patchUser(user_id):
+    "Update an existing user, similar but not completely compliant to RFC7396"
     uclaims = get_jwt_claims()
     logger.info('User Patch Request by '+ uclaims['username']+' on UserID '+user_id)
     if not request.is_json:
