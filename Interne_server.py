@@ -180,7 +180,7 @@ def signup():
     # CHECK for SQL Injection
     checkall = requestJSON['username'] + requestJSON['email']
     if 'DROP' in checkall or 'DELETE' in checkall or 'INSERT' in checkall or 'ALTER' in checkall or 'SELECT' in checkall:
-        return make_message_response("Bad Term in Request Body", 404)
+        return jsonify(message="Bad Term in Request Body"), 404
 
     session = Session()
     check_for_duplicates = session.query(User).filter(
@@ -320,7 +320,7 @@ def authenticate_and_return_accessToken():
         else (User.email == requestJSON['email']))
     if users.count() == 0:
         logger.info('Invalid Access Token Request (Username ' +
-                    requestJSON['username'] if 'username' in requestJSON else requestJSON['email'] + ' does not exist)')
+                    (requestJSON['username'] if 'username' in requestJSON else requestJSON['email']) + ' does not exist)')
         session.close()
         return jsonify(message='Invalid Username or Password'), 404
     thisuser = users.first()
