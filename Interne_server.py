@@ -78,7 +78,7 @@ def initialize_everything():
         application.config.from_envvar('MITFAHRGELEGENHEIT_SETTINGS')
     else:
         application.config['JWT_SECRET_KEY'] = 'SECRET'
-        application.config['SQL_ALCHEMY_ENGINE'] = 'mysql://flask_testuser:weak@monomo.solutions/Mitfahrgelegenheit'
+        application.config['SQL_ALCHEMY_ENGINE'] = 'sqlite://Test_DB.db'
         # TODO: ADD MYSQL CONFIG HERE OR IN SETTINGS FILE IN /etc/Mitfahrgelegnehit.conf
 
     logger.info('-------- STARTING UP --------')
