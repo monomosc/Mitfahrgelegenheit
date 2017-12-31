@@ -32,7 +32,7 @@ class InterneServerTestCase(unittest.TestCase):
 
         print("Running Test method " + self._testMethodName)
         return
-
+    
     def tearDown(self):
 
         token = self.login('UnitTest', '1234')
@@ -61,6 +61,25 @@ class InterneServerTestCase(unittest.TestCase):
         else:
             return None
 
+    def validateResponse(self, response, status_code=200, keys = []):
+        returnData = {}
+        
+        if response.status_code != status_code:
+            return returnData, 1
+        try:
+            returnData = json.loads(response.data)
+        except json.JSONDecodeError:
+            return returnData, 1
+        for key in keys:
+            if key not in returnData:
+                return returnData,1
+        return returnData, 0
+        
+
+
+
+
+        
     def test_login(self):
         "Tests login of existing user monomo+monomomo"
         token = self.login('monomo', 'monomomo')
@@ -143,6 +162,32 @@ class InterneServerTestCase(unittest.TestCase):
         self.assertTrue(
             token == None, msg='Login temptest+1234 still successful after deleting User')
 
+    def test_patchUser(self):
+        token = self.login('UnitTest', '1234')
+        if token == None:
+            self.fail(msg = 'UnitTest Login Failure')
+        
+        getStr = self.app.get('/api/users/UnitTest', follow_redirects = True, headers = {'Authorization' : token})
+        getData, err = self.validateResponse(getStr, keys = ['id'], status_code = 200)
+        if err != 0:
+            self.fail('Error on UPDATE /api/users/UnitTest')
+        
+        userid = getData['id']
+
+        data = {'email' : 'newemail@test.com', 'password' : '12345'}
+        print('Patching User with ID ' + str(userid))
+        updateData = self.app.put('/api/users/' + str(userid), data = json.dumps(data), 
+                                    headers = {'content-type' : 'application/json', 'Authorization' : token})
+        print(updateData.data)
+
+        token = self.login('UnitTest', '12345')
+        if token == None:
+            self.fail('UnitTest updated Login Failure')
+        getStr = self.app.get('/api/users/UnitTest', follow_redirects = True, headers = {'Authorization' : token})
+        getData, err = self.validateResponse(getStr, keys = ['email'], status_code = 200)
+        if err != 0: 
+            self.fail('Error on Updated GET /api/users/UnitTest')
+        self.assertTrue(getData['email'] == 'newemail@test.com', 'UnitTest Email does not reflect updated value')
 
 if __name__ == '__main__':
     unittest.main()

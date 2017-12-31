@@ -116,6 +116,8 @@ def initialize_everything():
         sentry.init_app(application)
 
 
+if __name__ == "__main__":
+    os.environ['MITFAHRGELEGENHEIT_SETTINGS'] = './Mitfahrgelegenheit.debug.conf'
 
 initialize_everything()
 if __name__ == "__main__":
@@ -219,9 +221,9 @@ def userByName(user_name):
         return jsonify(message='User does not exist'), 404
     user = users.first()
     session.close()
-    return redirect('/api/users/' + user.id)
+    return redirect('/api/users/' + str(user.id))
 
-@application.route('/api/users/int:user_id', methods = ['PUT', 'UPDATE'])
+@application.route('/api/users/int:user_id', methods = ['PUT', 'PATCH'])
 @jwt_required
 def patchUser(user_id):
     "Update an existing user, similar but not completely compliant to RFC7396"
@@ -302,10 +304,11 @@ def authenticate_and_return_accessToken():
     if not request.is_json:
         logger.info("Invalid Request in /api/auth. header content-type is: " +
                     request.headers['content-type'])
-        return make_message_response("Missing JSON request", 400)
+        return jsonify('No JSON'), 400
     requestJSON = json.loads(request.data)
     if ('username' not in requestJSON and 'email' not in requestJSON) or 'password' not in requestJSON:
-        return make_message_response("Missing username/email or password fields", 400)
+        logger.info('Malformed JSON in User Access Token Request')
+        return jsonify(message = 'Missing JSON Keys'), 422
 
     session = Session()
     
@@ -327,6 +330,7 @@ def authenticate_and_return_accessToken():
         return jsonify(access_token=token, username=thisuser.username, email=thisuser.email, globalAdminStatus=thisuser.globalAdminStatus, phoneNumber=thisuser.phoneNumber), 200
     else:
         session.close()
+        logger.info('Invalid Password in Access Token Request for user: ' + requestJSON['username'])
         return jsonify(message='Invalid Username or Password')
 
 
