@@ -37,6 +37,7 @@ Die JSON-Repräsentation eines Users enthält folgende Felder:
 \item globalAdminStatus
 \item id
 \end{enumerate}
+
 \section{User-Management}
 \subsection{Überblick}
 \begin{tabular}{|c|c|}
@@ -57,7 +58,7 @@ Erwartet eine vollständige JSON-Repräsentation eines Benutzers und zusätzlich
 
 \subsection{\textbf{POST} /api/users}
 Erwartet eine JSON-Repräsentation eines Benutzers und erstellt diesen nach Validierung der Daten. HTTP-Status 201 bei Erfolg.
-\subsection{\textbf{PUT,UPDATE} /api/users}
+\subsection{\textbf{PUT,PATCH} /api/users}
 Erwartet eine JSON-Repräsentation eines Benutzers, sowie optional ein neues Password im Feld password und überschreibt die alten Nutzerdaten.
 \subsection{\textbf{GET} /api/users/<UID>}
 Agiert wie erwartet. Nur der Benutzer selbst sowie Globale Administratoren haben Zugriffsrechte.
