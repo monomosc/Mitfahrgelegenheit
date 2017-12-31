@@ -33,38 +33,31 @@ scheduler = BackgroundScheduler()
 sentry = Sentry(
     dsn='https://6ac6c6188eb6499fa2967475961a03ca:2f617eada90f478bb489cd4cf2c50663@sentry.io/232283')
 Session = sessionmaker()
-log_handler = None
+__log_handler__ = None
+
 
 # LOG INITIALIZER
 def initialize_log():
-    global log_handler
+    global __log_handler__
     now = datetime.now()
     filename = application.config['MITFAHRGELEGENHEIT_LOG'] +'Mitfahrgelegenheit-'+ \
         now.strftime("%d-%m-%y") + ".log"
-    try:
-        logger.removeHandler(log_handler)
-    except UnboundLocalError:
-        pass
-    try:
-        logging.getLogger('apscheduler').removeHandler(log_handler)
-    except UnboundLocalError:
-        pass
-    try:
-        logging.getLogger('sqlalchemy').removeHandler(log_handler)
-    except UnboundLocalError:
-        pass
+    if __log_handler__ is not None:
+        logger.removeHandler(__log_handler__)
+        logging.getLogger('sqlalchemy').removeHandler(__log_handler__)
+        logging.getLogger('apscheduler').removeHandler(__log_handler__)
     
-    log_handler = logging.FileHandler(filename)
-    log_handler.setLevel(logging.DEBUG)
-    log_handler.setFormatter(logging.Formatter(
+    __log_handler__ = logging.FileHandler(filename)
+    __log_handler__.setLevel(logging.DEBUG)
+    __log_handler__.setFormatter(logging.Formatter(
         '%(asctime)s - %(levelname)s - %(message)s'))
-    logger.addHandler(log_handler)
+    logger.addHandler(__log_handler__)
 
     logger.setLevel(application.config['LogLevel'])
     logger.info("Initialized logging to " + filename + ".")
-    logging.getLogger('apscheduler').addHandler(log_handler)
+    logging.getLogger('apscheduler').addHandler(__log_handler__)
     logging.getLogger('apscheduler').setLevel(logging.WARN)
-    logging.getLogger('sqlalchemy').addHandler(log_handler)
+    logging.getLogger('sqlalchemy').addHandler(__log_handler__)
     logging.getLogger('sqlalchemy').setLevel(logging.WARN)
 
 
