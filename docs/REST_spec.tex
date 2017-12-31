@@ -15,7 +15,6 @@
 \begin{document}
 \normalfont
 \maketitle{}
-\tableofcontents{}
 \section{Einführung}
 \subsection{Zweck des Dokuments}
 Dieses Dokument dient als Handbuch für Fronteddeveloper zur Software "Interne Mitfahrgelegenheit". Es wird versucht, die REST-API vollständig aufzuzählen und alle möglichen Anwendungsfälle zu erfassen.
@@ -27,7 +26,17 @@ Alle Endpunkte lesen und schreiben ausschließlich JSON. Der Content-Type in jed
 Für Endpunkte, bei denen Autorisierung nötig ist, wird diese erbracht, indem der Http-Header 'Authorization' gesetzt ist und den Access-Token der von \url{/api/auth} erhalten wurde, in folgender Form enthält\\
 'Authorization' : 'Bearer ey................', z.B.:\\
 'Authorization' : 'Bearer eyJhbGciOiJI.3u4zudusua.asudfuu23'
-
+\tableofcontents{}
+\section{JSON-Objekte}
+\subsection{User}
+Die JSON-Repräsentation eines Users enthält folgende Felder:
+\begin{enumerate}
+\item username
+\item email
+\item phoneNumber
+\item globalAdminStatus
+\item id
+\end{enumerate}
 \section{User-Management}
 \subsection{Überblick}
 \begin{tabular}{|c|c|}
@@ -40,15 +49,16 @@ Für Endpunkte, bei denen Autorisierung nötig ist, wird diese erbracht, indem d
 \hline
 \textbf{POST} /api/auth & Login-Token Erstellung \\
 \hline
+\textbf{PUT, UPDATE} /api/users/uid & User-Update \\
+\hline
 \end{tabular}
 \subsection{\textbf{POST} /api/users}
-Nötige JSON-Einträge:
-\begin{itemize}
-\item Username
-\item Password
-\item email
-\end{itemize}
+Erwartet eine vollständige JSON-Repräsentation eines Benutzers und zusätzlich das password - Feld.
 
+\subsection{\textbf{POST} /api/users}
+Erwartet eine JSON-Repräsentation eines Benutzers und erstellt diesen nach Validierung der Daten. HTTP-Status 201 bei Erfolg.
+\subsection{\textbf{PUT,UPDATE} /api/users}
+Erwartet eine JSON-Repräsentation eines Benutzers, sowie optional ein neues Password im Feld password und überschreibt die alten Nutzerdaten.
 \subsection{\textbf{GET} /api/users/<UID>}
 Agiert wie erwartet. Nur der Benutzer selbst sowie Globale Administratoren haben Zugriffsrechte.
 \subsection{\textbf{POST} /api/auth}
@@ -70,11 +80,13 @@ Not yet Implemented
 
 \begin{tabular}{|c|c|}
 \hline
-\textbf{DELETE} /api/dev/removeUser/<username> & Löscht bestimmten Nutzer vollständig \\
+\textbf{DELETE} /api/dev/removeUser/<uname> & Löscht bestimmten Nutzer \\
 \hline
-\textbf{GET} /api/dev/check\_token & Gibt die ID des momentanen Nutzers zurück \\
+\textbf{GET} /api/dev/check\_token & User-ID des Nutzers \\
 \hline
-\textbf{GET} /api/dev/check-api & Einfache Nachricht zum Testen der allgemeinen Erreichbarkeit \\
+\textbf{GET} /api/dev/check-api & Simpler Test \\
+\hline
+\textbf{GET} /api/dev/log & Log \\
 \hline
 \end{tabular}
 
