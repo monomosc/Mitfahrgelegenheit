@@ -50,7 +50,7 @@ Die JSON-Repräsentation eines Users enthält folgende Felder:
 \hline
 \textbf{POST} /api/auth & Login-Token Erstellung \\
 \hline
-\textbf{PUT, UPDATE} /api/users/uid & User-Update \\
+\textbf{PUT, PATCH} /api/users/uid & User-Update \\
 \hline
 \end{tabular}
 \subsection{\textbf{POST} /api/users}
@@ -70,6 +70,12 @@ Außerdem werden alle Nutzerdaten in den Feldern 'username', 'email', 'phoneNumb
 \begin{tabular}{|c|c|}
 \hline
 \textbf{GET} /api/appointments/<appointmentID> & Daten zum gewähltem Appointment \\
+\hline
+\textbf{GET} /api/users/<userID>/appointments & Liste der Appointments zum Nutzer \\
+\hline
+\textbf{GET} /api/appointments & Liste aller Appointments \\
+\hline
+\textbf{POST} /api/appointments & Erstellt ein neues Appointment \\
 \hline
 \end{tabular}
 
