@@ -196,6 +196,31 @@ def signup():
     return jsonify(message="User " + requestJSON['username'] + " created"), 201
 
 
+@application.route('/api/users/<int:u_id>', methods=['GET', 'PUT', 'DELETE', 'PATCH'])
+@jwt_optional
+def doSomethingWithThisUser(u_id):
+    if request.method == 'PATCH':
+        return patchUser(u_id)
+    if request.method == 'PUT':
+        return patchUser(u_id)
+    if request.method == 'GET':
+        return user_profileByID(u_id)
+    if request.mehod == 'DELETE':
+        return jsonify(message='This Method is not implemented here (yet)'), 405
+
+@application.route('/api/users/<string:u_name>', methods=['GET', 'PUT', 'DELETE0', 'PATCH'])
+@jwt_optional
+def redirectToIdCall(u_name):
+    "User redirect Username --> UserID"
+    session = Session()
+    users = session.query(User).filter(User.username == u_name)
+    if users.count() == 0:
+        session.close()
+        return jsonify(message='User ' + u_name +' does not exist'), 404
+    user = users.first()
+    session.close()
+    return redirect('/api/users/' + str(user.id)), 307
+
 @application.route('/api/users/<int:u_id>', methods=['GET'])
 @jwt_optional
 def user_profileByID(u_id):  # Profile itself NYI
@@ -210,34 +235,23 @@ def user_profileByID(u_id):  # Profile itself NYI
     return jsonify(user.getAsJSON()), 200
 
 
-@application.route('/api/users/<string:user_name>', methods=['GET'])
-@jwt_optional
-def userByName(user_name):
-    "User profile redirect Username --> UserID"
-    session = Session()
-    users = session.query(User).filter(User.username == user_name)
-    if users.count() == 0:
-        session.close()
-        return jsonify(message='User does not exist'), 404
-    user = users.first()
-    session.close()
-    return redirect('/api/users/' + str(user.id))
-
-@application.route('/api/users/int:user_id', methods = ['PUT', 'PATCH'])
-@jwt_required
 def patchUser(user_id):
     "Update an existing user, similar but not completely compliant to RFC7396"
     uclaims = get_jwt_claims()
-    logger.info('User Patch Request by '+ uclaims['username']+' on UserID '+user_id)
+    logger.info('User Patch Request by '+ uclaims['username']+' on UserID '+ str(user_id))
     if not request.is_json:
         return jsonify(message='Malformed JSON or Wrong headers (expect applcation/json)'), 400
     requestJSON = json.loads(request.data)
 
     # check if user is allowed to change requested user profile
-    if uclaims['globalAdminStatus' < 1]:
-        if get_jwt_identity()!=user_id:
-            logger.warn('User '+ uclaims['username'] + '(Non-Admin) tried to patch user other than himself')
-            return jsonify(message='Not allowed'), 401
+    try:
+        if int(uclaims['globalAdminStatus'] < 1):
+            if get_jwt_identity()!=user_id:
+                logger.warn('User '+ uclaims['username'] + '(Non-Admin) tried to patch user other than himself')
+                return jsonify(message='Not allowed'), 401
+    except ValueError:
+        logger.error('User '+uclaims['username'] + '  has an illegal globalAdminStatus: ' + str(uclaims['globalAdminStatus']))
+        return jsonify(message = 'ye weird'), 500
     if 'globalAdminStatus' in requestJSON:
         try:
             if int(requestJSON['globalAdminStatus']) > uclaims['globalAdminStatus']:
@@ -273,8 +287,8 @@ def patchUser(user_id):
         thisuser.password = hashed_password
     
     session.commit()
-    session.close()
     logger.info('Changed User '+thisuser.username+'. Changed Keys: '+logstring)
+    session.close()
     return json.dumps(thisuser.getAsJSON()), 200
 
     

@@ -4,6 +4,17 @@
 import json
 import unittest
 import os
+import logging
+from datetime import datetime
+
+now = datetime.now()
+hndlr = logging.FileHandler('./test_logs/Mitfahrgelegenheit_test-' + now.strftime("%d-%m-%y %H-%M-%S") + '.log')
+hndlr.setFormatter(logging.Formatter(
+        '%(asctime)s - %(levelname)s - %(message)s'))
+hndlr.setLevel(logging.DEBUG)
+logging.getLogger(__name__).addHandler(hndlr)
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
 os.environ['MITFAHRGELEGENHEIT_SETTINGS'] = './Mitfahrgelegenheit.debug.conf'
 os.environ['MITFAHRGELEGENHEIT_TEST'] = '1'
@@ -25,12 +36,12 @@ class InterneServerTestCase(unittest.TestCase):
         putData['email'] = 'testemail@test.test'
         putData['password'] = '1234'
         putData['phoneNumber'] = '093710000000'
-        print("Creating TestUser:")
-        print(json.dumps(putData))
+        logger.info("Creating TestUser:")
+        logger.info(json.dumps(putData))
         self.app.post('/api/users', data=json.dumps(putData),
                       headers={'content-type': 'application/json'})
 
-        print("Running Test method " + self._testMethodName)
+        logger.info("Running Test method " + self._testMethodName)
         return
     
     def tearDown(self):
@@ -53,7 +64,7 @@ class InterneServerTestCase(unittest.TestCase):
         try:
             responseJSON = json.loads(responseLogin.data)
         except json.JSONDecodeError:
-            print(responseLogin)
+            logger.info(responseLogin)
             self.fail()
 
         if 'access_token' in responseJSON:
@@ -90,11 +101,11 @@ class InterneServerTestCase(unittest.TestCase):
                 '/api/dev/check_token', data="{}", headers={'Authorization': token}, follow_redirects=True)
             responseJSON = json.loads(responseCheck.data)
         except Exception:
-            print(Exception)
-            print("On Get Request: /api/dev/check_token " +
+            logger.info(Exception)
+            logger.info("On Get Request: /api/dev/check_token " +
                   "{Authorization : " + token + " | Data: " + "{}")
-            print("Returned: ")
-            print(responseCheck.data)
+            logger.info("Returned: ")
+            logger.info(responseCheck.data)
         self.assertTrue(responseJSON['username'] == 'monomo',
                         msg='Authorization Failure: monomo+monomomo')
 
@@ -125,8 +136,8 @@ class InterneServerTestCase(unittest.TestCase):
                 self.assertTrue(rq.status_code == 201,
                                 msg="User temptest+1234 could not be created;")
             except AssertionError:
-                print(rq.status_code)
-                print(rq.data)
+                logger.info(rq.status_code)
+                logger.info(rq.data)
                 self.fail()
 
         token = self.login('temptest', '1234')
@@ -144,9 +155,9 @@ class InterneServerTestCase(unittest.TestCase):
         try:
             responseJSON = json.loads(responseCheck.data)
         except json.JSONDecodeError:
-            print("/api/dev/check_token Data irregular. (No JSON)")
-            print("Data received was:")
-            print(str(responseCheck))
+            logger.info("/api/dev/check_token Data irregular. (No JSON)")
+            logger.info("Data received was:")
+            logger.info(str(responseCheck))
             self.assertTrue(False)
         self.assertTrue(responseJSON['username'] == 'temptest',
                         msg='Authorization Failure: temptest+1234')
@@ -154,9 +165,9 @@ class InterneServerTestCase(unittest.TestCase):
         response = self.app.delete(
             '/api/dev/removeUser/temptest', headers={'Authorization': token})
         if response.status_code != 204:
-            print("/api/dev/removeUser/" + str(id) +
+            logger.info("/api/dev/removeUser/" + str(id) +
                   " did not return status 204. Message is: " + response.status)
-            print(response.data)
+            logger.info(response.data)
         self.assertTrue(response.status_code == 204)
         token = self.login('temptest', '1234')
         self.assertTrue(
@@ -175,10 +186,10 @@ class InterneServerTestCase(unittest.TestCase):
         userid = getData['id']
 
         data = {'email' : 'newemail@test.com', 'password' : '12345'}
-        print('Patching User with ID ' + str(userid))
+        logger.info('Patching User with ID ' + str(userid))
         updateData = self.app.put('/api/users/' + str(userid), data = json.dumps(data), 
                                     headers = {'content-type' : 'application/json', 'Authorization' : token})
-        print(updateData.data)
+        logger.info(updateData.data)
 
         token = self.login('UnitTest', '12345')
         if token == None:
@@ -188,6 +199,14 @@ class InterneServerTestCase(unittest.TestCase):
         if err != 0: 
             self.fail('Error on Updated GET /api/users/UnitTest')
         self.assertTrue(getData['email'] == 'newemail@test.com', 'UnitTest Email does not reflect updated value')
+
+        data = {'password' : '1234' }
+        logger.info('Patching UnitTest to restore PW to 1234')
+        self.app.put('/api/users/' + str(userid), data = json.dumps(data), 
+                                    headers = {'content-type' : 'application/json', 'Authorization' : token})
+        token = self.login('UnitTest', '1234')
+        if token == None:
+            self.fail('After changing the UnitTest User Password from 1234 to 12345 and back, the second Login was a failure')
 
 if __name__ == '__main__':
     unittest.main()

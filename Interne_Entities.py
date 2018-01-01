@@ -1,6 +1,6 @@
 # Moritz Basel - Interne_Entities.py
 # Version 0.0.1
-from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy import Column, Integer, String, ForeignKey, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 
@@ -20,7 +20,7 @@ class User(SQLBase):
     # globalAdminStatus      //Global Admin Status, currently 0 or 1
     __tablename__ = 'users'
     id = Column(Integer, primary_key = True)
-    username = Column(String(50))
+    username = Column(String(50), unique = True)
     password = Column(String(255))
     email = Column(String(100))
     phoneNumber = Column(String(40))
@@ -56,6 +56,9 @@ class Appointment(SQLBase):
     # [id, id, id, id, ..]
     __tablename__='appointments'
     id = Column (Integer, primary_key = True)
+    startLocation = Column(String(40))
+    startTime = Column(DateTime())
+    repeatTime = Column(String(15))
     users = relationship("User_Appointment_Rel", back_populates="appointment",
                             cascade= "all, delete, delete-orphan")
 
