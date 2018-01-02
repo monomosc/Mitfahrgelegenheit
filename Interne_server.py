@@ -5,7 +5,7 @@ from flask import Flask, request, make_response, redirect, jsonify
 from Interne_Entities import Appointment, User, User_Appointment_Rel, SQLBase
 import os
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, exc
 from sqlalchemy.orm import sessionmaker
 
 from raven.contrib.flask import Sentry
@@ -205,7 +205,7 @@ def redirectToIdCall(u_name):
     return redirect('/api/users/' + str(user.id)), 307
 
 
-def user_profileByID(u_id):  # Profile itself NYI
+def user_profileByID(u_id): 
     "User Profile Endpoint - ID"
     session = Session()
     users = session.query(User).filter(User.id == u_id)
@@ -291,7 +291,7 @@ def userAppointments(u_id):
 
 
 def getAppointments(u_id):
-    return jsonify(message = 'Not yet implemented'), 404
+    return jsonify(message = 'Not yet implemented'), 404        #TODO: Implement and write test
 
 
 @application.route('/api/users/int:u_ID/appointments/a_ID', methods = ['PUT'])
@@ -305,7 +305,7 @@ def putAppointment(u_id):
 
 
 
-@application.route('/api/appointments/<appointmentID>', methods=['GET', 'DELETE'])  # Not yet implemented
+@application.route('/api/appointments/<appointmentID>', methods=['GET', 'DELETE'])  
 @jwt_required
 def appointment(appointmentID):
     if request.method == 'GET':
@@ -352,17 +352,74 @@ def deleteAppointment(appointmentID):
 @application.route('/api/appointments/<a_ID>/users', methods = ['GET'])
 @jwt_required
 def getAppUsers(a_ID):
-    return jsonify(message = "Not yet implemented"), 404
+    return jsonify(message = "Not yet implemented"), 404                    #TODO: Implement and add Test
 
 @application.route('/api/appointments/<a_ID>/users/u_ID', methods = ['PUT', 'GET'])
 @jwt_required
 def putAppUser(a_ID, u_ID):
+    "Add an existing appointment to a User (in the sense that he will be taking part)"
     if request.method == 'GET':
         logger.info('GET on /api/appointments/a_ID/users/u_ID redirecting to user profile')
         return redirect('/api/users/' + str(u_ID))
-    logger.info('User ' + get_jwt_claims()['username'] + ' attempts to add ' + str(u_ID) + ' to Appointment ' + str(a_ID))
-    logger.info('Not Implemented yet (putAppUser(..)')
-    return jsonify(message = 'Not implemented yet'), 404        #TODO: Implement and add test
+    
+    
+    
+    session = Session()
+
+    #check if Appointment exists:
+    appointments = session.query(Appointment).filter(Appointment.id == a_ID)
+    if appointments.count() == 0:
+        return jsonify(message = 'No such Appointment exists'), 404
+    thisappointment = appointments.first()
+
+    #check if user exists:
+    users = session.query(User).filter(User.id == u_ID)
+    if users.count() == 0:
+        return jsonify(message = 'No such User exists'), 404
+    thisuser = users.first()
+
+    logger.info('User ' + get_jwt_claims()['username'] + ' attempts to add ' + thisuser.username + ' to Appointment ' + str(a_ID))
+    
+
+
+    #Some basic checks for request syntax and semantics
+    if not request.is_json:
+        return jsonify(message= 'Expect JSON Body'), 400
+    try:
+        requestJSON = json.loads(request.data)
+    except:
+        logger.warn('Illegal Request Syntax')
+        return jsoinfy('Expect JSON Body'), 400
+
+    if 'drivingLevel' not in requestJSON:
+        return jsonify('Expect drivingLevel Integer JSON key'), 409
+    
+    #check priviliges:
+    if get_jwt_claims()['globalAdminStatus'] < 1:
+        if get_jwt_identity() != u_ID:
+            logger.warn('User ' + get_jwt_claims()['username'] + ' tried to add ' + thisuser.username + ' to an Appointment as Non-Admin')
+            return jsonify('Non-Admin can only add him/herself to Appointments'), 403
+
+    #build the relationshio column
+    try:
+        rel = User_Appointment_Rel(int(requestJSON['drivingLevel']))
+    except ValueError:
+        logger.warn('drivingLevel was not an Integer: drivingLevel : ' + requestJSON['drivingLevel'])
+        return jsonify('Expect integer drivingLevel'), 409
+    try:
+        rel.appointment = thisappointment
+        thisuser.appointments.append(rel)
+        session.commit()        
+    except exc.SQLAlchemyError:
+        logger.error('SQLAlchemy Error on building User_Takes_Part Row: %s', exc_info = True)
+        session.close()
+        return jsonify(message='Unfortunately, an error occured'), 500
+    
+
+    logger.info('Added User ' + thisuser + ' to Appointment ' + str(a_ID))
+
+    session.close()    
+    return jsonify(message = 'Success'), 200        #TODO: Implement and add test
    
 
 
