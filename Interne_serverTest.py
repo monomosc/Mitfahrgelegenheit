@@ -208,5 +208,19 @@ class InterneServerTestCase(unittest.TestCase):
         if token == None:
             self.fail('After changing the UnitTest User Password from 1234 to 12345 and back, the second Login was a failure')
 
+
+
+    def test_makeAndGetAppointment(self):
+        token = self.login('UnitTest', '1234')
+        if token == None:
+            self.fail('UnitTest Login Failure')
+        
+        postData = {'startLocation' : 'Berlin', 'startTime' : 1614847559}
+
+        resp = self.app.post('/api/appointments', 
+                data = json.dumps(postData), headers = {'content-type' : 'application/json', 'Authorization' : token})
+        self.assertEqual(resp.status_code, 201 , 'Appointment Creation returned ' +  str(resp.status_code))
+
+
 if __name__ == '__main__':
     unittest.main()
