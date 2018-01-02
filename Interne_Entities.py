@@ -26,7 +26,7 @@ class User(SQLBase):
     phoneNumber = Column(String(40))
     globalAdminStatus = Column(Integer)
     appointments = relationship("User_Appointment_Rel", back_populates="user",
-                                cascade = "all, delete, delete-orphan")
+                                cascade = "delete, delete-orphan")
 
     def getAsJSON(self):
         "Returns a JSON representation of a User"
@@ -48,7 +48,7 @@ class Appointment(SQLBase):
     startTime = Column(DateTime)
     repeatTime = Column(String(15))
     users = relationship("User_Appointment_Rel", back_populates="appointment",
-                            cascade= "all, delete, delete-orphan")
+                            cascade= "delete, delete-orphan")
 
     def getAsJSON(self):
         return {'id' : self.id, 'startLocation' : self.startLocation, 'startTime' : self.startTime, 'repeatTime' : self.repeatTime}
@@ -61,3 +61,6 @@ class User_Appointment_Rel(SQLBase):
     drivingLevel = Column(Integer)
     appointment = relationship("Appointment", back_populates = "users")
     user = relationship("User", back_populates = "appointments")
+
+
+
