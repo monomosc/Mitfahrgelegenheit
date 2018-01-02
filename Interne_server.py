@@ -323,11 +323,29 @@ def appointment_data(appointmentID):
         session.close()
         return jsonify(message="Appointment does not exist"), 404
     appointment = appointments.first()
+    appointmentJSON = appointment.getAsJSON()
     session.close()
-    return jsonify(appointment.getAsJSON()), 200
+    return jsonify(appointmentJSON), 200
 
 def deleteAppointment(appointmentID):
-    return jsonify(message = 'Not Implemenented yet')
+    logger.info('Trying to delete Appointment ' + str(appointmentID) + ' from User ' + get_jwt_claims()['username'])
+
+    session = Session()
+    appointments = session.query(Appointment).filter(Appointment.id == appointmentID)
+    if appointments.count() == 0:
+        session.close()
+        return jsonify(message = "Appointment does not exist"), 404
+    try:
+        appointment = appointments.first()
+        session.delete(appointment)
+        session.commit()
+        logger.info('Appointment ' +appointmentID + ' deleted')
+    except:
+        logger.error('Deletion of Appointment ID' +  str(appointmentID) + ' unsuccessful')
+    finally:
+        session.close()
+
+    return jsonify('Appointment Deleted '), 200
 
 @application.route('/api/appointments', methods = ['GET', 'POST'])
 @jwt_required
