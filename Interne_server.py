@@ -359,10 +359,17 @@ def appointments():
 def getAppointments():
     "Get a list of appointments"
     #request argument parsing
+    log.info('User ' + get_jwt_claims()['username'] +  'requesting appointment List')
     showFinished = False
     if 'showFinished' in request.args:
         showFinished = True if request.args['showFinished'] == 'true' else False
+    appointments = session.query(Appointment).all().order_by(Appointment.startTime)
+    retListJSON = []
+
+    for app in appointments:
+        retListJSON.append(app.getAsJSON())
     
+    return jsonify(retListJSON), 200
     
 def makeAppointment():
     "Creates a new Appointment"
