@@ -215,12 +215,30 @@ class InterneServerTestCase(unittest.TestCase):
         if token == None:
             self.fail('UnitTest Login Failure')
         
+        #create an appointment
         postData = {'startLocation' : 'Berlin', 'startTime' : 1614847559}
-
         resp = self.app.post('/api/appointments', 
                 data = json.dumps(postData), headers = {'content-type' : 'application/json', 'Authorization' : token})
         self.assertEqual(resp.status_code, 201 , 'Appointment Creation returned ' +  str(resp.status_code))
+        respJSON = json.loads(resp.data)
+        appID = respJSON['id']
 
+        resp = self.app.get('/api/appointments/' + str(appID), headers = {'content-type' : 'application/json', 'Authorization' : token})
+        self.assertEqual(resp.status_code, 200, 'Appointment apprently does not exist: 200 expected, returned ' + str(resp.status_code))
+        respJSON = json.loads(resp.data)
+        self.assertEqual(respJSON['startLocation'], 'Berlin', 
+                    'Newly created appointment has a different startLocation! Expected Berlin but got: ' + respJSON['startLocation'])
+        
+
+        #delete the appointment
+        resp = self.app.delete('/api/appointments/' + str(appID), data = '',
+                            headers = {'content-type' : 'application/json', 'Authorization' : token})
+        self.assertEqual(resp.status_code, 200, 'Appointment Deleteion returned ' + str(resp.status_code))
+
+        #check if appointment still exists anyway:
+        resp = self.app.get('/api/appointments/' + str(appID), headers = {'content-type' : 'application/json', 'Authorization' : token})
+        self.assertEqual(resp.status_code, 404, 'Appointment apprently still exists: 404 expected, returned ' + str(resp.status_code))
+            
 
 if __name__ == '__main__':
     unittest.main()
