@@ -31,7 +31,8 @@ jwt = JWTManager(application)
 logger = logging.getLogger(__name__)
 scheduler = BackgroundScheduler()
 sentry = Sentry(
-    dsn='https://6ac6c6188eb6499fa2967475961a03ca:2f617eada90f478bb489cd4cf2c50663@sentry.io/232283')
+    dsn=
+        'https://6ac6c6188eb6499fa2967475961a03ca:2f617eada90f478bb489cd4cf2c50663@sentry.io/232283')
 Session = sessionmaker()
 __log_handler__ = None
 
@@ -294,10 +295,11 @@ def getAppointments(u_id):
     return jsonify(message = 'Not yet implemented'), 404
 
 
-@application.route('/api/users/int:u_id/appointments/a_id', methods = ['PUT'])
+@application.route('/api/users/int:u_ID/appointments/a_ID', methods = ['PUT'])
 def putAppointment(u_id):
     "Add an existing appointment to a User (in the sense that he will be taking part)"
-    return jsonify(message = 'Not yet implemented')
+    logger.info('Call to /api/users/uid/appointments/aid redirecting to /api/appointments/aid/users/uid 307', code = 307)
+    return redirect('/api/appointments/' + str(a_ID) +'/users/'+ str(u_ID), code = 307)
 
 
 
@@ -346,6 +348,24 @@ def deleteAppointment(appointmentID):
         session.close()
 
     return jsonify('Appointment Deleted '), 200
+
+
+@application.route('/api/appointments/<a_ID>/users', methods = ['GET'])
+@jwt_required
+def getAppUsers(a_ID):
+    return jsonify(message = "Not yet implemented"), 404
+
+@application.route('/api/appointments/<a_ID>/users/u_ID', methods = ['PUT', 'GET'])
+@jwt_required
+def putAppUser(a_ID, u_ID):
+    if request.method == 'GET':
+        logger.info('GET on /api/appointments/a_ID/users/u_ID redirecting to user profile')
+        return redirect('/api/users/' + str(u_ID))
+    logger.info('User ' + get_jwt_claims()['username'] + ' attempts to add ' + str(u_ID) + ' to Appointment ' + str(a_ID))
+    logger.info('Not Implemented yet (putAppUser(..)')
+    return jsonify(message = 'Not implemented yet'), 404        #TODO: Implement and add test
+   
+
 
 @application.route('/api/appointments', methods = ['GET', 'POST'])
 @jwt_required
