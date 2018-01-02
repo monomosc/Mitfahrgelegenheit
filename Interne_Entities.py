@@ -40,30 +40,18 @@ class User(SQLBase):
 
 class Appointment(SQLBase):
     "Object to Entity Appointment in Database"
-    # Fields:
-    #id : int
-    #startLocation : string
-    #endLocation: string
-    #time : datetime            // TBD
-    #repeatPeriodDays : int
-    # owningOrganization  : int       //Foreign (unused) key to an organizaztion
-    # userDriverDic : dict            // JSON Dict, syntax:
-    # "Guaranteed Drivers" :
-    # [id, id, id, id, ...],
-    # "Possible Drivers" :
-    # [id, id, id, id, id, ....],
-    # "Passengers :
-    # [id, id, id, id, ..]
+
+
     __tablename__='appointments'
     id = Column (Integer, primary_key = True)
     startLocation = Column(String(40))
-    startTime = Column(DateTime())
+    startTime = Column(DateTime)
     repeatTime = Column(String(15))
     users = relationship("User_Appointment_Rel", back_populates="appointment",
                             cascade= "all, delete, delete-orphan")
 
     def getAsJSON(self):
-        return {'id' : self.id}
+        return {'id' : self.id, 'startLocation' : self.startLocation, 'startTime' : self.startTime, 'repeatTime' : self.repeatTime}
 
 
 class User_Appointment_Rel(SQLBase):
