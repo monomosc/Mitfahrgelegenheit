@@ -104,15 +104,6 @@ def initialize_everything():
         apscheduleSqliteEngine = create_engine('sqlite:///APSchedule.db', echo = False)
         scheduler.configure(jobstores = {'default' : SQLAlchemyJobStore(engine = apscheduleSqliteEngine)})
         scheduler.start()
-        # DEFINING THE Scheduled Trigger for Log Rollover IF NOT TESTING
-        logger.info('Setting Log Rollover CronTrigger')
-
-        scheduler.remove_all_jobs()
-        scheduler.add_job(initialize_log,
-                          'cron',
-                          hour=0,
-                          id = 'Log Rollover')
-        atexit.register(lambda: scheduler.shutdown())
         sentry.init_app(application)
 
 
@@ -133,15 +124,7 @@ if __name__ == "__main__":
 @application.route('/api/users', methods=['GET'])  # TODO: Write Test
 @jwt_required
 def users():
-    if get_jwt_claims()['globalAdminStatus'] < 1:
-        return jsonify(message="Not allowed as Non-Admin"), 403
 
-    offset = 1
-    amount = 10
-    if 'offset' in request.args:
-        offset = request.args['offset']
-    if 'amount' in request.args:
-        amount = request.args['amount']
 
     returnJSON = []
     session = Session()
@@ -221,8 +204,7 @@ def redirectToIdCall(u_name):
     session.close()
     return redirect('/api/users/' + str(user.id)), 307
 
-@application.route('/api/users/<int:u_id>', methods=['GET'])
-@jwt_optional
+
 def user_profileByID(u_id):  # Profile itself NYI
     "User Profile Endpoint - ID"
     session = Session()
@@ -291,10 +273,44 @@ def patchUser(user_id):
     session.close()
     return json.dumps(thisuser.getAsJSON()), 200
 
+
+
+
+@application.route('/api/users/int:u_id/appointments', methods = ['GET'])
+@jwt_required
+def userAppointments(u_id):
+    #check privileges
+    uclaims = get_jwt_claims()
+    if int(uclaims['globalAdminStatus']) < 1:
+        caller_id = get_jwt_identity()
+        if caller_id != u_id:
+            return jsonify(message = 'Not allowed'), 401
     
 
-@application.route('/api/appointments/<appointmentID>', methods=['GET'])  # Not yet implemented
+    return getAppointments(u_id)
+
+
+def getAppointments(u_id):
+    return jsonify(message = 'Not yet implemented'), 404
+
+
+@application.route('/api/users/int:u_id/appointments/a_id', methods = ['PUT'])
+def putAppointment(u_id):
+    "Add an existing appointment to a User (in the sense that he will be taking part)"
+    return jsonify(message = 'Not yet implemented')
+
+
+
+
+
+
+@application.route('/api/appointments/<appointmentID>', methods=['GET', 'DELETE'])  # Not yet implemented
 @jwt_required
+def appointment(appointmentID):
+    if request.method == 'GET':
+        return appointment_data(appointmentID)
+    if request.method == 'DELETE':
+        return deleteAppointment(appointmentID)
 def appointment_data(appointmentID):
     "Appointment functionailty"
     uclaims = get_jwt_claims()
@@ -309,6 +325,65 @@ def appointment_data(appointmentID):
     appointment = appointments.first()
     session.close()
     return jsonify(appointment.getAsJSON()), 200
+
+def deleteAppointment(appointmentID):
+    return jsonify(message = 'Not Implemenented yet')
+
+@application.route('/api/appointments', methods = ['GET', 'POST'])
+@jwt_required
+def appointments():
+    if request.method == 'GET':
+        return getAppointments
+    if request.method == 'POST':
+        return makeAppointment()
+    return jsonify(message='Method not allowed'), 405
+
+def getAppointments():
+    "Get a list of appointments"
+    #request argument parsing
+    showFinished = False
+    if 'showFinished' in request.args:
+        showFinished = True if request.args['showFinished'] == 'true' else False
+    
+    
+def makeAppointment():
+    "Creates a new Appointment"
+    logger.info('Access to "Make new Appointment" by user ' +  get_jwt_claims()['username'])
+    uclaims = get_jwt_claims()
+    if not request.is_json:
+        return jsonify(message='Illegal Format'), 400
+    try:
+        requestJSON = json.loads(request.data)
+    except json.JSONDecodeError:
+        return jsonify(message='Illegal JSON'), 400
+
+    
+    requiredKeys = ['startLocation', 'startTime']
+    for key in requiredKeys:
+        if key not in requestJSON:
+            return jsonify(message = 'Missing JSON key: '+key), 422
+    
+    if 'repeatTime' in requestJSON:
+        rTime = requestJSON['repeatTime']
+    else:
+        rTime = 'None'
+    
+
+    newappointment = Appointment(startLocation = requestJSON['startLocation'], 
+                                startTime = datetime.fromtimestamp(requestJSON['startTime']), repeatTime = rTime)
+    session = Session()
+    session.add(newappointment)
+    session.commit()
+
+    try:
+        logger.info('Added new Appointment on ' + str(newappointment.startTime))
+    except ValueError:
+        logger.error('Could not print Date of newly created Appointment! ID: ' + str(newappointment.id))
+
+    returnJSON = newappointment.getAsJSON()
+    session.close()
+
+    return jsonify(returnJSON), 201
 
 
 @application.route('/api/auth', methods=['POST'])  # complete, Test Complete
