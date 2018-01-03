@@ -352,9 +352,25 @@ def deleteAppointment(appointmentID):
 @application.route('/api/appointments/<a_ID>/users', methods = ['GET'])
 @jwt_required
 def getAppUsers(a_ID):
-    return jsonify(message = "Not yet implemented"), 404                    #TODO: Implement and add Test
+    logger.info('User ' +  get_jwt_claims()['username'] + 'requesting User List to Appointment ' + str(a_ID))
+    session = Session()
 
-@application.route('/api/appointments/<a_ID>/users/u_ID', methods = ['PUT', 'GET'])
+    appointments = session.query(Appointment).filter(Appointment.id == a_ID)
+    if appointments.count() == 0:
+        return jsonify(message="No Such Appointment"), 404
+    
+    returnJSON = []
+    thisappointment = appointments.first()
+    for user_app_rel in thisappointment.users:
+        appendJSON = user_app_rel.user.getAsJSON()
+        appendJSON['drivingLevel'] = user_app_rel.drivingLevel
+        returnJSON.append(appendJSON)
+    
+    logger.info('Returning Appointment ' + str(a_ID) + ' User List, containing ' + str(len(thisappointment.users)) + 'entities')
+    session.close()
+    return jsonify(returnJSON), 200
+
+@application.route('/api/appointments/<int:a_ID>/users/<int:u_ID>', methods = ['PUT', 'GET'])
 @jwt_required
 def putAppUser(a_ID, u_ID):
     "Add an existing appointment to a User (in the sense that he will be taking part)"
@@ -402,13 +418,15 @@ def putAppUser(a_ID, u_ID):
 
     #build the relationshio column
     try:
-        rel = User_Appointment_Rel(int(requestJSON['drivingLevel']))
+        rel = User_Appointment_Rel(drivingLevel = (int(requestJSON['drivingLevel'])))
     except ValueError:
         logger.warn('drivingLevel was not an Integer: drivingLevel : ' + requestJSON['drivingLevel'])
         return jsonify('Expect integer drivingLevel'), 409
     try:
+        
         rel.appointment = thisappointment
         thisuser.appointments.append(rel)
+        session.add(rel)
         session.commit()        
     except exc.SQLAlchemyError:
         logger.error('SQLAlchemy Error on building User_Takes_Part Row: %s', exc_info = True)
@@ -416,10 +434,10 @@ def putAppUser(a_ID, u_ID):
         return jsonify(message='Unfortunately, an error occured'), 500
     
 
-    logger.info('Added User ' + thisuser + ' to Appointment ' + str(a_ID))
+    logger.info('Added User ' + thisuser.username + ' to Appointment ' + str(a_ID))
 
     session.close()    
-    return jsonify(message = 'Success'), 200        #TODO: Implement and add test
+    return jsonify(message = 'Success'), 200        #TODO: Add test
    
 
 

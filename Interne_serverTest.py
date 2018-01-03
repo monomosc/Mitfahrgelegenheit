@@ -245,5 +245,48 @@ class InterneServerTestCase(unittest.TestCase):
                          'Appointment apprently still exists: 404 expected, returned ' + str(resp.status_code))
 
 
+    def test_addUserToAppointment(self):
+        token = self.login('UnitTest', '1234')
+        self.assertIsNotNone(token, 'UnitTest Login Failure')
+        authHeader = {'content-type' : 'application/json', 'Authorization' : token}
+        
+        #Get UID
+        resp = self.app.get('/api/users/UnitTest', headers = authHeader, follow_redirects = True)
+        respJSON = json.loads(resp.data)
+        self.assertTrue('id' in respJSON)
+        uID = int(respJSON['id'])
+
+        #create Appointment
+        postData = {'startLocation' : 'Berlin', 'startTime' : 1614847559}
+        resp = self.app.post('/api/appointments', data = json.dumps(postData), headers = authHeader)
+        self.assertEqual(resp.status_code, 201)
+        respJSON = json.loads(resp.data)
+        self.assertTrue('id' in respJSON)
+        appID = int(respJSON['id'])
+        
+
+        #add UnitTest to Appointment
+        putData = {'drivingLevel' : 2}
+        resp = self.app.put('/api/appointments/' + str(appID) + '/users/' + str(uID),
+                            data = json.dumps(putData), headers = authHeader)
+        self.assertEqual(resp.status_code, 200)
+
+        #check appointment data
+        resp = self.app.get('/api/appointments/' + str(appID) + '/users', headers = authHeader)
+        self.assertEqual(resp.status_code, 200)
+        respJSON = json.loads(resp.data)
+        self.assertGreaterEqual(len(respJSON), 1)
+        firstEntry = respJSON[0]
+
+
+        self.assertTrue('id' in firstEntry)
+        self.assertTrue('drivingLevel' in firstEntry)
+
+        self.assertEqual(2, firstEntry['drivingLevel'])
+        self.assertEqual('UnitTest', firstEntry['username'])
+
+        
+
+
 if __name__ == '__main__':
     unittest.main()
