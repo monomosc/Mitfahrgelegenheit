@@ -51,7 +51,8 @@ class Appointment(SQLBase):
                             cascade= "delete, delete-orphan")
 
     def getAsJSON(self):
-        return {'id' : self.id, 'startLocation' : self.startLocation, 'startTime' : self.startTime, 'repeatTime' : self.repeatTime}
+        return {'id' : self.id, 'startLocation' : self.startLocation, 
+                'startTime' : self.startTime, 'repeatTime' : self.repeatTime}
 
 
 class User_Appointment_Rel(SQLBase):
