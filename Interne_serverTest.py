@@ -252,16 +252,15 @@ class InterneServerTestCase(unittest.TestCase):
         
         #Get UID
         resp = self.app.get('/api/users/UnitTest', headers = authHeader, follow_redirects = True)
-        respJSON = json.loads(resp.data)
-        self.assertTrue('id' in respJSON)
+        respJSON, err = self.validateResponse(resp, 200, ['id'])
+        self.assertEqual(err, 0)
         uID = int(respJSON['id'])
 
         #create Appointment
-        postData = {'startLocation' : 'Berlin', 'startTime' : 1614847559}
+        postData = {'startLocation' : 'Berlin', 'startTime' : 1614847559}       #future
         resp = self.app.post('/api/appointments', data = json.dumps(postData), headers = authHeader)
-        self.assertEqual(resp.status_code, 201)
-        respJSON = json.loads(resp.data)
-        self.assertTrue('id' in respJSON)
+        respJSON, err = self.validateResponse(resp, 201, ['id'])
+        self.assertEqual(err,0)
         appID = int(respJSON['id'])
         
 
@@ -269,7 +268,8 @@ class InterneServerTestCase(unittest.TestCase):
         putData = {'drivingLevel' : 2}
         resp = self.app.put('/api/appointments/' + str(appID) + '/users/' + str(uID),
                             data = json.dumps(putData), headers = authHeader)
-        self.assertEqual(resp.status_code, 200)
+        abc, err = self.validateResponse(resp, 200, [])
+        self.assertEqual(err,0)
 
         #check appointment data
         resp = self.app.get('/api/appointments/' + str(appID) + '/users', headers = authHeader)
