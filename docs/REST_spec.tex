@@ -37,6 +37,27 @@ Die JSON-Repräsentation eines Users enthält folgende Felder:
 \item globalAdminStatus
 \item id
 \end{enumerate}
+\subsection{Appointment}
+Die JSON-Repräsentation eines Appointments enthält folgende Felder:
+\begin{enumerate}
+    \item id
+    \item startLocation
+    \item startTime
+    \item repeatTime
+\end{enumerate}
+Zur Semantik des Felds "repeatTime":\\
+Folgende Werte sind erlaubt\\
+
+\begin{tabular}{|c|c|}
+    \hline
+    "none" & Das Appointment wird nicht wiederholt\\
+    \hline
+    "daily" & Am nächsten Tag findet das Appointment erneut statt\\
+    \hline
+    "weekly" & Nach einer Woche findet das Appointment erneut statt\\
+    \hline
+\end{tabular}
+
 
 \section{User-Management}
 \subsection{Überblick}
@@ -80,7 +101,7 @@ Außerdem werden alle Nutzerdaten in den Feldern 'username', 'email', 'phoneNumb
 \end{tabular}
 
 \subsection{\textbf{GET} /api/appointments/<appointmentID>}
-Not yet Implemented
+Gibt eine JSON-Repräsentation des Appointments zurück.
 
 \section{Entwicklungs-API}
 \subsection{Überblick}
