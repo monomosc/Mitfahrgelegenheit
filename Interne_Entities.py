@@ -55,6 +55,7 @@ class Appointment(SQLBase):
 
 
 class User_Appointment_Rel(SQLBase):
+    " drivingLevel 0 means no car, 1 means Will definitely drive, 2 means may drive"
     __tablename__ = 'user_takesPart_appointment'
     user_id = Column(Integer, ForeignKey('users.id'), primary_key=True)
     appointment_id = Column(Integer, ForeignKey('appointments.id'), primary_key = True)
