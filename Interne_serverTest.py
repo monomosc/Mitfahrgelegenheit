@@ -1,5 +1,5 @@
 # Moritz Basel - interne_serverTest.py
-# Version 0.0.1
+# Version 0.1.0
 
 import json
 import unittest

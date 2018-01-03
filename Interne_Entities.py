@@ -1,5 +1,5 @@
 # Moritz Basel - Interne_Entities.py
-# Version 0.0.1
+# Version 0.1.0
 from sqlalchemy import Column, Integer, String, ForeignKey, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
