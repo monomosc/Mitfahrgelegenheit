@@ -102,7 +102,11 @@ Außerdem werden alle Nutzerdaten in den Feldern 'username', 'email', 'phoneNumb
 
 \subsection{\textbf{GET} /api/appointments/<appointmentID>}
 Gibt eine JSON-Repräsentation des Appointments zurück.
-
+\subsection{\textbf{GET} /api/users/appointments}
+Liste aller Apppointments, an denen der Nutzer beteiligt ist. Diese Methode unterstützt \textbf{GET}-Parameter
+\begin{description}
+    \item[finished] Standardmäßig auf "false" - bestimmt, ob auch schon vergangene Appointments gefordert werden
+\end{description}
 \section{Entwicklungs-API}
 \subsection{Überblick}
 
