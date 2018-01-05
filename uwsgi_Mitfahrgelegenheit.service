@@ -1,0 +1,9 @@
+[Unit]
+Description=uWSGI Mitfahrgelegenheit
+After=syslog.target
+
+[Service]
+ExecStart=/bin/bash -c 'export MITFAHRGELEGENHEIT_SETTINGS=/etc/conf/Mitfahrgelegenheit.conf; source /var/websrvenv/Venv/bin/activate; cd /var/WebSrv; uwsgi --ini uwsgi.ini --enable-threads --touch-reload /tmp/uwsgi_reload'
+
+[Install]
+WantedBy=multi-user.target
