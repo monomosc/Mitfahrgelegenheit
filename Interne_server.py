@@ -121,6 +121,30 @@ if __name__ == "__main__":
 
 # DYNAMIC PART - REST-API
 #///////////////////////////////////////////////////////////////////////////////////////////////////
+# simple API description
+@application.route('/api', methods = ['GET'])
+def api():
+    returnJSON = {}
+    try:
+        returnJSON['version'] = application.config['VERSION']
+    except:
+        returnJSON['version'] = 'invalid Version'
+    returnJSON['lastknownversion'] = '0.1.0'
+    objectUser = {'username: string' : 'required: login name', 'id: int' : 'required: internal id', 'email: string' : 'required: valid email',
+                    'phoneNumber: string' : 'required: Phone Number the user is available on in case of conflicts',
+                    'globalAdminStatus: int' : 'required: higher means more rights',
+                    'password: string' : 'do not send this'}
+    objectAppointment = {'id: int' : 'required: internal ID', 'startLocation: string' : 'required: Meetup Location for Starting the Appointment', 
+                            'startTime: int' : 'required: unix timestamp for Appointment Meetup time', 'repeatTime: string' : 'required: as of now always none' }
+    
+    returnJSON['objects'] = { 'user' : objectUser, 'appointment' : objectAppointment}
+    returnJSON['relationships'] = [{'parent' : 'User', 'child' : 'appointment', 'drivingLevel: int' : 'Enum: 0 denoting the User WILL NOT drive, \
+                                1 denoting he WILL definitely drive, 2 he MAY drive if need exists'}]
+
+    returnJSON['endpoints'] = []
+
+    return jsonify(returnJSON), 200
+
 @application.route('/api/users', methods=['GET'])  # TODO: Write Test
 @jwt_required
 def users():
