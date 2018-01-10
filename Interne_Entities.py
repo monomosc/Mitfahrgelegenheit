@@ -1,6 +1,6 @@
 # Moritz Basel - Interne_Entities.py
 # Version 0.1.0
-from sqlalchemy import Column, Integer, String, ForeignKey, DateTime
+from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Boolean
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 
@@ -49,10 +49,13 @@ class Appointment(SQLBase):
     repeatTime = Column(String(15))
     users = relationship("User_Appointment_Rel", back_populates="appointment",
                             cascade= "delete, delete-orphan")
-
+    retired = Column(Boolean)
+    distance = Column(Integer)
     def getAsJSON(self):
         return {'id' : self.id, 'startLocation' : self.startLocation, 
-                'startTime' : self.startTime, 'repeatTime' : self.repeatTime}
+                'startTime' : self.startTime, 'repeatTime' : self.repeatTime, 
+                'retired' : ('true' if self.retired is True else 'false'),
+                'distance' : self.distance}
 
 
 class User_Appointment_Rel(SQLBase):
@@ -61,6 +64,7 @@ class User_Appointment_Rel(SQLBase):
     user_id = Column(Integer, ForeignKey('users.id'), primary_key=True)
     appointment_id = Column(Integer, ForeignKey('appointments.id'), primary_key = True)
     drivingLevel = Column(Integer)
+    actualDrivingParticipation = Column(Boolean)
     appointment = relationship("Appointment", back_populates = "users")
     user = relationship("User", back_populates = "appointments")
 
