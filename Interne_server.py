@@ -9,6 +9,8 @@ from sqlalchemy import create_engine, exc
 from sqlalchemy.orm import sessionmaker
 
 from raven.contrib.flask import Sentry
+from raven.handlers.logging import SentryHandler
+from raven.conf import setup_logging
 from werkzeug import generate_password_hash, check_password_hash
 from werkzeug.security import safe_str_cmp
 from flask import json
@@ -105,7 +107,12 @@ def initialize_everything():
         apscheduleSqliteEngine = create_engine('sqlite:///APSchedule.db', echo = False)
         scheduler.configure(jobstores = {'default' : SQLAlchemyJobStore(engine = apscheduleSqliteEngine)})
         scheduler.start()
+        sentryhandler = SentryHandler('https://3fb25fb74b6c4cf48f5c0e8ff285bc51:a36099e9044e4b0ab09224bddd652489@sentry.monomo.solutions/2')
+        sentryhandler.setLevel(logging.WARNING)
+        setup_logging(sentryhandler)
+
         sentry.init_app(application)
+        sentry.captureMessage('Setup on Flask at ' + datetime.now())
 
 
 if __name__ == "__main__":
