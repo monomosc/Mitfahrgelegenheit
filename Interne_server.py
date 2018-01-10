@@ -112,7 +112,7 @@ def initialize_everything():
         setup_logging(sentryhandler)
 
         sentry.init_app(application)
-        sentry.captureMessage('Setup on Flask at ' + datetime.now())
+        sentry.captureMessage('Setup on Flask at ' + str(datetime.now()))
 
 
 if __name__ == "__main__":
@@ -746,4 +746,59 @@ def revoked_token_loader():
 @jwt.unauthorized_loader
 def unauthorized_loader(msg):
     logger.info("Unauthorized Request: " + msg)
-    return make_json_response(msg, 401)
+    return jsonify(message=msg), 401
+
+
+#schedule an event to be run
+#appointment: Appointment
+#time: timedelta
+def startAppointmentScheduledEvent(appointmentID, timediff):
+    log.info('Adding Scheduler Job for Appointment #' + str(appointmentID))
+    #check for Appointment Retiredness
+    Session = session()
+    appointments = session.query(Appointment).filter(Appointment.id == appointmentID)
+    if appointments.count() == 0:
+        log.warning('No such Appointment #' +  str(appointmentID))
+        return
+    thisappointment = appointments.first()
+    if thisappointment.retired == True:
+        log.error('Appointment #' +  appointmentID + ' sent to Scheduler despite it being retired!')
+        return
+
+    #check if runtime is in the past
+    now = datetime.now()
+    if (appointment.startTime - timediff) < now:
+        log.error('Appointment #' + ' scheduled Event cannot be in the past! Trying to schedule for ' + appointment.startTime - timediff)
+        return
+    scheduler.add_job(notifyAppointmentParticipants, trigger = 'date', args= [appointmentID], id = 'Appointment Notify Job ' + str(appointmentID), run_date = appointment.startTime - timediff)
+    log.info('Added Scheduler Job for Appointment #' +str(appointmentID) + ' on ' + (appointment.startTime - timediff))
+
+
+def refreshAppointmentRepetition(appointment):
+    logger.error('Unimplemented Method called: refreshAppointmentRepetition')
+    pass
+
+
+
+def notifyAppointmentParticipants(appointment):
+    logger.error('Unimplemented Method called: notifyAppointmentParticipants on appointment ' + str(appointment.id))
+    pass
+
+def retireAppointment(appointmentID, actualDrivers):
+    log.info('Retiring Appointment #' + appointmentID)
+    session = Session()
+    appointments = session.query(Appointment).filter(Appointment.id == appointment.id)
+    if appointments.count() == 0:
+        log.warning('No Appointment #' + appointment.id + 'exists')
+        session.close()
+        return
+    thisappointment = appointments.first()
+    if thisappointment.retired == True:
+        logger.error('Appointment #' +  appointmentID + ' retiring, but is already retired!')
+        session.close()
+        return
+
+    
+    session.close()
+    logger.error('Appointment retiring not yet implemented!')
+
