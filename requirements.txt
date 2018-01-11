@@ -6,3 +6,4 @@ raven==6.3.0
 Flask==0.12.2
 SQLAlchemy==1.2.0
 blinker
+configparser
