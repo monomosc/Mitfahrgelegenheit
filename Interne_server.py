@@ -112,7 +112,7 @@ def initialize_everything():
         setup_logging(sentryhandler)
 
         sentry.init_app(application)
-        sentry.captureMessage('Setup on Flask at ' + str(datetime.now()))
+        #sentry.captureMessage('Setup on Flask at ' + str(datetime.now()))
 
 
 if __name__ == "__main__":
