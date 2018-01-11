@@ -3,6 +3,7 @@
 import atexit
 from flask import Flask, request, make_response, redirect, jsonify
 from Interne_Entities import Appointment, User, User_Appointment_Rel, SQLBase
+import configparser
 import os
 
 from sqlalchemy import create_engine, exc
@@ -104,6 +105,8 @@ def initialize_everything():
     SQLBase.metadata.create_all(engine)
 
     if prod:
+        conf = configparser.RawConfigParser(allow_no_value=True)
+
         apscheduleSqliteEngine = create_engine('sqlite:///APSchedule.db', echo = False)
         scheduler.configure(jobstores = {'default' : SQLAlchemyJobStore(engine = apscheduleSqliteEngine)})
         scheduler.start()
@@ -133,10 +136,15 @@ if __name__ == "__main__":
 def api():
     returnJSON = {}
     try:
-        returnJSON['version'] = application.config['VERSION']
+        conf.read('version.conf')
+        application.config['version'] = conf.get('VERSION', 'version')
     except:
-        returnJSON['version'] = 'invalid Version'
-    returnJSON['lastknownversion'] = '0.1.0'
+        returnJSON['version'] = 'invalid'
+        logger.error('Error reading Version Config File')
+        sentry.captureException()
+    
+        
+    returnJSON['lastknownversion'] = '0.1.1'
     objectUser = {'username: string' : 'required: login name', 'id: int' : 'required: internal id', 'email: string' : 'required: valid email',
                     'phoneNumber: string' : 'required: Phone Number the user is available on in case of conflicts',
                     'globalAdminStatus: int' : 'required: higher means more rights',
