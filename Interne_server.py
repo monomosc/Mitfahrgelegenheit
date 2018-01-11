@@ -105,7 +105,6 @@ def initialize_everything():
     SQLBase.metadata.create_all(engine)
 
     if prod:
-        conf = configparser.RawConfigParser(allow_no_value=True)
 
         apscheduleSqliteEngine = create_engine('sqlite:///APSchedule.db', echo = False)
         scheduler.configure(jobstores = {'default' : SQLAlchemyJobStore(engine = apscheduleSqliteEngine)})
@@ -136,6 +135,7 @@ if __name__ == "__main__":
 def api():
     returnJSON = {}
     try:
+        conf = configparser.RawConfigParser(allow_no_value=True)
         conf.read('version.conf')
         application.config['version'] = conf.get('VERSION', 'version')
     except:
