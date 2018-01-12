@@ -138,7 +138,7 @@ def api():
         with open("Version.conf") as f:
             conf = configparser.RawConfigParser(allow_no_value=True)
             conf.read_file(f)
-            application.config['version'] = conf.get('VERSION', 'VERSION')
+            returnJSON['version'] = conf.get('VERSION', 'VERSION')
     except:
         returnJSON['version'] = 'invalid'
         logger.error('Error reading Version Config File')
