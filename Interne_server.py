@@ -167,9 +167,10 @@ def api():
             for arg in rule.arguments:
                 options[arg] = "[{0}]".format(arg)
             httpmethods = []
-
+            for method in rule.methods:
+                httpmethods.append(method)
             route = {   'function' : rule.endpoint,
-                        'http-methods' : rule.methods,
+                        'http-methods' : httpmethods,
                         'url' : url_for(rule.endpoint, **options)}
             routes.append(route)
         except:
