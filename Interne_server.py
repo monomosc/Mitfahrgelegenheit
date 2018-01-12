@@ -151,7 +151,10 @@ def api():
                     'globalAdminStatus: int' : 'required: higher means more rights',
                     'password: string' : 'do not send this'}
     objectAppointment = {'id: int' : 'required: internal ID', 'startLocation: string' : 'required: Meetup Location for Starting the Appointment', 
-                            'startTime: int' : 'required: unix timestamp for Appointment Meetup time', 'repeatTime: string' : 'required: as of now always none' }
+                            'startTime: int' : 'required: unix timestamp for Appointment Meetup time', 
+                            'repeatTime: string' : 'required: as of now always none',
+                            'distance: int' : 'required: the distance to drive',
+                            'retired: bool' : 'defaults to False; changes to True once when the appointment is finished' }
     
     returnJSON['objects'] = { 'user' : objectUser, 'appointment' : objectAppointment}
     returnJSON['relationships'] = [{'parent' : 'User', 'child' : 'appointment', 'drivingLevel: int' : 'Enum: 0 denoting the User WILL NOT drive, \
@@ -160,7 +163,15 @@ def api():
     routes = []
     for rule in application.url_map.iter_rules():
         try:
-            routes.append(url_for(rule.endpoint))
+            options = {}
+            for arg in rule.arguments:
+                options[arg] = "[{0}]".format(arg)
+            httpmethods = []
+
+            route = {   'function' : rule.endpoint,
+                        'http-methods' : rule.methods,
+                        'url' : url_for(rule.endpoint, **options)}
+            routes.append(route)
         except:
             sentry.captureException()
     returnJSON['endpoints'] = routes
