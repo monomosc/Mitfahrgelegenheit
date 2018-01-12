@@ -159,7 +159,10 @@ def api():
 
     routes = []
     for rule in application.url_map.iter_rules():
-        routes.append(url_for(rule.endpoint))
+        try:
+            routes.append(url_for(rule.endpoint))
+        except:
+            sentry.captureException()
     returnJSON['endpoints'] = routes
 
     return jsonify(returnJSON), 200
