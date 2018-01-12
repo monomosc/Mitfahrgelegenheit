@@ -535,7 +535,7 @@ def makeAppointment():
         return jsonify(message='Illegal JSON'), 400
 
     
-    requiredKeys = ['startLocation', 'startTime']
+    requiredKeys = ['startLocation', 'startTime', 'distance']
     for key in requiredKeys:
         if key not in requestJSON:
             return jsonify(message = 'Missing JSON key: '+key), 422
@@ -547,7 +547,10 @@ def makeAppointment():
     
 
     newappointment = Appointment(startLocation = requestJSON['startLocation'], 
-                                startTime = datetime.fromtimestamp(requestJSON['startTime']), repeatTime = rTime)
+                                startTime = datetime.fromtimestamp(requestJSON['startTime']),
+                                repeatTime = rTime,
+                                retired=False,
+                                distance=requestJSON['distance'])
     session = Session()
     session.add(newappointment)
     session.commit()

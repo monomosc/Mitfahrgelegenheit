@@ -55,7 +55,7 @@ class Appointment(SQLBase):
         return {'id' : self.id, 'startLocation' : self.startLocation, 
                 'startTime' : self.startTime, 'repeatTime' : self.repeatTime, 
                 'retired' : ('true' if self.retired is True else 'false'),
-                'distance' : self.distance}
+                'distance' : self.distance}                                 #distance in kilometers
 
 
 class User_Appointment_Rel(SQLBase):

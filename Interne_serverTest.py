@@ -216,7 +216,7 @@ class InterneServerTestCase(unittest.TestCase):
             self.fail('UnitTest Login Failure')
 
         # create an appointment
-        postData = {'startLocation': 'Berlin', 'startTime': 1614847559}
+        postData = {'startLocation': 'Berlin', 'startTime': 1614847559, 'distance' : 100}
         resp = self.app.post('/api/appointments',
                              data=json.dumps(postData), headers={'content-type': 'application/json', 'Authorization': token})
         self.assertEqual(resp.status_code, 201,
@@ -257,7 +257,7 @@ class InterneServerTestCase(unittest.TestCase):
         uID = int(respJSON['id'])
 
         #create Appointment
-        postData = {'startLocation' : 'Berlin', 'startTime' : 1614847559}       #future
+        postData = {'startLocation' : 'Berlin', 'startTime' : 1614847559, 'distance' : 100}       #future
         resp = self.app.post('/api/appointments', data = json.dumps(postData), headers = authHeader)
         respJSON, err = self.validateResponse(resp, 201, ['id'])
         self.assertEqual(err,0)
