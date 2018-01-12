@@ -157,7 +157,10 @@ def api():
     returnJSON['relationships'] = [{'parent' : 'User', 'child' : 'appointment', 'drivingLevel: int' : 'Enum: 0 denoting the User WILL NOT drive, \
                                 1 denoting he WILL definitely drive, 2 he MAY drive if need exists'}]
 
-    returnJSON['endpoints'] = []
+    routes = []
+    for rule in application.url_map.iter_rules():
+        routes.append(url_for(rule.endpoint))
+    returnJSON['endpoints'] = routes
 
     return jsonify(returnJSON), 200
 
