@@ -249,7 +249,7 @@ def doSomethingWithThisUser(u_id):
     if request.mehod == 'DELETE':
         return jsonify(message='This Method is not implemented here (yet)'), 405
 
-@application.route('/api/users/<string:u_name>', methods=['GET', 'PUT', 'DELETE0', 'PATCH'])
+@application.route('/api/users/<string:u_name>', methods=['GET', 'PUT', 'DELETE', 'PATCH'])
 @jwt_optional
 def redirectToIdCall(u_name):
     "User redirect Username --> UserID"
