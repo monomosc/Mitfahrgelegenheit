@@ -265,7 +265,7 @@ class InterneServerTestCase(unittest.TestCase):
         
 
         #add UnitTest to Appointment
-        putData = {'drivingLevel' : 2}
+        putData = {'drivingLevel' : 2, 'maximumPassengers' : 4}
         resp = self.app.put('/api/appointments/' + str(appID) + '/users/' + str(uID),
                             data = json.dumps(putData), headers = authHeader)
         abc, err = self.validateResponse(resp, 200, [])

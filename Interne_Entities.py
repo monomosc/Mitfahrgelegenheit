@@ -65,6 +65,7 @@ class User_Appointment_Rel(SQLBase):
     appointment_id = Column(Integer, ForeignKey('appointments.id'), primary_key = True)
     drivingLevel = Column(Integer)
     actualDrivingParticipation = Column(Boolean)
+    maximumPassengers = Column(Integer)     #Optional field for drivingLevel not 0
     appointment = relationship("Appointment", back_populates = "users")
     user = relationship("User", back_populates = "appointments")
 
