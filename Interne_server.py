@@ -1,7 +1,7 @@
 # Moritz Basel - interne_server.py
 # Version 0.1.0
 import atexit
-from flask import Flask, request, make_response, redirect, jsonify
+from flask import Flask, url_for, request, make_response, redirect, jsonify
 from Interne_Entities import Appointment, User, User_Appointment_Rel, SQLBase
 import configparser
 import os
