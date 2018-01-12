@@ -468,6 +468,11 @@ def putAppUser(a_ID, u_ID):
     if 'drivingLevel' not in requestJSON:
         return jsonify('Expect drivingLevel Integer JSON key'), 409
     
+    if requestJSON['drivingLevel'] != 0:
+        if 'maximumPassengers' not in requestJSON:
+            logger.warning('maximumPassngers not in Request for adding User to Appointment')
+            return jsonify(message='If drivingLevel is not 0, supply maximumPassengers key'), 422
+
     #check priviliges:
     if get_jwt_claims()['globalAdminStatus'] < 1:
         if get_jwt_identity() != u_ID:
