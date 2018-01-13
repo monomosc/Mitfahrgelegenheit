@@ -719,6 +719,7 @@ def jobs():
     for job in jobs:
         returnJSON.append(job.id)
     
+    logger.info('Sending Joblist containing ' + str(len(returnJSON)) + ' entities')
     return jsonify(returnJSON)
 
 #//////////////////////////////////////////////////////////////////////////////////////////////////
@@ -816,12 +817,12 @@ def terminateAppointment(appointmentID):
 #appointment: Appointment
 #time: timedelta
 def startAppointmentScheduledEvent(appointmentID, timediff):
-    log.info('Adding Scheduler Job for Appointment #' + str(appointmentID))
+    logger.info('Adding Scheduler Job for Appointment #' + str(appointmentID))
     #check for Appointment Retiredness
-    Session = session()
+    session = Session()
     appointments = session.query(Appointment).filter(Appointment.id == appointmentID)
     if appointments.count() == 0:
-        log.warning('No such Appointment #' +  str(appointmentID))
+        logger.warning('No such Appointment #' +  str(appointmentID))
         return
     thisappointment = appointments.first()
     if thisappointment.retired == True:
@@ -830,11 +831,11 @@ def startAppointmentScheduledEvent(appointmentID, timediff):
 
     #check if runtime is in the past
     now = datetime.now()
-    if (appointment.startTime - timediff) < now:
-        log.error('Appointment #' + ' scheduled Event cannot be in the past! Trying to schedule for ' + appointment.startTime - timediff)
+    if (thisappointment.startTime - timediff) < now:
+        logger.error('Appointment #' + ' scheduled Event cannot be in the past! Trying to schedule for ' + thisappointment.startTime - timediff)
         return
-    scheduler.add_job(terminateAppointment, trigger = 'date', args= [appointmentID], id = 'Appointment Notify Job ' + str(appointmentID), run_date = appointment.startTime - timediff)
-    log.info('Added Scheduler Job for Appointment #' +str(appointmentID) + ' on ' + (appointment.startTime - timediff))
+    scheduler.add_job(terminateAppointment, trigger = 'date', args= [appointmentID], id = 'Appointment Notify Job ' + str(appointmentID), run_date = thisappointment.startTime - timediff)
+    logger.info('Added Scheduler Job for Appointment #' +str(appointmentID) + ' on ' + str(thisappointment.startTime - timediff))
 
 
 def refreshAppointmentRepetition(appointment):
