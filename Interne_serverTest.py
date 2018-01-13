@@ -170,6 +170,7 @@ class InterneServerTestCase(unittest.TestCase):
             token == None, msg='Login temptest+1234 still successful after deleting User')
 
     def test_patchUser(self):
+        "Tests whether an existing user can be changed"
         token = self.login('UnitTest', '1234')
         if token == None:
             self.fail(msg='UnitTest Login Failure')
@@ -211,6 +212,7 @@ class InterneServerTestCase(unittest.TestCase):
                 'After changing the UnitTest User Password from 1234 to 12345 and back, the second Login was a failure')
 
     def test_makeAndGetAppointment(self):
+        "Tests Creaton and Deleteion of an Appointment as normal User"
         token = self.login('UnitTest', '1234')
         if token == None:
             self.fail('UnitTest Login Failure')
@@ -246,6 +248,7 @@ class InterneServerTestCase(unittest.TestCase):
 
 
     def test_addUserToAppointment(self):
+        "Tests Adding a User to an Appointment"
         token = self.login('UnitTest', '1234')
         self.assertIsNotNone(token, 'UnitTest Login Failure')
         authHeader = {'content-type' : 'application/json', 'Authorization' : token}
@@ -286,6 +289,7 @@ class InterneServerTestCase(unittest.TestCase):
         self.assertEqual('UnitTest', firstEntry['username'])
 
     def test_jobForAppointments(self):
+        "Tests the existence of a notifying job for an appointment; does not test the correct execution of that job"
         token = self.login('UnitTest', '1234')
         self.assertIsNotNone(token, 'UnitTest Login Failure')
         authHeader = {'content-type' : 'application/json', 'Authorization' : token}
@@ -312,8 +316,11 @@ class InterneServerTestCase(unittest.TestCase):
         self.assertEqual(err,0)
 
         #check the job exists
+        #Job checking is an admin operation
+        token = self.login('monomo', 'monomomo')
+        authHeader = {'content-type' : 'application/json', 'Authorization' : token}
         resp = self.app.get('/api/dev/jobs', headers = authHeader)
-        respJSON = json.loads(resp)
+        respJSON = json.loads(resp.data)
         self.assertTrue(('Appointment Notify Job ' + str(appID)) in respJSON, 'Appointment notify job not in Serverside jobs')
 
         #remove appointment - this will remove the corresponding scheduler job
@@ -321,8 +328,8 @@ class InterneServerTestCase(unittest.TestCase):
 
         #check the job now doesn't exist
         resp = self.app.get('/api/dev/jobs', headers = authHeader)
-        respJSON = json.loads(resp)
-        self.assertFalse(('Appointment Notify Job ' + str(appID)) in respJSON, 'Appointment notify job not in Serverside jobs')
+        respJSON = json.loads(resp.data)
+        self.assertFalse(('Appointment Notify Job ' + str(appID)) in respJSON, 'Appointment notify job still in Serverside jobs')
 
 
 if __name__ == '__main__':
