@@ -285,7 +285,44 @@ class InterneServerTestCase(unittest.TestCase):
         self.assertEqual(2, firstEntry['drivingLevel'])
         self.assertEqual('UnitTest', firstEntry['username'])
 
+    def test_jobForAppointments(self):
+        token = self.login('UnitTest', '1234')
+        self.assertIsNotNone(token, 'UnitTest Login Failure')
+        authHeader = {'content-type' : 'application/json', 'Authorization' : token}
         
+        #Get UID
+        resp = self.app.get('/api/users/UnitTest', headers = authHeader, follow_redirects = True)
+        respJSON, err = self.validateResponse(resp, 200, ['id'])
+        self.assertEqual(err, 0)
+        uID = int(respJSON['id'])
+
+        #create Appointment
+        postData = {'startLocation' : 'Berlin', 'startTime' : 1614847559, 'distance' : 100}       #future
+        resp = self.app.post('/api/appointments', data = json.dumps(postData), headers = authHeader)
+        respJSON, err = self.validateResponse(resp, 201, ['id'])
+        self.assertEqual(err,0)
+        appID = int(respJSON['id'])
+        
+
+        #add UnitTest to Appointment
+        putData = {'drivingLevel' : 2, 'maximumPassengers' : 4}
+        resp = self.app.put('/api/appointments/' + str(appID) + '/users/' + str(uID),
+                            data = json.dumps(putData), headers = authHeader)
+        abc, err = self.validateResponse(resp, 200, [])
+        self.assertEqual(err,0)
+
+        #check the job exists
+        resp = self.app.get('/api/dev/jobs', headers = authHeader)
+        respJSON = json.loads(resp)
+        self.assertTrue(('Appointment Notify Job ' + str(appID)) in respJSON, 'Appointment notify job not in Serverside jobs')
+
+        #remove appointment - this will remove the corresponding scheduler job
+        self.app.delete('/api/appointments/' + str(appID), headers = authHeader)
+
+        #check the job now doesn't exist
+        resp = self.app.get('/api/dev/jobs', headers = authHeader)
+        respJSON = json.loads(resp)
+        self.assertFalse(('Appointment Notify Job ' + str(appID)) in respJSON, 'Appointment notify job not in Serverside jobs')
 
 
 if __name__ == '__main__':

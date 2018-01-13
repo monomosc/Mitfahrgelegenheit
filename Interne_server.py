@@ -405,13 +405,14 @@ def deleteAppointment(appointmentID):
     finally:
         session.close()
 
+    scheduler.remove_job('Appointment Notify Job ' + str(appointmentID))
     return jsonify('Appointment Deleted '), 200
 
 
 @application.route('/api/appointments/<a_ID>/users', methods = ['GET'])
 @jwt_required
 def getAppUsers(a_ID):
-    logger.info('User ' +  get_jwt_claims()['username'] + 'requesting User List to Appointment ' + str(a_ID))
+    logger.info('User ' +  get_jwt_claims()['username'] + ' requesting User List to Appointment ' + str(a_ID))
     session = Session()
 
     appointments = session.query(Appointment).filter(Appointment.id == a_ID)
@@ -425,7 +426,7 @@ def getAppUsers(a_ID):
         appendJSON['drivingLevel'] = user_app_rel.drivingLevel
         returnJSON.append(appendJSON)
     
-    logger.info('Returning Appointment ' + str(a_ID) + ' User List, containing ' + str(len(thisappointment.users)) + 'entities')
+    logger.info('Returning Appointment ' + str(a_ID) + ' User List, containing ' + str(len(thisappointment.users)) + ' entities')
     session.close()
     return jsonify(returnJSON), 200
 
