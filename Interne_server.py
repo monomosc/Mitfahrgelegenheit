@@ -405,7 +405,11 @@ def deleteAppointment(appointmentID):
     finally:
         session.close()
 
-    scheduler.remove_job('Appointment Notify Job ' + str(appointmentID))
+    try:
+        scheduler.remove_job('Appointment Notify Job ' + str(appointmentID))
+    except:
+        logger.error('Could not remove Appointment Notify Job to Appointment #' + str(appointmentID))
+    
     return jsonify('Appointment Deleted '), 200
 
 
@@ -567,6 +571,7 @@ def makeAppointment():
     except ValueError:
         logger.error('Could not print Date of newly created Appointment! ID: ' + str(newappointment.id))
 
+    startAppointmentScheduledEvent(newappointment.id, timedelta(hours = 1))
     returnJSON = newappointment.getAsJSON()
     session.close()
 
