@@ -700,6 +700,21 @@ def logfile():
             return jsonify(exception=str(ex)), 500
     return jsonify(message="Only ?latest=true allowed"), 422
 
+@application.route('/api/dev/jobs', methods=['GET'])
+@jwt_required
+def jobs():
+    logger.info('Jobs Request from User: ' + get_jwt_claims()['username'])
+    if get_jwt_claims()['globalAdminStatus'] < 1:
+        logger.warning('Illegal Operation: Jobs Request from User: ' + get_jwt_claims()['username'])
+        return jsonify(message="Illegal Non-Admin Operation"), 401
+
+    returnJSON = []
+    jobs = scheduler.get_jobs()
+    for job in jobs:
+        returnJSON.append(job.id)
+    
+    return jsonify(returnJSON)
+
 #//////////////////////////////////////////////////////////////////////////////////////////////////
 
 def make_message_response(string, status):
@@ -785,6 +800,12 @@ def unauthorized_loader(msg):
     return jsonify(message=msg), 401
 
 
+
+def terminateAppointment(appointmentID):
+
+    logger.error('Unimplemented Method called: notifyAppointmentParticipants on appointment ' + str(appointment.id))
+    pass
+
 #schedule an event to be run
 #appointment: Appointment
 #time: timedelta
@@ -806,18 +827,12 @@ def startAppointmentScheduledEvent(appointmentID, timediff):
     if (appointment.startTime - timediff) < now:
         log.error('Appointment #' + ' scheduled Event cannot be in the past! Trying to schedule for ' + appointment.startTime - timediff)
         return
-    scheduler.add_job(notifyAppointmentParticipants, trigger = 'date', args= [appointmentID], id = 'Appointment Notify Job ' + str(appointmentID), run_date = appointment.startTime - timediff)
+    scheduler.add_job(terminateAppointment, trigger = 'date', args= [appointmentID], id = 'Appointment Notify Job ' + str(appointmentID), run_date = appointment.startTime - timediff)
     log.info('Added Scheduler Job for Appointment #' +str(appointmentID) + ' on ' + (appointment.startTime - timediff))
 
 
 def refreshAppointmentRepetition(appointment):
     logger.error('Unimplemented Method called: refreshAppointmentRepetition')
-    pass
-
-
-
-def notifyAppointmentParticipants(appointment):
-    logger.error('Unimplemented Method called: notifyAppointmentParticipants on appointment ' + str(appointment.id))
     pass
 
 def retireAppointment(appointmentID, actualDrivers):
@@ -837,4 +852,3 @@ def retireAppointment(appointmentID, actualDrivers):
     
     session.close()
     logger.error('Appointment retiring not yet implemented!')
-
