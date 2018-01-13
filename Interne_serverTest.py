@@ -218,7 +218,8 @@ class InterneServerTestCase(unittest.TestCase):
             self.fail('UnitTest Login Failure')
 
         # create an appointment
-        postData = {'startLocation': 'Berlin', 'startTime': 1614847559, 'distance' : 100}
+        postData = {'startLocation': 'Berlin',
+                    'startTime': 1614847559, 'distance': 100}
         resp = self.app.post('/api/appointments',
                              data=json.dumps(postData), headers={'content-type': 'application/json', 'Authorization': token})
         self.assertEqual(resp.status_code, 201,
@@ -246,41 +247,43 @@ class InterneServerTestCase(unittest.TestCase):
         self.assertEqual(resp.status_code, 404,
                          'Appointment apprently still exists: 404 expected, returned ' + str(resp.status_code))
 
-
     def test_addUserToAppointment(self):
         "Tests Adding a User to an Appointment"
         token = self.login('UnitTest', '1234')
         self.assertIsNotNone(token, 'UnitTest Login Failure')
-        authHeader = {'content-type' : 'application/json', 'Authorization' : token}
-        
-        #Get UID
-        resp = self.app.get('/api/users/UnitTest', headers = authHeader, follow_redirects = True)
+        authHeader = {'content-type': 'application/json',
+                      'Authorization': token}
+
+        # Get UID
+        resp = self.app.get('/api/users/UnitTest',
+                            headers=authHeader, follow_redirects=True)
         respJSON, err = self.validateResponse(resp, 200, ['id'])
         self.assertEqual(err, 0)
         uID = int(respJSON['id'])
 
-        #create Appointment
-        postData = {'startLocation' : 'Berlin', 'startTime' : 1614847559, 'distance' : 100}       #future
-        resp = self.app.post('/api/appointments', data = json.dumps(postData), headers = authHeader)
+        # create Appointment
+        postData = {'startLocation': 'Berlin',
+                    'startTime': 1614847559, 'distance': 100}  # future
+        resp = self.app.post('/api/appointments',
+                             data=json.dumps(postData), headers=authHeader)
         respJSON, err = self.validateResponse(resp, 201, ['id'])
-        self.assertEqual(err,0)
+        self.assertEqual(err, 0)
         appID = int(respJSON['id'])
-        
 
-        #add UnitTest to Appointment
-        putData = {'drivingLevel' : 2, 'maximumPassengers' : 4}
+        # add UnitTest to Appointment
+        putData = {'drivingLevel': 2, 'maximumPassengers': 4}
         resp = self.app.put('/api/appointments/' + str(appID) + '/users/' + str(uID),
-                            data = json.dumps(putData), headers = authHeader)
+                            data=json.dumps(putData), headers=authHeader)
         abc, err = self.validateResponse(resp, 200, [])
-        self.assertEqual(err,0)
+        self.assertEqual(err, 0)
 
-        #check appointment data
-        resp = self.app.get('/api/appointments/' + str(appID) + '/users', headers = authHeader)
+        # check appointment data
+        resp = self.app.get('/api/appointments/' +
+                            str(appID) + '/users', headers=authHeader)
         self.assertEqual(resp.status_code, 200)
         respJSON = json.loads(resp.data)
         self.assertGreaterEqual(len(respJSON), 1)
         firstEntry = respJSON[0]
-
 
         self.assertTrue('id' in firstEntry)
         self.assertTrue('drivingLevel' in firstEntry)
@@ -292,44 +295,50 @@ class InterneServerTestCase(unittest.TestCase):
         "Tests the existence of a notifying job for an appointment; does not test the correct execution of that job"
         token = self.login('UnitTest', '1234')
         self.assertIsNotNone(token, 'UnitTest Login Failure')
-        authHeader = {'content-type' : 'application/json', 'Authorization' : token}
-        
-        #Get UID
-        resp = self.app.get('/api/users/UnitTest', headers = authHeader, follow_redirects = True)
+        authHeader = {'content-type': 'application/json',
+                      'Authorization': token}
+
+        # Get UID
+        resp = self.app.get('/api/users/UnitTest',
+                            headers=authHeader, follow_redirects=True)
         respJSON, err = self.validateResponse(resp, 200, ['id'])
         self.assertEqual(err, 0)
         uID = int(respJSON['id'])
 
-        #create Appointment
-        postData = {'startLocation' : 'Berlin', 'startTime' : 1614847559, 'distance' : 100}       #future
-        resp = self.app.post('/api/appointments', data = json.dumps(postData), headers = authHeader)
+        # create Appointment
+        postData = {'startLocation': 'Berlin',
+                    'startTime': 1614847559, 'distance': 100}  # future
+        resp = self.app.post('/api/appointments',
+                             data=json.dumps(postData), headers=authHeader)
         respJSON, err = self.validateResponse(resp, 201, ['id'])
-        self.assertEqual(err,0)
+        self.assertEqual(err, 0)
         appID = int(respJSON['id'])
-        
 
-        #add UnitTest to Appointment
-        putData = {'drivingLevel' : 2, 'maximumPassengers' : 4}
+        # add UnitTest to Appointment
+        putData = {'drivingLevel': 2, 'maximumPassengers': 4}
         resp = self.app.put('/api/appointments/' + str(appID) + '/users/' + str(uID),
-                            data = json.dumps(putData), headers = authHeader)
+                            data=json.dumps(putData), headers=authHeader)
         abc, err = self.validateResponse(resp, 200, [])
-        self.assertEqual(err,0)
+        self.assertEqual(err, 0)
 
-        #check the job exists
-        #Job checking is an admin operation
+        # check the job exists
+        # Job checking is an admin operation
         token = self.login('monomo', 'monomomo')
-        authHeader = {'content-type' : 'application/json', 'Authorization' : token}
-        resp = self.app.get('/api/dev/jobs', headers = authHeader)
+        authHeader = {'content-type': 'application/json',
+                      'Authorization': token}
+        resp = self.app.get('/api/dev/jobs', headers=authHeader)
         respJSON = json.loads(resp.data)
-        self.assertTrue(('Appointment Notify Job ' + str(appID)) in respJSON, 'Appointment notify job not in Serverside jobs')
+        self.assertTrue(('Appointment Notify Job ' + str(appID))
+                        in respJSON, 'Appointment notify job not in Serverside jobs')
 
-        #remove appointment - this will remove the corresponding scheduler job
-        self.app.delete('/api/appointments/' + str(appID), headers = authHeader)
+        # remove appointment - this will remove the corresponding scheduler job
+        self.app.delete('/api/appointments/' + str(appID), headers=authHeader)
 
-        #check the job now doesn't exist
-        resp = self.app.get('/api/dev/jobs', headers = authHeader)
+        # check the job now doesn't exist
+        resp = self.app.get('/api/dev/jobs', headers=authHeader)
         respJSON = json.loads(resp.data)
-        self.assertFalse(('Appointment Notify Job ' + str(appID)) in respJSON, 'Appointment notify job still in Serverside jobs')
+        self.assertFalse(('Appointment Notify Job ' + str(appID))
+                         in respJSON, 'Appointment notify job still in Serverside jobs')
 
 
 if __name__ == '__main__':
