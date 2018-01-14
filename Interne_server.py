@@ -179,7 +179,7 @@ def api():
             routes.append(route)
         except:
             try:
-                sentry.captureException({'tags' : options})
+                sentry.captureException(extra = {'tags' : options})
             except:
                 logger.error('Sending Sentry Event Failed')
     returnJSON['endpoints'] = routes
@@ -1030,11 +1030,7 @@ def refreshAppointmentRepetition(appointment):
 #actual Drivers is a List of the form [uid1, uid2, uid3, ...]
 def retireAppointment(appointmentID, actualDrivers):
     "Called when a User wishes to retire an appointment"
-<<<<<<< HEAD
-    log.info('Retiring Appointment #' + appointmentID)
-=======
     logger.info('Retiring Appointment #' + str(appointmentID))
->>>>>>> develop-0.2.0
     session = Session()
     appointments = session.query(Appointment).filter(
         Appointment.id == appointmentID)
@@ -1059,8 +1055,4 @@ def retireAppointment(appointmentID, actualDrivers):
 
     logger.info('Appointment #' + str(thisappointment.id) + ' retired')
     session.commit()
-<<<<<<< HEAD
     session.close()
-=======
-    session.close()
->>>>>>> develop-0.2.0
