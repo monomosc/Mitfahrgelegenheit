@@ -48,7 +48,7 @@ class Appointment(SQLBase):
     startTime = Column(DateTime)
     repeatTime = Column(String(15))
     users = relationship("User_Appointment_Rel", back_populates="appointment",
-                            cascade= "delete, delete-orphan")
+                            cascade= "delete, delete-orphan", foreign_keys = "User_Appointment_Rel.appointment_id")
     retired = Column(Boolean)
     distance = Column(Integer)
     
