@@ -842,6 +842,25 @@ def unauthorized_loader(msg):
     return jsonify(message=msg), 401
 
 
+
+def getUserTotalDistance(u_ID):
+    "Retrieves the total traveled distance"
+    session = Session()
+    users = session.query(User).filter(User.id == u_ID)
+    if users.count() == 0:
+        logger.error('getUserTotalDistance: User #' + str(u_ID) + ' does not exist', extra = {'tags' : 'getUserTotalDistance'})
+        return -1
+    
+    thisuser = users.first()
+
+    totaldistance = 0
+    for user_app_rel in thisuser.appointments:
+        if user_app_rel.actualDrivingParticipation == True:
+            totaldistance = totaldistance + user_app_rel.appointment.distance
+    
+    logger.info('Calculated total driven distance of User ' + thisuser.username + ' to be ' + str(totaldistance))
+    return totaldistance
+
 def terminateAppointment(appointmentID):
     "terminateAppointment is called by the scheduler 1 hour before the appointment takes place"
     #get Number of total possible Passengers including only 
@@ -976,10 +995,10 @@ def refreshAppointmentRepetition(appointment):
 #actual Drivers is a List of the form [uid1, uid2, uid3, ...]
 def retireAppointment(appointmentID, actualDrivers):
     "Called when a User wishes to retire an appointment"
-    log.info('Retiring Appointment #' + appointmentID)
+    logger.info('Retiring Appointment #' + str(appointmentID))
     session = Session()
     appointments = session.query(Appointment).filter(
-        Appointment.id == appointment.id)
+        Appointment.id == appointmentID)
     if appointments.count() == 0:
         log.warning('No Appointment #' + appointment.id + 'exists')
         session.close()
@@ -1002,3 +1021,4 @@ def retireAppointment(appointmentID, actualDrivers):
     logger.info('Appointment #' + str(thisappointment.id) + ' retired')
     session.commit()
     session.close()
+
