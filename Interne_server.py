@@ -239,10 +239,11 @@ def signup():
                    password=hashed_password)
     session.add(newuser)
     session.commit()
+    newuserJSON = newuser.getAsJSON()
     session.close()
     # Respond 201 CREATED
     logger.info('User ' + requestJSON['username'] + ' created')
-    return jsonify(message="User " + requestJSON['username'] + " created"), 201
+    return jsonify(newuserJSON), 201
 
 
 @application.route('/api/users/<int:u_id>', methods=['GET', 'PUT', 'DELETE', 'PATCH'])
