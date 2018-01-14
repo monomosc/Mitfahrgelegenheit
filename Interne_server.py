@@ -142,7 +142,10 @@ def api():
     except:
         returnJSON['version'] = 'invalid'
         logger.error('Error reading Version Config File')
-        sentry.captureException()
+        try:
+            sentry.captureException()
+        except:
+            pass
 
     returnJSON['lastknownversion'] = '0.1.1'
     objectUser = {'username: string': 'required: login name', 'id: int': 'required: internal id', 'email: string': 'required: valid email',
@@ -175,7 +178,10 @@ def api():
                      'url': url_for(rule.endpoint, **options)}
             routes.append(route)
         except:
-            sentry.captureException()
+            try:
+                sentry.captureException()
+            except:
+                pass
     returnJSON['endpoints'] = routes
 
     return jsonify(returnJSON), 200
@@ -918,7 +924,10 @@ def terminateAppointment(appointmentID):
             logger.fatal('Not yet Implemented! Failed Distribution !!')
 
     except:
-        sentry.captureException()
+        try:
+            sentry.captureException()
+        except:
+            pass
         logger.fatal('Something went wrong in terminateAppointment!!!')
     finally:
         session.close()
