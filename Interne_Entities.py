@@ -26,7 +26,7 @@ class User(SQLBase):
     phoneNumber = Column(String(40))
     globalAdminStatus = Column(Integer)
     appointments = relationship("User_Appointment_Rel", back_populates="user",
-                                cascade = "delete, delete-orphan")
+                                cascade = "delete, delete-orphan", foreign_keys = "User_Appointment_Rel.user_id")
 
     def getAsJSON(self):
         "Returns a JSON representation of a User"
@@ -51,6 +51,13 @@ class Appointment(SQLBase):
                             cascade= "delete, delete-orphan")
     retired = Column(Boolean)
     distance = Column(Integer)
+    
+    #This has similar meaning as drivingLevel:
+    #0 - it is undecided
+    #1 - everyone fits only with the people that definitely drive (drivingLevel 1)
+    #2 - everyone fits with the users that MAY drive (drivingLevel 2)
+    #3 - not everyone fits, needs out-of-bounds resolution
+    everyoneFits = Column(Integer)
     def getAsJSON(self):
         return {'id' : self.id, 'startLocation' : self.startLocation, 
                 'startTime' : self.startTime, 'repeatTime' : self.repeatTime, 
@@ -62,12 +69,19 @@ class User_Appointment_Rel(SQLBase):
     " drivingLevel 0 means no car, 1 means Will definitely drive, 2 means may drive"
     __tablename__ = 'user_takesPart_appointment'
     user_id = Column(Integer, ForeignKey('users.id'), primary_key=True)
+
+
+    #who is my driver? - might be myself
+    designatedDriverID = Column(Integer, ForeignKey('users.id'))
+
     appointment_id = Column(Integer, ForeignKey('appointments.id'), primary_key = True)
     drivingLevel = Column(Integer)
     actualDrivingParticipation = Column(Boolean)
     maximumPassengers = Column(Integer)     #Optional field for drivingLevel not 0
-    appointment = relationship("Appointment", back_populates = "users")
-    user = relationship("User", back_populates = "appointments")
 
+    appointment = relationship("Appointment", back_populates = "users", foreign_keys=[appointment_id])
+    user = relationship("User", back_populates = "appointments", foreign_keys = [user_id])
+
+    designatedDriverUser = relationship("User", foreign_keys = [designatedDriverID])
 
 
