@@ -179,9 +179,9 @@ def api():
             routes.append(route)
         except:
             try:
-                sentry.captureException()
+                sentry.captureException({'tags' : options})
             except:
-                pass
+                logger.error('Sending Sentry Event Failed')
     returnJSON['endpoints'] = routes
 
     return jsonify(returnJSON), 200
