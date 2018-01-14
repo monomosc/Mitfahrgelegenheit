@@ -341,7 +341,7 @@ def patchUser(user_id):
     return json.dumps(thisuser.getAsJSON()), 200
 
 
-@application.route('/api/users/int:u_id/appointments', methods=['GET'])
+@application.route('/api/users/<int:u_id>/appointments', methods=['GET'])
 @jwt_required
 def userAppointments(u_id):
     # check privileges
@@ -359,7 +359,7 @@ def getAppointments(u_id):
     return jsonify(message='Not yet implemented'), 404
 
 
-@application.route('/api/users/int:u_ID/appointments/a_ID', methods=['PUT'])
+@application.route('/api/users/<int:u_ID>/appointments/a_ID', methods=['PUT'])
 def putAppointment(u_id):
     "Add an existing appointment to a User (in the sense that he will be taking part)"
     logger.info(
@@ -488,7 +488,7 @@ def putAppUser(a_ID, u_ID):
     if requestJSON['drivingLevel'] != 0:
         if 'maximumPassengers' not in requestJSON:
             logger.warning(
-                'maximumPassngers not in Request for adding User to Appointment')
+                'maximumPassengers not in Request for adding User to Appointment')
             return jsonify(message='If drivingLevel is not 0, supply maximumPassengers key'), 422
 
     # check priviliges:
@@ -887,7 +887,7 @@ def terminateAppointment(appointmentID):
                     drvingDict[user_app_rel].append(user_app_rel)
                     finishedPassengers.append(user_app_rel)
             
-            for user_app-rel in finishedPassengers:
+            for user_app_rel in finishedPassengers:
                 listOfAllPassengers.remove(user_app_rel)
             finishedPassengers.clear()
             
