@@ -1002,4 +1002,3 @@ def retireAppointment(appointmentID, actualDrivers):
     logger.info('Appointment #' + str(thisappointment.id) + ' retired')
     session.commit()
     session.close()
-
