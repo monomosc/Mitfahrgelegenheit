@@ -359,7 +359,7 @@ def getAppointments(u_id):
     return jsonify(message='Not yet implemented'), 404
 
 
-@application.route('/api/users/<int:u_ID>/appointments/a_ID', methods=['PUT'])
+@application.route('/api/users/<int:u_ID>/appointments/<int:a_ID>', methods=['PUT'])
 def putAppointment(u_id):
     "Add an existing appointment to a User (in the sense that he will be taking part)"
     logger.info(
@@ -423,7 +423,7 @@ def deleteAppointment(appointmentID):
     return jsonify('Appointment Deleted '), 200
 
 
-@application.route('/api/appointments/<a_ID>/users', methods=['GET'])
+@application.route('/api/appointments/<int:a_ID>/users', methods=['GET'])
 @jwt_required
 def getAppUsers(a_ID):
     logger.info('User ' + get_jwt_claims()
