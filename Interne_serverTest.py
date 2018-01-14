@@ -384,7 +384,11 @@ class InterneServerTestCase(unittest.TestCase):
             resp = self.app.post('/api/users', data = json.dumps(putData), headers = {'content-type' : 'application/json'})
             self.assertTrue(resp.status_code == 201 or resp.status_code == 409) # 409 if user already exists
             respJSON = json.loads(resp.data)
-            uID = respJSON['id']
+            try:
+                uID = respJSON['id']
+            except:
+                logger.info(str(respJSON))
+                self.fail('Check logs - some response KeyError')
 
 
             putData = {'drivingLevel': 0}
@@ -401,7 +405,7 @@ class InterneServerTestCase(unittest.TestCase):
         #delete a bunch of users and then delete the appointmetn:
         for  i in range(1,4):
             token = self.login('User' + str(i), '1234')
-            resp = self.app.delete('/api/dev/removeUser/temptest', headers={'Authorization': token})
+            resp = self.app.delete('/api/dev/removeUser/User' + str(i), headers={'Authorization': token})
             self.assertEquals(resp.status_code, 204)
         
         resp = self.app.delete('/api/appointments/' + str(appID), headers=authHeader)
