@@ -867,9 +867,10 @@ def terminateAppointment(appointmentID):
                 possibleDriversPassengerAmount = possibleDriversPassengerAmount + user_app_rel.maximumPassengers
             totalParticipants = totalParticipants + 1
         
+        #good News !! Everyone fits!
         if totalParticipants <= definiteDriversPassengerAmount:
             logger.info('Everyone fits into Definite Driver Seats on Appointment #' + str(thisappointment.id))
-            #good News !! Everyone fits!
+        
             thisappointment.everyoneFits = 1
 
             listOfAllDrivers = []
@@ -917,7 +918,8 @@ def terminateAppointment(appointmentID):
             logger.info('Distributed ' + str(totalParticipants) + ' Participants onto ' + str(totalNumberOfDrivers) + ' on Appointment # ' + str(thisappointment.id))
             logger.info('Writing Driver Distribution Information for Appointment #' + str(thisappointment.id) + ' to DB.')
             session.commit()
-            
+        
+        #sortof good News !! everyone fits..at least including the may-drivers
         if totalParticipants > definiteDriversPassengerAmount and totalParticipants <= possibleDriversPassengerAmount:
             logger.info('Not everyone fits into Definite Driver Seats. Taking Possible Drivers into Account on Appointment #' + str(thisappointment.id))
             logger.fatal('Not yet Implemented! Distribution onto possible drivers!')
@@ -971,8 +973,9 @@ def refreshAppointmentRepetition(appointment):
     logger.error('Unimplemented Method called: refreshAppointmentRepetition')
     pass
 
-
+#actual Drivers is a List of the form [uid1, uid2, uid3, ...]
 def retireAppointment(appointmentID, actualDrivers):
+    "Called when a User wishes to retire an appointment"
     log.info('Retiring Appointment #' + appointmentID)
     session = Session()
     appointments = session.query(Appointment).filter(
@@ -988,5 +991,15 @@ def retireAppointment(appointmentID, actualDrivers):
         session.close()
         return
 
+    for user_app_rel in thisappointment.users:
+        if user_app_rel.user_id in actualDrivers:
+            user_app_rel.actualDrivingParticipation = True
+        else:
+            user_app_rel.actualDrivingParticipation = False
+    
+    thisappointment.retired = True
+
+    logger.info('Appointment #' + str(thisappointment.id) + ' retired')
+    session.commit()
     session.close()
-    logger.error('Appointment retiring not yet implemented!')
+
