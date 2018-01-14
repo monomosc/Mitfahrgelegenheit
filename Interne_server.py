@@ -349,6 +349,17 @@ def patchUser(user_id):
     return json.dumps(thisuser.getAsJSON()), 200
 
 
+@application.route('/api/users/<int:u_id>/distance', methods = ['GET'])
+@jwt_required
+def getDistance(u_id):
+    "Retrieves the Distance a single User has actively driven in the past"  
+    d = getUserTotalDistance(u_id)
+    if d == -1:
+        return jsonify(message='An Error occured'), 500
+    returnJSON = {}
+    returnJSON['distance'] = d
+    return jsonify(returnJSON), 200
+
 @application.route('/api/users/<int:u_id>/appointments', methods=['GET'])
 @jwt_required
 def userAppointments(u_id):
@@ -1021,4 +1032,3 @@ def retireAppointment(appointmentID, actualDrivers):
     logger.info('Appointment #' + str(thisappointment.id) + ' retired')
     session.commit()
     session.close()
-
