@@ -17,6 +17,7 @@ from werkzeug.security import safe_str_cmp
 from flask import json
 from datetime import time, timedelta, datetime
 from time import strftime
+from random import randint
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers import cron
@@ -34,8 +35,7 @@ jwt = JWTManager(application)
 logger = logging.getLogger(__name__)
 scheduler = BackgroundScheduler()
 sentry = Sentry(
-    dsn=
-        'https://3fb25fb74b6c4cf48f5c0e8ff285bc51:a36099e9044e4b0ab09224bddd652489@sentry.monomo.solutions/2')
+    dsn='https://3fb25fb74b6c4cf48f5c0e8ff285bc51:a36099e9044e4b0ab09224bddd652489@sentry.monomo.solutions/2')
 Session = sessionmaker()
 __log_handler__ = None
 
@@ -44,13 +44,13 @@ __log_handler__ = None
 def initialize_log():
     global __log_handler__
     now = datetime.now()
-    filename = application.config['MITFAHRGELEGENHEIT_LOG'] +'Mitfahrgelegenheit-'+ \
+    filename = application.config['MITFAHRGELEGENHEIT_LOG'] + 'Mitfahrgelegenheit-' + \
         now.strftime("%d-%m-%y") + ".log"
     if __log_handler__ is not None:
         logger.removeHandler(__log_handler__)
         logging.getLogger('sqlalchemy').removeHandler(__log_handler__)
         logging.getLogger('apscheduler').removeHandler(__log_handler__)
-    
+
     __log_handler__ = logging.FileHandler(filename)
     __log_handler__.setLevel(logging.DEBUG)
     __log_handler__.setFormatter(logging.Formatter(
@@ -78,13 +78,13 @@ def initialize_everything():
             application.config['LogLevel'] = logging.INFO
         else:
             application.testing = True
-    
 
     # LOADING CONFIG
-    application.config.from_envvar('MITFAHRGELEGENHEIT_SETTINGS')   # is set to /etc/Mitfahrgelegenheit.conf on productionf
+    # is set to /etc/Mitfahrgelegenheit.conf on productionf
+    application.config.from_envvar('MITFAHRGELEGENHEIT_SETTINGS')
 
     initialize_log()            # Important logger initialization
-    
+
     logger.info('-------- STARTING UP --------')
     logger.info('Appliction is in ' +
                 ('TEST' if application.testing else 'NON-TEST') + ' mode')
@@ -106,10 +106,13 @@ def initialize_everything():
 
     if prod:
 
-        apscheduleSqliteEngine = create_engine('sqlite:///APSchedule.db', echo = False)
-        scheduler.configure(jobstores = {'default' : SQLAlchemyJobStore(engine = apscheduleSqliteEngine)})
+        apscheduleSqliteEngine = create_engine(
+            'sqlite:///APSchedule.db', echo=False)
+        scheduler.configure(
+            jobstores={'default': SQLAlchemyJobStore(engine=apscheduleSqliteEngine)})
         scheduler.start()
-        sentryhandler = SentryHandler('https://3fb25fb74b6c4cf48f5c0e8ff285bc51:a36099e9044e4b0ab09224bddd652489@sentry.monomo.solutions/2')
+        sentryhandler = SentryHandler(
+            'https://3fb25fb74b6c4cf48f5c0e8ff285bc51:a36099e9044e4b0ab09224bddd652489@sentry.monomo.solutions/2')
         sentryhandler.setLevel(logging.WARNING)
         setup_logging(sentryhandler)
 
@@ -125,13 +128,10 @@ if __name__ == "__main__":
     application.run(host='127.0.0.1', debug=True)
 
 
-
-
-
 # DYNAMIC PART - REST-API
 #///////////////////////////////////////////////////////////////////////////////////////////////////
 # simple API description
-@application.route('/api', methods = ['GET'])
+@application.route('/api', methods=['GET'])
 def api():
     returnJSON = {}
     try:
@@ -142,23 +142,27 @@ def api():
     except:
         returnJSON['version'] = 'invalid'
         logger.error('Error reading Version Config File')
-        sentry.captureException()
-    
-        
+        try:
+            sentry.captureException()
+        except:
+            pass
+
     returnJSON['lastknownversion'] = '0.1.1'
-    objectUser = {'username: string' : 'required: login name', 'id: int' : 'required: internal id', 'email: string' : 'required: valid email',
-                    'phoneNumber: string' : 'required: Phone Number the user is available on in case of conflicts',
-                    'globalAdminStatus: int' : 'required: higher means more rights',
-                    'password: string' : 'do not send this'}
-    objectAppointment = {'id: int' : 'required: internal ID', 'startLocation: string' : 'required: Meetup Location for Starting the Appointment', 
-                            'startTime: int' : 'required: unix timestamp for Appointment Meetup time', 
-                            'repeatTime: string' : 'required: as of now always none',
-                            'distance: int' : 'required: the distance to drive',
-                            'retired: bool' : 'defaults to False; changes to True once when the appointment is finished' }
-    
-    returnJSON['objects'] = { 'user' : objectUser, 'appointment' : objectAppointment}
-    returnJSON['relationships'] = [{'parent' : 'User', 'child' : 'appointment', 'drivingLevel: int' : 'Enum: 0 denoting the User WILL NOT drive, \
-                                1 denoting he WILL definitely drive, 2 he MAY drive if need exists'}]
+    objectUser = {'username: string': 'required: login name', 'id: int': 'required: internal id', 'email: string': 'required: valid email',
+                  'phoneNumber: string': 'required: Phone Number the user is available on in case of conflicts',
+                  'globalAdminStatus: int': 'required: higher means more rights',
+                  'password: string': 'do not send this'}
+    objectAppointment = {'id: int': 'required: internal ID', 'startLocation: string': 'required: Meetup Location for Starting the Appointment',
+                         'startTime: int': 'required: unix timestamp for Appointment Meetup time',
+                         'repeatTime: string': 'required: as of now always none',
+                         'distance: int': 'required: the distance to drive',
+                         'retired: bool': 'defaults to False; changes to True once when the appointment is finished'}
+
+    returnJSON['objects'] = {'user': objectUser,
+                             'appointment': objectAppointment}
+    returnJSON['relationships'] = [{'parent': 'User', 'child': 'appointment', 'drivingLevel: int': 'Enum: 0 denoting the User WILL NOT drive,' +
+                                    '1 denoting he WILL definitely drive, 2 he MAY drive if need exists',
+                                    'maximumPassengers: int': 'optional: Denotes the maximum amount of passengers the User can transport if he were to drive'}]
 
     routes = []
     for rule in application.url_map.iter_rules():
@@ -169,20 +173,23 @@ def api():
             httpmethods = []
             for method in rule.methods:
                 httpmethods.append(method)
-            route = {   'function' : rule.endpoint,
-                        'http-methods' : httpmethods,
-                        'url' : url_for(rule.endpoint, **options)}
+            route = {'function': rule.endpoint,
+                     'http-methods': httpmethods,
+                     'url': url_for(rule.endpoint, **options)}
             routes.append(route)
         except:
-            sentry.captureException()
+            try:
+                sentry.captureException()
+            except:
+                pass
     returnJSON['endpoints'] = routes
 
     return jsonify(returnJSON), 200
 
+
 @application.route('/api/users', methods=['GET'])  # TODO: Write Test
 @jwt_required
 def users():
-
 
     returnJSON = []
     session = Session()
@@ -225,16 +232,18 @@ def signup():
         User.username == requestJSON['username'])
     if check_for_duplicates.count() > 0:
         session.close()
-        return jsonify(message="User " + requestJSON['username'] + ' already exists'), 409
+        logger.warning('User ' + requestJSON['username'] + 'already exists with ID ' + str(check_for_duplicates.first().id))
+        return jsonify(check_for_duplicates.first().getAsJSON()), 409
     newuser = User(username=requestJSON['username'], email=requestJSON['email'],
                    phoneNumber=requestJSON['phoneNumber'], globalAdminStatus=0,
                    password=hashed_password)
     session.add(newuser)
     session.commit()
+    newuserJSON = newuser.getAsJSON()
     session.close()
     # Respond 201 CREATED
-    logger.info('User '+requestJSON['username'] + ' created')
-    return jsonify(message="User " + requestJSON['username'] + " created"), 201
+    logger.info('User ' + requestJSON['username'] + ' created')
+    return jsonify(newuserJSON), 201
 
 
 @application.route('/api/users/<int:u_id>', methods=['GET', 'PUT', 'DELETE', 'PATCH'])
@@ -249,6 +258,7 @@ def doSomethingWithThisUser(u_id):
     if request.mehod == 'DELETE':
         return jsonify(message='This Method is not implemented here (yet)'), 405
 
+
 @application.route('/api/users/<string:u_name>', methods=['GET', 'PUT', 'DELETE', 'PATCH'])
 @jwt_optional
 def redirectToIdCall(u_name):
@@ -257,13 +267,13 @@ def redirectToIdCall(u_name):
     users = session.query(User).filter(User.username == u_name)
     if users.count() == 0:
         session.close()
-        return jsonify(message='User ' + u_name +' does not exist'), 404
+        return jsonify(message='User ' + u_name + ' does not exist'), 404
     user = users.first()
     session.close()
     return redirect('/api/users/' + str(user.id)), 307
 
 
-def user_profileByID(u_id): 
+def user_profileByID(u_id):
     "User Profile Endpoint - ID"
     session = Session()
     users = session.query(User).filter(User.id == u_id)
@@ -278,7 +288,8 @@ def user_profileByID(u_id):
 def patchUser(user_id):
     "Update an existing user, similar but not completely compliant to RFC7396"
     uclaims = get_jwt_claims()
-    logger.info('User Patch Request by '+ uclaims['username']+' on UserID '+ str(user_id))
+    logger.info('User Patch Request by ' +
+                uclaims['username'] + ' on UserID ' + str(user_id))
     if not request.is_json:
         return jsonify(message='Malformed JSON or Wrong headers (expect applcation/json)'), 400
     requestJSON = json.loads(request.data)
@@ -286,17 +297,20 @@ def patchUser(user_id):
     # check if user is allowed to change requested user profile
     try:
         if int(uclaims['globalAdminStatus'] < 1):
-            if get_jwt_identity()!=user_id:
-                logger.warn('User '+ uclaims['username'] + '(Non-Admin) tried to patch user other than himself')
+            if get_jwt_identity() != user_id:
+                logger.warn(
+                    'User ' + uclaims['username'] + '(Non-Admin) tried to patch user other than himself')
                 return jsonify(message='Not allowed'), 401
     except ValueError:
-        logger.error('User '+uclaims['username'] + '  has an illegal globalAdminStatus: ' + str(uclaims['globalAdminStatus']))
-        return jsonify(message = 'ye weird'), 500
+        logger.error('User ' + uclaims['username'] +
+                     '  has an illegal globalAdminStatus: ' + str(uclaims['globalAdminStatus']))
+        return jsonify(message='ye weird'), 500
     if 'globalAdminStatus' in requestJSON:
         try:
             if int(requestJSON['globalAdminStatus']) > uclaims['globalAdminStatus']:
-                logger.warn('User '+ uclaims['username'] + 'illegaly attempts to elevate Admin Privileges to '+ requestJSON['globalAdminStatus'])
-                return jsonify(message='Not allowed'),404
+                logger.warn(
+                    'User ' + uclaims['username'] + 'illegaly attempts to elevate Admin Privileges to ' + requestJSON['globalAdminStatus'])
+                return jsonify(message='Not allowed'), 404
         except ValueError:
             return jsonify(message='Illegal Type in field "globalAdminStatus"'), 422
     if 'username' in requestJSON:
@@ -306,70 +320,70 @@ def patchUser(user_id):
 
     session = Session()
     users = session.query(User).filter(User.id == user_id)
-    if users.count()==0:
+    if users.count() == 0:
         session.close()
-        logger.info('User '+ user_id+' does not exist. No Change executed')
-        return jsonify('User '+user_id+' does not exist'), 404
+        logger.info('User ' + user_id + ' does not exist. No Change executed')
+        return jsonify('User ' + user_id + ' does not exist'), 404
     thisuser = users.first()
     logstring = ''
     if 'globalAdminStatus' in requestJSON:
-        logstring = logstring + 'globalAdminStatus: '+str(requestJSON['globalAdminStatus'])+', '
+        logstring = logstring + 'globalAdminStatus: ' + \
+            str(requestJSON['globalAdminStatus']) + ', '
         thisuser.globalAdminStatus = requestJSON['globalAdminStatus']
     if 'email' in requestJSON:
-        logstring = logstring +'email: ' + str(requestJSON['email'])+', '
+        logstring = logstring + 'email: ' + str(requestJSON['email']) + ', '
         thisuser.email = requestJSON['email']
     if 'phoneNumber' in requestJSON:
-        logstring = logstring + 'phoneNumber: ' + str(requestJSON['phoneNumber']) + ', '
+        logstring = logstring + 'phoneNumber: ' + \
+            str(requestJSON['phoneNumber']) + ', '
         thisuser.phoneNumber = requestJSON['phoneNumber']
     if 'password' in requestJSON:
         hashed_password = generate_password_hash(requestJSON['password'])
-        logger.info('Set new Password on User ' +  thisuser.username)
+        logger.info('Set new Password on User ' + thisuser.username)
         thisuser.password = hashed_password
-    
+
     session.commit()
-    logger.info('Changed User '+thisuser.username+'. Changed Keys: '+logstring)
+    logger.info('Changed User ' + thisuser.username +
+                '. Changed Keys: ' + logstring)
     session.close()
     return json.dumps(thisuser.getAsJSON()), 200
 
 
-
-
-@application.route('/api/users/int:u_id/appointments', methods = ['GET'])
+@application.route('/api/users/<int:u_id>/appointments', methods=['GET'])
 @jwt_required
 def userAppointments(u_id):
-    #check privileges
+    # check privileges
     uclaims = get_jwt_claims()
     if int(uclaims['globalAdminStatus']) < 1:
         caller_id = get_jwt_identity()
         if caller_id != u_id:
-            return jsonify(message = 'Not allowed'), 401
-    
+            return jsonify(message='Not allowed'), 401
 
     return getAppointments(u_id)
 
 
 def getAppointments(u_id):
-    return jsonify(message = 'Not yet implemented'), 404        #TODO: Implement and write test
+    # TODO: Implement and write test
+    return jsonify(message='Not yet implemented'), 404
 
 
-@application.route('/api/users/int:u_ID/appointments/a_ID', methods = ['PUT'])
+@application.route('/api/users/<int:u_ID>/appointments/<int:a_ID>', methods=['PUT'])
 def putAppointment(u_id):
     "Add an existing appointment to a User (in the sense that he will be taking part)"
-    logger.info('Call to /api/users/uid/appointments/aid redirecting to /api/appointments/aid/users/uid 307', code = 307)
-    return redirect('/api/appointments/' + str(a_ID) +'/users/'+ str(u_ID), code = 307)
+    logger.info(
+        'Call to /api/users/uid/appointments/aid redirecting to /api/appointments/aid/users/uid 307', code=307)
+    return redirect('/api/appointments/' + str(a_ID) + '/users/' + str(u_ID), code=307)
 
 
-
-
-
-
-@application.route('/api/appointments/<appointmentID>', methods=['GET', 'DELETE'])  
+@application.route('/api/appointments/<appointmentID>', methods=['GET', 'DELETE'])
 @jwt_required
 def appointment(appointmentID):
     if request.method == 'GET':
         return appointment_data(appointmentID)
     if request.method == 'DELETE':
         return deleteAppointment(appointmentID)
+
+
 def appointment_data(appointmentID):
     "Appointment functionailty"
     uclaims = get_jwt_claims()
@@ -386,79 +400,90 @@ def appointment_data(appointmentID):
     session.close()
     return jsonify(appointmentJSON), 200
 
+
 def deleteAppointment(appointmentID):
-    logger.info('Trying to delete Appointment ' + str(appointmentID) + ' from User ' + get_jwt_claims()['username'])
+    logger.info('Trying to delete Appointment ' + str(appointmentID) +
+                ' from User ' + get_jwt_claims()['username'])
 
     session = Session()
-    appointments = session.query(Appointment).filter(Appointment.id == appointmentID)
+    appointments = session.query(Appointment).filter(
+        Appointment.id == appointmentID)
     if appointments.count() == 0:
         session.close()
-        return jsonify(message = "Appointment does not exist"), 404
+        return jsonify(message="Appointment does not exist"), 404
     try:
         appointment = appointments.first()
         session.delete(appointment)
         session.commit()
-        logger.info('Appointment ' +appointmentID + ' deleted')
+        logger.info('Appointment ' + appointmentID + ' deleted')
     except:
-        logger.error('Deletion of Appointment ID' +  str(appointmentID) + ' unsuccessful')
+        logger.error('Deletion of Appointment ID' +
+                     str(appointmentID) + ' unsuccessful')
     finally:
         session.close()
 
-    return jsonify('Appointment Deleted '), 200
+    try:
+        scheduler.remove_job('Appointment Notify Job ' + str(appointmentID))
+    except:
+        logger.error(
+            'Could not remove Appointment Notify Job to Appointment #' + str(appointmentID))
+
+    return '', 204
 
 
-@application.route('/api/appointments/<a_ID>/users', methods = ['GET'])
+@application.route('/api/appointments/<int:a_ID>/users', methods=['GET'])
 @jwt_required
 def getAppUsers(a_ID):
-    logger.info('User ' +  get_jwt_claims()['username'] + 'requesting User List to Appointment ' + str(a_ID))
+    logger.info('User ' + get_jwt_claims()
+                ['username'] + ' requesting User List to Appointment ' + str(a_ID))
     session = Session()
 
     appointments = session.query(Appointment).filter(Appointment.id == a_ID)
     if appointments.count() == 0:
         return jsonify(message="No Such Appointment"), 404
-    
+
     returnJSON = []
     thisappointment = appointments.first()
     for user_app_rel in thisappointment.users:
         appendJSON = user_app_rel.user.getAsJSON()
         appendJSON['drivingLevel'] = user_app_rel.drivingLevel
         returnJSON.append(appendJSON)
-    
-    logger.info('Returning Appointment ' + str(a_ID) + ' User List, containing ' + str(len(thisappointment.users)) + 'entities')
+
+    logger.info('Returning Appointment ' + str(a_ID) +
+                ' User List, containing ' + str(len(thisappointment.users)) + ' entities')
     session.close()
     return jsonify(returnJSON), 200
 
-@application.route('/api/appointments/<int:a_ID>/users/<int:u_ID>', methods = ['PUT', 'GET'])
+
+@application.route('/api/appointments/<int:a_ID>/users/<int:u_ID>', methods=['PUT', 'GET'])
 @jwt_required
 def putAppUser(a_ID, u_ID):
     "Add an existing appointment to a User (in the sense that he will be taking part)"
     if request.method == 'GET':
-        logger.info('GET on /api/appointments/a_ID/users/u_ID redirecting to user profile')
+        logger.info(
+            'GET on /api/appointments/a_ID/users/u_ID redirecting to user profile')
         return redirect('/api/users/' + str(u_ID))
-    
-    
-    
+
     session = Session()
 
-    #check if Appointment exists:
+    # check if Appointment exists:
     appointments = session.query(Appointment).filter(Appointment.id == a_ID)
     if appointments.count() == 0:
-        return jsonify(message = 'No such Appointment exists'), 404
+        return jsonify(message='No such Appointment exists'), 404
     thisappointment = appointments.first()
 
-    #check if user exists:
+    # check if user exists:
     users = session.query(User).filter(User.id == u_ID)
     if users.count() == 0:
-        return jsonify(message = 'No such User exists'), 404
+        return jsonify(message='No such User exists'), 404
     thisuser = users.first()
 
-    logger.info('User ' + get_jwt_claims()['username'] + ' attempts to add ' + thisuser.username + ' to Appointment ' + str(a_ID))
-    
+    logger.info('User ' + get_jwt_claims()
+                ['username'] + ' attempts to add ' + thisuser.username + ' to Appointment ' + str(a_ID))
 
-
-    #Some basic checks for request syntax and semantics
+    # Some basic checks for request syntax and semantics
     if not request.is_json:
-        return jsonify(message= 'Expect JSON Body'), 400
+        return jsonify(message='Expect JSON Body'), 400
     try:
         requestJSON = json.loads(request.data)
     except:
@@ -467,44 +492,48 @@ def putAppUser(a_ID, u_ID):
 
     if 'drivingLevel' not in requestJSON:
         return jsonify('Expect drivingLevel Integer JSON key'), 409
-    
+
     if requestJSON['drivingLevel'] != 0:
         if 'maximumPassengers' not in requestJSON:
-            logger.warning('maximumPassngers not in Request for adding User to Appointment')
+            logger.warning(
+                'maximumPassengers not in Request for adding User to Appointment')
             return jsonify(message='If drivingLevel is not 0, supply maximumPassengers key'), 422
 
-    #check priviliges:
+    # check priviliges:
     if get_jwt_claims()['globalAdminStatus'] < 1:
         if get_jwt_identity() != u_ID:
-            logger.warn('User ' + get_jwt_claims()['username'] + ' tried to add ' + thisuser.username + ' to an Appointment as Non-Admin')
+            logger.warn('User ' + get_jwt_claims()['username'] + ' tried to add ' +
+                        thisuser.username + ' to an Appointment as Non-Admin')
             return jsonify('Non-Admin can only add him/herself to Appointments'), 403
 
-    #build the relationshio column
+    # build the relationshio column
     try:
-        rel = User_Appointment_Rel(drivingLevel = (int(requestJSON['drivingLevel'])))
+        rel = User_Appointment_Rel(drivingLevel=(
+            int(requestJSON['drivingLevel'])))
     except ValueError:
-        logger.warn('drivingLevel was not an Integer: drivingLevel : ' + requestJSON['drivingLevel'])
+        logger.warn('drivingLevel was not an Integer: drivingLevel : ' +
+                    requestJSON['drivingLevel'])
         return jsonify('Expect integer drivingLevel'), 409
     try:
-        
+
         rel.appointment = thisappointment
         thisuser.appointments.append(rel)
         session.add(rel)
-        session.commit()        
+        session.commit()
     except exc.SQLAlchemyError:
-        logger.error('SQLAlchemy Error on building User_Takes_Part Row: %s', exc_info = True)
+        logger.error(
+            'SQLAlchemy Error on building User_Takes_Part Row: %s', exc_info=True)
         session.close()
         return jsonify(message='Unfortunately, an error occured'), 500
-    
 
-    logger.info('Added User ' + thisuser.username + ' to Appointment ' + str(a_ID))
+    logger.info('Added User ' + thisuser.username +
+                ' to Appointment ' + str(a_ID))
 
-    session.close()    
-    return jsonify(message = 'Success'), 200        #TODO: Add test
-   
+    session.close()
+    return jsonify(message='Success'), 200  # TODO: Add test
 
 
-@application.route('/api/appointments', methods = ['GET', 'POST'])
+@application.route('/api/appointments', methods=['GET', 'POST'])
 @jwt_required
 def appointments():
     if request.method == 'GET':
@@ -513,24 +542,29 @@ def appointments():
         return makeAppointment()
     return jsonify(message='Method not allowed'), 405
 
+
 def getAppointments():
     "Get a list of appointments"
-    #request argument parsing
-    log.info('User ' + get_jwt_claims()['username'] +  'requesting appointment List')
+    # request argument parsing
+    log.info('User ' + get_jwt_claims()
+             ['username'] + 'requesting appointment List')
     showFinished = False
     if 'showFinished' in request.args:
         showFinished = True if request.args['showFinished'] == 'true' else False
-    appointments = session.query(Appointment).all().order_by(Appointment.startTime)
+    appointments = session.query(
+        Appointment).all().order_by(Appointment.startTime)
     retListJSON = []
 
     for app in appointments:
         retListJSON.append(app.getAsJSON())
-    
+
     return jsonify(retListJSON), 200
-    
+
+
 def makeAppointment():
     "Creates a new Appointment"
-    logger.info('Access to "Make new Appointment" by user ' +  get_jwt_claims()['username'])
+    logger.info('Access to "Make new Appointment" by user ' +
+                get_jwt_claims()['username'])
     uclaims = get_jwt_claims()
     if not request.is_json:
         return jsonify(message='Illegal Format'), 400
@@ -539,32 +573,35 @@ def makeAppointment():
     except json.JSONDecodeError:
         return jsonify(message='Illegal JSON'), 400
 
-    
     requiredKeys = ['startLocation', 'startTime', 'distance']
     for key in requiredKeys:
         if key not in requestJSON:
-            return jsonify(message = 'Missing JSON key: '+key), 422
-    
+            return jsonify(message='Missing JSON key: ' + key), 422
+
     if 'repeatTime' in requestJSON:
         rTime = requestJSON['repeatTime']
     else:
         rTime = 'None'
-    
 
-    newappointment = Appointment(startLocation = requestJSON['startLocation'], 
-                                startTime = datetime.fromtimestamp(requestJSON['startTime']),
-                                repeatTime = rTime,
-                                retired=False,
-                                distance=requestJSON['distance'])
+    newappointment = Appointment(startLocation=requestJSON['startLocation'],
+                                 startTime=datetime.fromtimestamp(
+                                     requestJSON['startTime']),
+                                 repeatTime=rTime,
+                                 retired=False,
+                                 distance=requestJSON['distance'],
+                                 everyoneFits=0)
     session = Session()
     session.add(newappointment)
     session.commit()
 
     try:
-        logger.info('Added new Appointment on ' + str(newappointment.startTime))
+        logger.info('Added new Appointment on ' +
+                    str(newappointment.startTime))
     except ValueError:
-        logger.error('Could not print Date of newly created Appointment! ID: ' + str(newappointment.id))
+        logger.error(
+            'Could not print Date of newly created Appointment! ID: ' + str(newappointment.id))
 
+    startAppointmentScheduledEvent(newappointment.id, timedelta(hours=1))
     returnJSON = newappointment.getAsJSON()
     session.close()
 
@@ -582,13 +619,13 @@ def authenticate_and_return_accessToken():
     requestJSON = json.loads(request.data)
     if ('username' not in requestJSON and 'email' not in requestJSON) or 'password' not in requestJSON:
         logger.info('Malformed JSON in User Access Token Request')
-        return jsonify(message = 'Missing JSON Keys'), 422
+        return jsonify(message='Missing JSON Keys'), 422
 
     session = Session()
-    
+
     users = session.query(User).filter((
-        User.username == requestJSON['username']) 
-        if ('username' in requestJSON) 
+        User.username == requestJSON['username'])
+        if ('username' in requestJSON)
         else (User.email == requestJSON['email']))
     if users.count() == 0:
         logger.info('Invalid Access Token Request (Username ' +
@@ -604,7 +641,8 @@ def authenticate_and_return_accessToken():
         return jsonify(access_token=token, username=thisuser.username, email=thisuser.email, globalAdminStatus=thisuser.globalAdminStatus, phoneNumber=thisuser.phoneNumber), 200
     else:
         session.close()
-        logger.info('Invalid Password in Access Token Request for user: ' + requestJSON['username'])
+        logger.info(
+            'Invalid Password in Access Token Request for user: ' + requestJSON['username'])
         return jsonify(message='Invalid Username or Password')
 
 
@@ -648,7 +686,7 @@ def removeUser(uname):
     session.close()
     logger.warning('Removed User : ' +
                    uclaims['username'] + ' - Was this intended?')
-    return ('',204)
+    return ('', 204)
 
 
 @application.route('/api/dev/check_api')
@@ -687,7 +725,7 @@ def logfile():
         return jsonify(message="Illegal Non-Admin Operation"), 401
 
     now = datetime.now()
-    filename = application.config['MITFAHRGELEGENHEIT_LOG'] +'Mitfahrgelegenheit-'+ \
+    filename = application.config['MITFAHRGELEGENHEIT_LOG'] + 'Mitfahrgelegenheit-' + \
         now.strftime("%d-%m-%y") + ".log"
     logger.info('Sending Logfile: ' + filename)
     latest = request.args.get('latest')
@@ -699,7 +737,27 @@ def logfile():
             return jsonify(exception=str(ex)), 500
     return jsonify(message="Only ?latest=true allowed"), 422
 
+
+@application.route('/api/dev/jobs', methods=['GET'])
+@jwt_required
+def jobs():
+    logger.info('Jobs Request from User: ' + get_jwt_claims()['username'])
+    if get_jwt_claims()['globalAdminStatus'] < 1:
+        logger.warning(
+            'Illegal Operation: Jobs Request from User: ' + get_jwt_claims()['username'])
+        return jsonify(message="Illegal Non-Admin Operation"), 401
+
+    returnJSON = []
+    jobs = scheduler.get_jobs()
+    for job in jobs:
+        returnJSON.append(job.id)
+
+    logger.info('Sending Joblist containing ' +
+                str(len(returnJSON)) + ' entities')
+    return jsonify(returnJSON)
+
 #//////////////////////////////////////////////////////////////////////////////////////////////////
+
 
 def make_message_response(string, status):
     return make_json_response('{"message" : "' + string + '"}', status)
@@ -784,29 +842,129 @@ def unauthorized_loader(msg):
     return jsonify(message=msg), 401
 
 
-#schedule an event to be run
+def terminateAppointment(appointmentID):
+    "terminateAppointment is called by the scheduler 1 hour before the appointment takes place"
+    #get Number of total possible Passengers including only 
+    #Definite Drivers - drivingLevel #1
+    definiteDriversPassengerAmount = 0
+    #Possible Drivers - drivingLevel #2
+    possibleDriversPassengerAmount = 0
+
+    #totalParticipants holds the total number of Users that want to take part in this appointment
+    totalParticipants = 0
+
+    session = Session()
+    try:
+        appointments = session.query(Appointment).filter(Appointment.id == appointmentID)
+        if appointments.count() == 0:
+            raise Exception('terminateAppointment called on a nonexisting Appointment!!(#'+str(appointmentID)+') This is bad news!')
+        thisappointment = appointments.first()
+        for user_app_rel in thisappointment.users:
+            if user_app_rel.drivingLevel == 1:
+                definiteDriversPassengerAmount = definiteDriversPassengerAmount + user_app_rel.maximumPassengers
+                possibleDriversPassengerAmount = possibleDriversPassengerAmount + user_app_rel.maximumPassengers
+            if user_app_rel.drivingLevel == 2:
+                possibleDriversPassengerAmount = possibleDriversPassengerAmount + user_app_rel.maximumPassengers
+            totalParticipants = totalParticipants + 1
+        
+        if totalParticipants <= definiteDriversPassengerAmount:
+            logger.info('Everyone fits into Definite Driver Seats on Appointment #' + str(thisappointment.id))
+            #good News !! Everyone fits!
+            thisappointment.everyoneFits = 1
+
+            listOfAllDrivers = []
+            listOfAllPassengers = []
+            for user_app_rel in thisappointment.users:
+                listOfAllPassengers.append(user_app_rel)
+                if user_app_rel.drivinLevel == 1:
+                    listOfAllDrivers.append(user_app_rel)
+            
+            totalNumberOfDrivers = len(listOfAllDrivers)
+
+            #alright, so now an algorithmic challenge...
+            #distribute all passengers onto their drivers!
+
+                    #list.sort(listOfAllDrivers, key = lambda user_app_rel: user_app_rel.maximumPassengers, reverse = True)
+            
+            drivingDict = {}
+            for user_app_rel in listOfAllDrivers:
+                drivingDict[user_app_rel] = []
+            
+            finishedPassengers = []
+            for user_app_rel in listOfAllPassengers:
+                if user_app_rel in listOfAllDrivers:
+                    drvingDict[user_app_rel].append(user_app_rel)
+                    finishedPassengers.append(user_app_rel)
+            
+            for user_app_rel in finishedPassengers:
+                listOfAllPassengers.remove(user_app_rel)
+            finishedPassengers.clear()
+            
+            #we now have handled all drivers (who will of course have themselves as passenger)
+            
+            #randomly distribute passengers on cars
+            for user_app_rel in listOfAllPassengers:
+                k = randint(0, len(listOfAllDrivers))
+                drivingDict[listOfAllDrivers[k]].append(user_app_rel)
+                if len(drivingDict[listOfAllDrivers[k]])> listOfAllDrivers[k].maximumPassengers:
+                    del listOfAllDrivers[k]
+            #drivingDict now holds a dictionary containing a valid configuration of drivers to cars
+
+            #write to DB
+            for driver, passenger in drivingDict:
+                passenger.designatedDriverUser = driver.user
+            
+            logger.info('Distributed ' + str(totalParticipants) + ' Participants onto ' + str(totalNumberOfDrivers) + ' on Appointment # ' + str(thisappointment.id))
+            logger.info('Writing Driver Distribution Information for Appointment #' + str(thisappointment.id) + ' to DB.')
+            session.commit()
+            
+        if totalParticipants > definiteDriversPassengerAmount and totalParticipants <= possibleDriversPassengerAmount:
+            logger.info('Not everyone fits into Definite Driver Seats. Taking Possible Drivers into Account on Appointment #' + str(thisappointment.id))
+            logger.fatal('Not yet Implemented! Distribution onto possible drivers!')
+
+        if totalParticipants > possibleDriversPassengerAmount:
+            logger.warning('Not everyone even fits onto Possible Driver Seats on Appointment #' + str(thisappointment.id) +'!')
+            logger.fatal('Not yet Implemented! Failed Distribution !!')
+
+    except:
+        try:
+            sentry.captureException()
+        except:
+            pass
+        logger.fatal('Something went wrong in terminateAppointment!!!')
+    finally:
+        session.close()
+
+    logger.info('Exiting terminateAppointment on Appointment #' + str(appointmentID))
+
+# schedule an event to be run
 #appointment: Appointment
 #time: timedelta
 def startAppointmentScheduledEvent(appointmentID, timediff):
-    log.info('Adding Scheduler Job for Appointment #' + str(appointmentID))
-    #check for Appointment Retiredness
-    Session = session()
-    appointments = session.query(Appointment).filter(Appointment.id == appointmentID)
+    logger.info('Adding Scheduler Job for Appointment #' + str(appointmentID))
+    # check for Appointment Retiredness
+    session = Session()
+    appointments = session.query(Appointment).filter(
+        Appointment.id == appointmentID)
     if appointments.count() == 0:
-        log.warning('No such Appointment #' +  str(appointmentID))
+        logger.warning('No such Appointment #' + str(appointmentID))
         return
     thisappointment = appointments.first()
     if thisappointment.retired == True:
-        log.error('Appointment #' +  appointmentID + ' sent to Scheduler despite it being retired!')
+        log.error('Appointment #' + appointmentID +
+                  ' sent to Scheduler despite it being retired!')
         return
 
-    #check if runtime is in the past
+    # check if runtime is in the past
     now = datetime.now()
-    if (appointment.startTime - timediff) < now:
-        log.error('Appointment #' + ' scheduled Event cannot be in the past! Trying to schedule for ' + appointment.startTime - timediff)
+    if (thisappointment.startTime - timediff) < now:
+        logger.error('Appointment #' + ' scheduled Event cannot be in the past! Trying to schedule for ' +
+                     thisappointment.startTime - timediff)
         return
-    scheduler.add_job(notifyAppointmentParticipants, trigger = 'date', args= [appointmentID], id = 'Appointment Notify Job ' + str(appointmentID), run_date = appointment.startTime - timediff)
-    log.info('Added Scheduler Job for Appointment #' +str(appointmentID) + ' on ' + (appointment.startTime - timediff))
+    scheduler.add_job(terminateAppointment, trigger='date', args=[
+                      appointmentID], id='Appointment Notify Job ' + str(appointmentID), run_date=thisappointment.startTime - timediff)
+    logger.info('Added Scheduler Job for Appointment #' +
+                str(appointmentID) + ' on ' + str(thisappointment.startTime - timediff))
 
 
 def refreshAppointmentRepetition(appointment):
@@ -814,26 +972,21 @@ def refreshAppointmentRepetition(appointment):
     pass
 
 
-
-def notifyAppointmentParticipants(appointment):
-    logger.error('Unimplemented Method called: notifyAppointmentParticipants on appointment ' + str(appointment.id))
-    pass
-
 def retireAppointment(appointmentID, actualDrivers):
     log.info('Retiring Appointment #' + appointmentID)
     session = Session()
-    appointments = session.query(Appointment).filter(Appointment.id == appointment.id)
+    appointments = session.query(Appointment).filter(
+        Appointment.id == appointment.id)
     if appointments.count() == 0:
         log.warning('No Appointment #' + appointment.id + 'exists')
         session.close()
         return
     thisappointment = appointments.first()
     if thisappointment.retired == True:
-        logger.error('Appointment #' +  appointmentID + ' retiring, but is already retired!')
+        logger.error('Appointment #' + appointmentID +
+                     ' retiring, but is already retired!')
         session.close()
         return
 
-    
     session.close()
     logger.error('Appointment retiring not yet implemented!')
-
