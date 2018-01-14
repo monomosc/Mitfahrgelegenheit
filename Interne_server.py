@@ -441,6 +441,28 @@ def deleteAppointment(appointmentID):
 
     return '', 204
 
+@application.route('/api/appointments/<int:a_ID>/retire', methods = ['POST'])
+@jwt_required
+def api_retire_appointment(a_ID):
+    "API Endpoint to retire and appointment after it has been run and fix the driver list"
+    try:
+        requestJSON = json.loads()
+    except:
+        sentry.captureException()
+        return jsonify('JSON syntax Error'), 400
+
+    logger.info('Retire Command on Appointment #' + str(a_ID) + ' by User ' + get_jwt_claims()['username'])
+
+    driverList = requestJSON['drivers']
+    try:
+        retireAppointment(a_ID, driverList)
+    except:
+        logger.error('Retiring Appointment #' + str(a_ID) + ' unsuccessful!')
+        return jsonify(message='An Internal Error occured'), 500
+
+    return jsonify(message='Success'), 200
+
+
 
 @application.route('/api/appointments/<int:a_ID>/users', methods=['GET'])
 @jwt_required
@@ -458,6 +480,8 @@ def getAppUsers(a_ID):
     for user_app_rel in thisappointment.users:
         appendJSON = user_app_rel.user.getAsJSON()
         appendJSON['drivingLevel'] = user_app_rel.drivingLevel
+        appendJSON['actualDrivingParticipation'] = user_app_rel.actualDrivingParticipation
+        appendJSON['maximumPassengers'] = user_app_rel.maximumPassengers
         returnJSON.append(appendJSON)
 
     logger.info('Returning Appointment ' + str(a_ID) +
