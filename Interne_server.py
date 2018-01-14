@@ -232,7 +232,8 @@ def signup():
         User.username == requestJSON['username'])
     if check_for_duplicates.count() > 0:
         session.close()
-        return jsonify(message="User " + requestJSON['username'] + ' already exists'), 409
+        logger.warning('User ' + requestJSON['username'] + 'already exists with ID ' + str(check_for_duplicates.first().id))
+        return jsonify(check_for_duplicates.first().getAsJSON()), 409
     newuser = User(username=requestJSON['username'], email=requestJSON['email'],
                    phoneNumber=requestJSON['phoneNumber'], globalAdminStatus=0,
                    password=hashed_password)
@@ -426,7 +427,7 @@ def deleteAppointment(appointmentID):
         logger.error(
             'Could not remove Appointment Notify Job to Appointment #' + str(appointmentID))
 
-    return jsonify('Appointment Deleted '), 200
+    return '', 204
 
 
 @application.route('/api/appointments/<int:a_ID>/users', methods=['GET'])
@@ -586,7 +587,8 @@ def makeAppointment():
                                      requestJSON['startTime']),
                                  repeatTime=rTime,
                                  retired=False,
-                                 distance=requestJSON['distance'])
+                                 distance=requestJSON['distance'],
+                                 everyoneFits=0)
     session = Session()
     session.add(newappointment)
     session.commit()
@@ -937,8 +939,6 @@ def terminateAppointment(appointmentID):
 # schedule an event to be run
 #appointment: Appointment
 #time: timedelta
-
-
 def startAppointmentScheduledEvent(appointmentID, timediff):
     logger.info('Adding Scheduler Job for Appointment #' + str(appointmentID))
     # check for Appointment Retiredness
