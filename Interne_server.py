@@ -17,6 +17,7 @@ from werkzeug.security import safe_str_cmp
 from flask import json
 from datetime import time, timedelta, datetime
 from time import strftime
+from random import randint
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers import cron
@@ -833,10 +834,96 @@ def unauthorized_loader(msg):
 
 
 def terminateAppointment(appointmentID):
+    "terminateAppointment is called by the scheduler 1 hour before the appointment takes place"
+    #get Number of total possible Passengers including only 
+    #Definite Drivers - drivingLevel #1
+    definiteDriversPassengerAmount = 0
+    #Possible Drivers - drivingLevel #2
+    possibleDriversPassengerAmount = 0
 
-    logger.error(
-        'Unimplemented Method called: notifyAppointmentParticipants on appointment ' + str(appointment.id))
-    pass
+    #totalParticipants holds the total number of Users that want to take part in this appointment
+    totalParticipants = 0
+
+    session = Session()
+    try:
+        appointments = session.query(Appointment).filter(Appointment.id == appointmentID)
+        if appointments.count() == 0:
+            raise Exception('terminateAppointment called on a nonexisting Appointment!!(#'+str(appointmentID)+') This is bad news!')
+        thisappointment = appointments.first()
+        for user_app_rel in thisappointment.users:
+            if user_app_rel.drivingLevel == 1:
+                definiteDriversPassengerAmount = definiteDriversPassengerAmount + user_app_rel.maximumPassengers
+                possibleDriversPassengerAmount = possibleDriversPassengerAmount + user_app_rel.maximumPassengers
+            if user_app_rel.drivingLevel == 2:
+                possibleDriversPassengerAmount = possibleDriversPassengerAmount + user_app_rel.maximumPassengers
+            totalParticipants = totalParticipants + 1
+        
+        if totalParticipants <= definiteDriversPassengerAmount:
+            logger.info('Everyone fits into Definite Driver Seats on Appointment #' + str(thisappointment.id))
+            #good News !! Everyone fits!
+            thisappointment.everyoneFits = 1
+
+            listOfAllDrivers = []
+            listOfAllPassengers = []
+            for user_app_rel in thisappointment.users:
+                listOfAllPassengers.append(user_app_rel)
+                if user_app_rel.drivinLevel == 1:
+                    listOfAllDrivers.append(user_app_rel)
+            
+            totalNumberOfDrivers = len(listOfAllDrivers)
+
+            #alright, so now an algorithmic challenge...
+            #distribute all passengers onto their drivers!
+
+                    #list.sort(listOfAllDrivers, key = lambda user_app_rel: user_app_rel.maximumPassengers, reverse = True)
+            
+            drivingDict = {}
+            for user_app_rel in listOfAllDrivers:
+                drivingDict[user_app_rel] = []
+            
+            finishedPassengers = []
+            for user_app_rel in listOfAllPassengers:
+                if user_app_rel in listOfAllDrivers:
+                    drvingDict[user_app_rel].append(user_app_rel)
+                    finishedPassengers.append(user_app_rel)
+            
+            for user_app-rel in finishedPassengers:
+                listOfAllPassengers.remove(user_app_rel)
+            finishedPassengers.clear()
+            
+            #we now have handled all drivers (who will of course have themselves as passenger)
+            
+            #randomly distribute passengers on cars
+            for user_app_rel in listOfAllPassengers:
+                k = randint(0, len(listOfAllDrivers))
+                drivingDict[listOfAllDrivers[k]].append(user_app_rel)
+                if len(drivingDict[listOfAllDrivers[k]])> listOfAllDrivers[k].maximumPassengers:
+                    del listOfAllDrivers[k]
+            #drivingDict now holds a dictionary containing a valid configuration of drivers to cars
+
+            #write to DB
+            for driver, passenger in drivingDict:
+                passenger.designatedDriverUser = driver.user
+            
+            logger.info('Distributed ' + str(totalParticipants) + ' Participants onto ' + str(totalNumberOfDrivers) + ' on Appointment # ' + str(thisappointment.id))
+            logger.info('Writing Driver Distribution Information for Appointment #' + str(thisappointment.id) + ' to DB.')
+            session.commit()
+            
+        if totalParticipants > definiteDriversPassengerAmount and totalParticipants <= possibleDriversPassengerAmount:
+            logger.info('Not everyone fits into Definite Driver Seats. Taking Possible Drivers into Account on Appointment #' + str(thisappointment.id))
+            logger.fatal('Not yet Implemented! Distribution onto possible drivers!')
+
+        if totalParticipants > possibleDriversPassengerAmount:
+            logger.warning('Not everyone even fits onto Possible Driver Seats on Appointment #' + str(thisappointment.id) +'!')
+            logger.fatal('Not yet Implemented! Failed Distribution !!')
+
+    except:
+        sentry.captureException()
+        logger.fatal('Something went wrong in terminateAppointment!!!')
+    finally:
+        session.close()
+
+    logger.info('Exiting terminateAppointment on Appointment #' + str(appointmentID))
 
 # schedule an event to be run
 #appointment: Appointment
