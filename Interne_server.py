@@ -349,6 +349,17 @@ def patchUser(user_id):
     return json.dumps(thisuser.getAsJSON()), 200
 
 
+@application.route('/api/users/<int:u_id>/distance', methods = ['GET'])
+@jwt_required
+def getDistance(u_id):
+    "Retrieves the Distance a single User has actively driven in the past"  
+    d = getUserTotalDistance(u_id)
+    if d == -1:
+        return jsonify(message='An Error occured'), 500
+    returnJSON = {}
+    returnJSON['distance'] = d
+    return jsonify(returnJSON), 200
+
 @application.route('/api/users/<int:u_id>/appointments', methods=['GET'])
 @jwt_required
 def userAppointments(u_id):
@@ -430,6 +441,28 @@ def deleteAppointment(appointmentID):
 
     return '', 204
 
+@application.route('/api/appointments/<int:a_ID>/retire', methods = ['POST'])
+@jwt_required
+def api_retire_appointment(a_ID):
+    "API Endpoint to retire and appointment after it has been run and fix the driver list"
+    try:
+        requestJSON = json.loads()
+    except:
+        sentry.captureException()
+        return jsonify('JSON syntax Error'), 400
+
+    logger.info('Retire Command on Appointment #' + str(a_ID) + ' by User ' + get_jwt_claims()['username'])
+
+    driverList = requestJSON['drivers']
+    try:
+        retireAppointment(a_ID, driverList)
+    except:
+        logger.error('Retiring Appointment #' + str(a_ID) + ' unsuccessful!')
+        return jsonify(message='An Internal Error occured'), 500
+
+    return jsonify(message='Success'), 200
+
+
 
 @application.route('/api/appointments/<int:a_ID>/users', methods=['GET'])
 @jwt_required
@@ -447,6 +480,8 @@ def getAppUsers(a_ID):
     for user_app_rel in thisappointment.users:
         appendJSON = user_app_rel.user.getAsJSON()
         appendJSON['drivingLevel'] = user_app_rel.drivingLevel
+        appendJSON['actualDrivingParticipation'] = user_app_rel.actualDrivingParticipation
+        appendJSON['maximumPassengers'] = user_app_rel.maximumPassengers
         returnJSON.append(appendJSON)
 
     logger.info('Returning Appointment ' + str(a_ID) +
@@ -842,6 +877,25 @@ def unauthorized_loader(msg):
     return jsonify(message=msg), 401
 
 
+
+def getUserTotalDistance(u_ID):
+    "Retrieves the total traveled distance"
+    session = Session()
+    users = session.query(User).filter(User.id == u_ID)
+    if users.count() == 0:
+        logger.error('getUserTotalDistance: User #' + str(u_ID) + ' does not exist', extra = {'tags' : 'getUserTotalDistance'})
+        return -1
+    
+    thisuser = users.first()
+
+    totaldistance = 0
+    for user_app_rel in thisuser.appointments:
+        if user_app_rel.actualDrivingParticipation == True:
+            totaldistance = totaldistance + user_app_rel.appointment.distance
+    
+    logger.info('Calculated total driven distance of User ' + thisuser.username + ' to be ' + str(totaldistance))
+    return totaldistance
+
 def terminateAppointment(appointmentID):
     "terminateAppointment is called by the scheduler 1 hour before the appointment takes place"
     #get Number of total possible Passengers including only 
@@ -976,10 +1030,14 @@ def refreshAppointmentRepetition(appointment):
 #actual Drivers is a List of the form [uid1, uid2, uid3, ...]
 def retireAppointment(appointmentID, actualDrivers):
     "Called when a User wishes to retire an appointment"
+<<<<<<< HEAD
     log.info('Retiring Appointment #' + appointmentID)
+=======
+    logger.info('Retiring Appointment #' + str(appointmentID))
+>>>>>>> develop-0.2.0
     session = Session()
     appointments = session.query(Appointment).filter(
-        Appointment.id == appointment.id)
+        Appointment.id == appointmentID)
     if appointments.count() == 0:
         log.warning('No Appointment #' + appointment.id + 'exists')
         session.close()
@@ -1001,4 +1059,8 @@ def retireAppointment(appointmentID, actualDrivers):
 
     logger.info('Appointment #' + str(thisappointment.id) + ' retired')
     session.commit()
+<<<<<<< HEAD
     session.close()
+=======
+    session.close()
+>>>>>>> develop-0.2.0

@@ -400,7 +400,9 @@ class InterneServerTestCase(unittest.TestCase):
                 self.fail('Could not add User to Appointment')
             
         
-        #execute the 
+        #execute the distribution code!!
+        Interne_server.terminateAppointment(appID)
+        #Hopefully nothing went wrong
 
         #delete a bunch of users and then delete the appointmetn:
         for  i in range(1,4):
@@ -411,5 +413,47 @@ class InterneServerTestCase(unittest.TestCase):
         resp = self.app.delete('/api/appointments/' + str(appID), headers=authHeader)
         self.assertEquals(resp.status_code, 204)
         
+
+
+        def test_totalDistance(self):
+            token = self.login('UnitTest', '1234')
+            
+            #create Appointment
+        postData = {'startLocation': 'Berlin',
+                    'startTime': 1614847559, 'distance': 100}  # future
+        resp = self.app.post('/api/appointments',
+                             data=json.dumps(postData), headers=authHeader)
+        respJSON, err = self.validateResponse(resp, 201, ['id'])
+        self.assertEqual(err, 0)
+        appID = int(respJSON['id'])
+
+        # Get UnitTest UID
+        resp = self.app.get('/api/users/UnitTest',
+                            headers=authHeader, follow_redirects=True)
+        respJSON, err = self.validateResponse(resp, 200, ['id'])
+        self.assertEqual(err, 0)
+        uID = int(respJSON['id'])
+
+        #add UnitTest as driver
+        putData = {'drivingLevel': 1, 'maximumPassengers' : 5}
+        resp = self.app.put('/api/appointments/' + str(appID) + '/users/' + str(uID),
+                            data=json.dumps(putData), headers=authHeader)
+        
+        #execute the distribution code
+        Interne_server.terminateAppointment(appID)
+
+        #retire the appointment with UnitTest as only driver
+        Interne_server.retireAppointment(appID, [uID])
+        #Hopefully nothing went wront!
+
+        distance = Interne_server.getUserTotalDistance(uID)
+
+        self.assertEqual(distance, 100)
+        #delete the appointment again
+        resp = self.app.delete('/api/appointments/' + str(appID), headers=authHeader)
+        self.assertEqual(resp.status_code, 204)
+
+
+
 if __name__ == '__main__':
     unittest.main()
