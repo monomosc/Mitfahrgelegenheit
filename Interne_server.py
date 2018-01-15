@@ -259,18 +259,18 @@ def doSomethingWithThisUser(u_id):
         return jsonify(message='This Method is not implemented here (yet)'), 405
 
 
-@application.route('/api/users/<string:u_name>', methods=['GET', 'PUT', 'DELETE', 'PATCH'])
-@jwt_required
-def redirectToIdCall(u_name):
-    "User redirect Username --> UserID"
+@application.route('/api/users/<string:u_name>', methods=['GET'])
+def getUserID(u_name):
+    "Return id of user"
     session = Session()
     users = session.query(User).filter(User.username == u_name)
     if users.count() == 0:
         session.close()
         return jsonify(message='User ' + u_name + ' does not exist'), 404
     user = users.first()
+    uid = user.id
     session.close()
-    return redirect('/api/users/' + str(user.id)), 307
+    return jsonify(id = uid), 200
 
 
 def user_profileByID(u_id):

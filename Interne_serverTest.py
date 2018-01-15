@@ -194,7 +194,7 @@ class InterneServerTestCase(unittest.TestCase):
         if token == None:
             self.fail('UnitTest updated Login Failure')
         getStr = self.app.get(
-            '/api/users/UnitTest', follow_redirects=True, headers={'Authorization': token})
+            '/api/users/' + str(userid), follow_redirects=True, headers={'Authorization': token})
         getData, err = self.validateResponse(
             getStr, keys=['email'], status_code=200)
         if err != 0:
@@ -251,14 +251,14 @@ class InterneServerTestCase(unittest.TestCase):
         "Tests Adding a User to an Appointment"
         token = self.login('UnitTest', '1234')
         self.assertIsNotNone(token, 'UnitTest Login Failure')
-        authHeader = {'content-type': 'application/json',
-                      'Authorization': token}
+        authHeader = {'content-type' : 'application/json',
+                      'Authorization' : token}
 
         # Get UID
         resp = self.app.get('/api/users/UnitTest',
                             headers=authHeader, follow_redirects=True)
         respJSON, err = self.validateResponse(resp, 200, ['id'])
-        self.assertEqual(err, 0)
+        self.assertEqual(err, 0, 'response was: ' + str(resp.data))
         uID = int(respJSON['id'])
 
         # create Appointment
