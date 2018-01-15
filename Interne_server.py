@@ -155,13 +155,15 @@ def api():
                          'startTime: int': 'required: unix timestamp for Appointment Meetup time',
                          'repeatTime: string': 'required: as of now always none',
                          'distance: int': 'required: the distance to drive',
-                         'status: int': 'Status of an Appointment; see docs'}
+                         'status: int': 'Status of an Appointment; see docs (enum)'}
 
     returnJSON['objects'] = {'user': objectUser,
                              'appointment': objectAppointment}
     returnJSON['relationships'] = [{'parent': 'User', 'child': 'appointment', 'drivingLevel: int': 'Enum: 0 denoting the User WILL NOT drive,' +
                                     '1 denoting he WILL definitely drive, 2 he MAY drive if need exists',
-                                    'maximumPassengers: int': 'optional: Denotes the maximum amount of passengers the User can transport if he were to drive'}]
+                                    'maximumPassengers: int': 'optional: Denotes the maximum amount of passengers the User can transport if he were to drive',
+                                    'actualDrivingParticipation: bool' : 'For a retired Appointment this will denote whether the User has participated as a driver for this appoointment',
+                                    'designatedDriverID: int' : 'Foreign Key for Users; the participating users driver'}]
 
     routes = []
 
