@@ -44,9 +44,11 @@ Die JSON-Repräsentation eines Appointments enthält folgende Felder:
     \item startLocation
     \item startTime
     \item repeatTime
+    \item distance
+    \item status
 \end{enumerate}
 Zur Semantik des Felds "repeatTime":\\
-Folgende Werte sind erlaubt\\
+Folgende Werte sind erlaubt
 
 \begin{tabular}{|c|c|}
     \hline
@@ -71,7 +73,11 @@ Folgende Werte sind erlaubt\\
 \hline
 \textbf{POST} /api/auth & Login-Token Erstellung \\
 \hline
-\textbf{PUT, PATCH} /api/users/uid & User-Update \\
+\textbf{PUT, PATCH} /api/users/<UID> & User-Update \\
+\hline
+\textbf{GET} /api/users/<UID>/distance & Kilometerzähler \\
+\hline
+\textbf{GET} /api/users/<UID>/appointments & Appointments des Users \\
 \hline
 \end{tabular}
 \subsection{\textbf{POST} /api/users}
@@ -79,13 +85,17 @@ Erwartet eine vollständige JSON-Repräsentation eines Benutzers und zusätzlich
 
 \subsection{\textbf{POST} /api/users}
 Erwartet eine JSON-Repräsentation eines Benutzers und erstellt diesen nach Validierung der Daten. HTTP-Status 201 bei Erfolg.
-\subsection{\textbf{PUT,PATCH} /api/users}
+\subsection{\textbf{PUT,PATCH} /api/users/<UID>}
 Erwartet eine JSON-Repräsentation eines Benutzers, sowie optional ein neues Password im Feld password und überschreibt die alten Nutzerdaten.
 \subsection{\textbf{GET} /api/users/<UID>}
 Agiert wie erwartet. Nur der Benutzer selbst sowie Globale Administratoren haben Zugriffsrechte.
 \subsection{\textbf{POST} /api/auth}
 Gibt den Login-Token im JSON-Eintrag 'access\_token' zurück. Dieser muss bei Zugriffen auf geschützte http-Endpunkte im Header-Feld 'Authorization' in allen Requests mitgegeben werden.\\
 Außerdem werden alle Nutzerdaten in den Feldern 'username', 'email', 'phoneNumber', 'globalAdminStatus' versendet. Dies wird nur zur Unterstützung getan, da im JWT Body alle Felder in Base64 vorhanden sind.
+\subsection{\textbf{GET} /api/users/<UID>/distance}
+Gibt die tatsächlich als Fahrer gefahrene Distanz eines Users zurück.
+\subsection{\textbf{GET} /api/users/<UID>/appointments}
+Gibt die Appointments des Nutzers zurück. (a.k.a. alle Appointments, an denen der User teilnimmt)
 \section{Appointment-Funktionalitäten}
 \subsection{Überblick}
 \begin{tabular}{|c|c|}
