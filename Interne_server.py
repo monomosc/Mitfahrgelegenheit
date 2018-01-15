@@ -263,7 +263,7 @@ def doSomethingWithThisUser(u_id):
 
 
 @application.route('/api/users/<string:u_name>', methods=['GET', 'PUT', 'DELETE', 'PATCH'])
-@jwt_optional
+@jwt_required
 def redirectToIdCall(u_name):
     "User redirect Username --> UserID"
     session = Session()
