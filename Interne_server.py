@@ -1,33 +1,32 @@
 # Moritz Basel - interne_server.py
-# Version 0.1.0
+# Version 0.2.0
 import atexit
-from flask import Flask, url_for, request, make_response, redirect, jsonify
-from Interne_Entities import Appointment, User, User_Appointment_Rel, SQLBase
 import configparser
+import logging
 import os
-
-from sqlalchemy import create_engine, exc
-from sqlalchemy.orm import sessionmaker
-
-from raven.contrib.flask import Sentry
-from raven.handlers.logging import SentryHandler
-from raven.conf import setup_logging
-from werkzeug import generate_password_hash, check_password_hash
-from werkzeug.security import safe_str_cmp
-from flask import json
-from datetime import time, timedelta, datetime
-from time import strftime
+from datetime import datetime, time, timedelta
 from random import randint
+from time import strftime
 
+from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers import cron
-from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
-
+from flask import (Flask, json, jsonify, make_response, redirect, request,
+                   url_for)
+from flask_jwt_extended import (JWTManager, create_access_token,
+                                get_jwt_claims, get_jwt_identity, jwt_optional,
+                                jwt_required)
+from raven.conf import setup_logging
+from raven.contrib.flask import Sentry
+from raven.handlers.logging import SentryHandler
+from sqlalchemy import create_engine, exc
+from sqlalchemy.orm import sessionmaker
 from validate_email import validate_email
+from werkzeug import check_password_hash, generate_password_hash
+from werkzeug.security import safe_str_cmp
 
-from flask_jwt_extended import (
-    JWTManager, jwt_required, create_access_token, get_jwt_identity, get_jwt_claims, jwt_optional)
-import logging
+from Interne_Entities import Appointment, SQLBase, User, User_Appointment_Rel
+import Interne_helpers
 
 # GLOBALS:
 application = Flask(__name__)
@@ -156,7 +155,7 @@ def api():
                          'startTime: int': 'required: unix timestamp for Appointment Meetup time',
                          'repeatTime: string': 'required: as of now always none',
                          'distance: int': 'required: the distance to drive',
-                         'retired: bool': 'defaults to False; changes to True once when the appointment is finished'}
+                         'status: int': 'Status of an Appointment; see docs'}
 
     returnJSON['objects'] = {'user': objectUser,
                              'appointment': objectAppointment}
@@ -165,6 +164,7 @@ def api():
                                     'maximumPassengers: int': 'optional: Denotes the maximum amount of passengers the User can transport if he were to drive'}]
 
     routes = []
+
     for rule in application.url_map.iter_rules():
         try:
             options = {}
@@ -622,9 +622,8 @@ def makeAppointment():
                                  startTime=datetime.fromtimestamp(
                                      requestJSON['startTime']),
                                  repeatTime=rTime,
-                                 retired=False,
-                                 distance=requestJSON['distance'],
-                                 everyoneFits=0)
+                                 status = Interne_helpers.APPOINTMENT_UNFINISHED,
+                                 distance=requestJSON['distance'])
     session = Session()
     session.add(newappointment)
     session.commit()
@@ -925,7 +924,7 @@ def terminateAppointment(appointmentID):
         if totalParticipants <= definiteDriversPassengerAmount:
             logger.info('Everyone fits into Definite Driver Seats on Appointment #' + str(thisappointment.id))
         
-            thisappointment.everyoneFits = 1
+            thisappointment.status = Interne_helpers.APPOINTMENT_LOCKED_EVERYONE_FITS_DEFINITE
 
             listOfAllDrivers = []
             listOfAllPassengers = []
@@ -1006,7 +1005,7 @@ def startAppointmentScheduledEvent(appointmentID, timediff):
         logger.warning('No such Appointment #' + str(appointmentID))
         return
     thisappointment = appointments.first()
-    if thisappointment.retired == True:
+    if thisappointment.status == Interne_helpers.APPOINTMENT_RETIRED:
         log.error('Appointment #' + appointmentID +
                   ' sent to Scheduler despite it being retired!')
         return
@@ -1039,7 +1038,7 @@ def retireAppointment(appointmentID, actualDrivers):
         session.close()
         return
     thisappointment = appointments.first()
-    if thisappointment.retired == True:
+    if thisappointment.status == Interne_helpers.APPOINTMENT_RETIRED:
         logger.error('Appointment #' + appointmentID +
                      ' retiring, but is already retired!')
         session.close()
@@ -1051,7 +1050,7 @@ def retireAppointment(appointmentID, actualDrivers):
         else:
             user_app_rel.actualDrivingParticipation = False
     
-    thisappointment.retired = True
+    thisappointment.status =  Interne_helpers.APPOINTMENT_RETIRED
 
     logger.info('Appointment #' + str(thisappointment.id) + ' retired')
     session.commit()
