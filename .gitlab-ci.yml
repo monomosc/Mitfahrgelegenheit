@@ -8,8 +8,8 @@ stages:
 unittest:
   stage: test
   script:
-    - mkdir ./test_logs
-    - mkdir ./log
+    - mkdir -p ./test_logs
+    - mkdir -p ./log
     - export MITFAHRGELEGENHEIT_SETTINGS=./Mitfahrgelegenheit.debug.conf
     - python Interne_serverTest.py
   only:
