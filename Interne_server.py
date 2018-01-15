@@ -363,18 +363,34 @@ def getDistance(u_id):
 
 
 def getUserAppointments(u_id):
-    # TODO: Implement and write test
-    return jsonify(message='Not yet implemented'), 404
+    "Return just a User's Appointments"
+    # TODO: write test
+
+    session = Session()
+    
+    #retrieve the user
+    users = session.query(User).filter(User.id == u_id)
+    if users.count() == 0:
+        logger.warning('User ' + str(u_id) + ' does not exist!')
+        session.close()
+        return jsonify(message='User ' + str(u_id) + ' does not exist!'), 404
+    thisuser = users.first()
+    logger.info('User ' + get_jwt_claims()['username'] + ' requesting Appointment List for ' + thisuser.username)
+
+    #construct the actual list
+    returnJSON = []
+    for user_app_rel in thisuser.appointments:
+        returnJSON.append(user_app_rel.appointment.getAsJSON())
+    
+    session.close()
+    logger.info('Created User Appointment List for User ' + get_jwt_claims()['username'] + ', containing ' + str(len(returnJSON)) + ' entities')
+    return jsonify(returnJSON), 200
 
 @application.route('/api/users/<int:u_id>/appointments', methods=['GET'])
 @jwt_required
 def userAppointments(u_id):
-    # check privileges
-    uclaims = get_jwt_claims()
-    if int(uclaims['globalAdminStatus']) < 1:
-        caller_id = get_jwt_identity()
-        if caller_id != u_id:
-            return jsonify(message='Not allowed'), 401
+    # check privileges - REMOVED! Everybody is allowed to do this
+    
 
     return getUserAppointments(u_id)
 
