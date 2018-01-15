@@ -69,7 +69,7 @@ def initialize_everything():
     "Initializes EVERYTHING"
     if __name__ == "__main__":
         application.debug = True
-    application.config['LogLevel'] = logging.DEBUG
+    application.config['LogLevel'] = logging.INFO
     prod = False
     if (not application.debug and not application.testing):
         if not 'MITFAHRGELEGENHEIT_TEST' in os.environ:
