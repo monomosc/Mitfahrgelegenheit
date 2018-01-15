@@ -179,7 +179,7 @@ def api():
             routes.append(route)
         except:
             try:
-                sentry.captureException(extra = {'tags' : options})
+                sentry.captureException(extra={'tags': options})
             except:
                 logger.error('Sending Sentry Event Failed')
     returnJSON['endpoints'] = routes
@@ -232,7 +232,8 @@ def signup():
         User.username == requestJSON['username'])
     if check_for_duplicates.count() > 0:
         session.close()
-        logger.warning('User ' + requestJSON['username'] + 'already exists with ID ' + str(check_for_duplicates.first().id))
+        logger.warning('User ' + requestJSON['username'] +
+                       'already exists with ID ' + str(check_for_duplicates.first().id))
         return jsonify(check_for_duplicates.first().getAsJSON()), 409
     newuser = User(username=requestJSON['username'], email=requestJSON['email'],
                    phoneNumber=requestJSON['phoneNumber'], globalAdminStatus=0,
@@ -349,16 +350,17 @@ def patchUser(user_id):
     return json.dumps(thisuser.getAsJSON()), 200
 
 
-@application.route('/api/users/<int:u_id>/distance', methods = ['GET'])
+@application.route('/api/users/<int:u_id>/distance', methods=['GET'])
 @jwt_required
 def getDistance(u_id):
-    "Retrieves the Distance a single User has actively driven in the past"  
+    "Retrieves the Distance a single User has actively driven in the past"
     d = getUserTotalDistance(u_id)
     if d == -1:
         return jsonify(message='An Error occured'), 500
     returnJSON = {}
     returnJSON['distance'] = d
     return jsonify(returnJSON), 200
+
 
 @application.route('/api/users/<int:u_id>/appointments', methods=['GET'])
 @jwt_required
@@ -441,7 +443,8 @@ def deleteAppointment(appointmentID):
 
     return '', 204
 
-@application.route('/api/appointments/<int:a_ID>/retire', methods = ['POST'])
+
+@application.route('/api/appointments/<int:a_ID>/retire', methods=['POST'])
 @jwt_required
 def api_retire_appointment(a_ID):
     "API Endpoint to retire and appointment after it has been run and fix the driver list"
@@ -451,7 +454,8 @@ def api_retire_appointment(a_ID):
         sentry.captureException()
         return jsonify('JSON syntax Error'), 400
 
-    logger.info('Retire Command on Appointment #' + str(a_ID) + ' by User ' + get_jwt_claims()['username'])
+    logger.info('Retire Command on Appointment #' + str(a_ID) +
+                ' by User ' + get_jwt_claims()['username'])
 
     driverList = requestJSON['drivers']
     try:
@@ -463,39 +467,42 @@ def api_retire_appointment(a_ID):
     return jsonify(message='Success'), 200
 
 
-@application.route('/api/appointments/<int:a_ID>/drivingDistribution', methods = ['GET'])
+@application.route('/api/appointments/<int:a_ID>/drivingDistribution', methods=['GET'])
 @jwt_required
 def getDrivingDistribution(a_ID):
     "Retrieves the driving distribution for an appointment, if it is locked already"
 
-    logger.info('Driving Distribution request for appointment #' + str(a_ID) + ' from User ' + get_jwt_claims()['username'])
+    logger.info('Driving Distribution request for appointment #' +
+                str(a_ID) + ' from User ' + get_jwt_claims()['username'])
 
-    #query the Appointment
+    # query the Appointment
     session = Session()
-    appointments = session.query(Appointment).filter (Appointment.id == a_ID)
+    appointments = session.query(Appointment).filter(Appointment.id == a_ID)
     if appointments.count() == 0:
         logger.warning('Appointment #' + str(a_ID) + ' does not exist')
         session.close()
         return jsoinfy(message='Appointment does not exist'), 404
     thisappointment = appointments.first()
-    
-    #check the appointment is in a valid state for driver list retrieval
+
+    # check the appointment is in a valid state for driver list retrieval
     if thisappointment.status == Interne_helpers.APPOINTMENT_UNFINISHED:
         session.close()
-        logger.warning('Appointment #' + str(a_ID) + ' not locked yet. Driver List Retrieval Impossible.')
-        return jsonify(message = 'Appointment #' + str(a_ID) + ' not locked yet. Driver List Retrieval Impossible.'), 422
+        logger.warning('Appointment #' + str(a_ID) +
+                       ' not locked yet. Driver List Retrieval Impossible.')
+        return jsonify(message='Appointment #' + str(a_ID) + ' not locked yet. Driver List Retrieval Impossible.'), 422
 
     if thisappointment.status == Interne_helpers.APPOINTMENT_RETIRED:
         session.close()
-        logger.warning('Appointment #' + str(a_ID) + ' already retired. Driver List Retrieval Impossible.')
-        return jsonify(message = 'Appointment #' + str(a_ID) + ' already retired. Driver List Retrieval Impossible.'), 422
-
+        logger.warning('Appointment #' + str(a_ID) +
+                       ' already retired. Driver List Retrieval Impossible.')
+        return jsonify(message='Appointment #' + str(a_ID) + ' already retired. Driver List Retrieval Impossible.'), 422
 
     if thisappointment.status == Interne_helpers.APPOINTMENT_LOCKED_NO_FIT:
         session.close()
-        logger.warning('Appointment #' + str(a_ID) + ' has no viable driving Configuration. Empty Response generated')
+        logger.warning('Appointment #' + str(a_ID) +
+                       ' has no viable driving Configuration. Empty Response generated')
         return jsonify(message='No viable Driving Configuration'), 403
-    
+
     drivingGroups = {}
     for user_app_rel in thisappointment.users:
         driver = user_app_rel.designatedDriverUser
@@ -630,8 +637,12 @@ def getAppointments():
     showFinished = False
     if 'showFinished' in request.args:
         showFinished = True if request.args['showFinished'] == 'true' else False
-    appointments = session.query(
-        Appointment).all().order_by(Appointment.startTime)
+    
+    if showFinished == True:
+        appointments = session.query(
+            Appointment).all().order_by(Appointment.startTime)
+    else:
+        appointments = session.query(Appointment).filter(Appointment.status != Interne_helpers.APPOINTMENT_RETIRED).order_by(Appointment.startTime)
     retListJSON = []
 
     for app in appointments:
@@ -666,7 +677,7 @@ def makeAppointment():
                                  startTime=datetime.fromtimestamp(
                                      requestJSON['startTime']),
                                  repeatTime=rTime,
-                                 status = Interne_helpers.APPOINTMENT_UNFINISHED,
+                                 status=Interne_helpers.APPOINTMENT_UNFINISHED,
                                  distance=requestJSON['distance'])
     session = Session()
     session.add(newappointment)
@@ -920,54 +931,62 @@ def unauthorized_loader(msg):
     return jsonify(message=msg), 401
 
 
-
 def getUserTotalDistance(u_ID):
     "Retrieves the total traveled distance"
     session = Session()
     users = session.query(User).filter(User.id == u_ID)
     if users.count() == 0:
-        logger.error('getUserTotalDistance: User #' + str(u_ID) + ' does not exist', extra = {'tags' : 'getUserTotalDistance'})
+        logger.error('getUserTotalDistance: User #' + str(u_ID) +
+                     ' does not exist', extra={'tags': 'getUserTotalDistance'})
         return -1
-    
+
     thisuser = users.first()
 
     totaldistance = 0
     for user_app_rel in thisuser.appointments:
         if user_app_rel.actualDrivingParticipation == True:
             totaldistance = totaldistance + user_app_rel.appointment.distance
-    
-    logger.info('Calculated total driven distance of User ' + thisuser.username + ' to be ' + str(totaldistance))
+
+    logger.info('Calculated total driven distance of User ' +
+                thisuser.username + ' to be ' + str(totaldistance))
     return totaldistance
+
 
 def terminateAppointment(appointmentID):
     "terminateAppointment is called by the scheduler 1 hour before the appointment takes place"
-    #get Number of total possible Passengers including only 
-    #Definite Drivers - drivingLevel #1
+    # get Number of total possible Passengers including only
+    # Definite Drivers - drivingLevel #1
     definiteDriversPassengerAmount = 0
-    #Possible Drivers - drivingLevel #2
+    # Possible Drivers - drivingLevel #2
     possibleDriversPassengerAmount = 0
 
-    #totalParticipants holds the total number of Users that want to take part in this appointment
+    # totalParticipants holds the total number of Users that want to take part in this appointment
     totalParticipants = 0
 
     session = Session()
     try:
-        appointments = session.query(Appointment).filter(Appointment.id == appointmentID)
+        appointments = session.query(Appointment).filter(
+            Appointment.id == appointmentID)
         if appointments.count() == 0:
-            raise Exception('terminateAppointment called on a nonexisting Appointment!!(#'+str(appointmentID)+') This is bad news!')
+            raise Exception('terminateAppointment called on a nonexisting Appointment!!(#' +
+                            str(appointmentID) + ') This is bad news!')
         thisappointment = appointments.first()
         for user_app_rel in thisappointment.users:
             if user_app_rel.drivingLevel == 1:
-                definiteDriversPassengerAmount = definiteDriversPassengerAmount + user_app_rel.maximumPassengers
-                possibleDriversPassengerAmount = possibleDriversPassengerAmount + user_app_rel.maximumPassengers
+                definiteDriversPassengerAmount = definiteDriversPassengerAmount + \
+                    user_app_rel.maximumPassengers
+                possibleDriversPassengerAmount = possibleDriversPassengerAmount + \
+                    user_app_rel.maximumPassengers
             if user_app_rel.drivingLevel == 2:
-                possibleDriversPassengerAmount = possibleDriversPassengerAmount + user_app_rel.maximumPassengers
+                possibleDriversPassengerAmount = possibleDriversPassengerAmount + \
+                    user_app_rel.maximumPassengers
             totalParticipants = totalParticipants + 1
-        
-        #good News !! Everyone fits!
+
+        # good News !! Everyone fits!
         if totalParticipants <= definiteDriversPassengerAmount:
-            logger.info('Everyone fits into Definite Driver Seats on Appointment #' + str(thisappointment.id))
-        
+            logger.info(
+                'Everyone fits into Definite Driver Seats on Appointment #' + str(thisappointment.id))
+
             thisappointment.status = Interne_helpers.APPOINTMENT_LOCKED_EVERYONE_FITS_DEFINITE
 
             listOfAllDrivers = []
@@ -976,53 +995,58 @@ def terminateAppointment(appointmentID):
                 listOfAllPassengers.append(user_app_rel)
                 if user_app_rel.drivinLevel == 1:
                     listOfAllDrivers.append(user_app_rel)
-            
+
             totalNumberOfDrivers = len(listOfAllDrivers)
 
-            #alright, so now an algorithmic challenge...
-            #distribute all passengers onto their drivers!
+            # alright, so now an algorithmic challenge...
+            # distribute all passengers onto their drivers!
 
-                    #list.sort(listOfAllDrivers, key = lambda user_app_rel: user_app_rel.maximumPassengers, reverse = True)
-            
+            #list.sort(listOfAllDrivers, key = lambda user_app_rel: user_app_rel.maximumPassengers, reverse = True)
+
             drivingDict = {}
             for user_app_rel in listOfAllDrivers:
                 drivingDict[user_app_rel] = []
-            
+
             finishedPassengers = []
             for user_app_rel in listOfAllPassengers:
                 if user_app_rel in listOfAllDrivers:
                     drvingDict[user_app_rel].append(user_app_rel)
                     finishedPassengers.append(user_app_rel)
-            
+
             for user_app_rel in finishedPassengers:
                 listOfAllPassengers.remove(user_app_rel)
             finishedPassengers.clear()
-            
-            #we now have handled all drivers (who will of course have themselves as passenger)
-            
-            #randomly distribute passengers on cars
+
+            # we now have handled all drivers (who will of course have themselves as passenger)
+
+            # randomly distribute passengers on cars
             for user_app_rel in listOfAllPassengers:
                 k = randint(0, len(listOfAllDrivers))
                 drivingDict[listOfAllDrivers[k]].append(user_app_rel)
-                if len(drivingDict[listOfAllDrivers[k]])> listOfAllDrivers[k].maximumPassengers:
+                if len(drivingDict[listOfAllDrivers[k]]) > listOfAllDrivers[k].maximumPassengers:
                     del listOfAllDrivers[k]
-            #drivingDict now holds a dictionary containing a valid configuration of drivers to cars
+            # drivingDict now holds a dictionary containing a valid configuration of drivers to cars
 
-            #write to DB
+            # write to DB
             for driver, passenger in drivingDict:
                 passenger.designatedDriverUser = driver.user
-            
-            logger.info('Distributed ' + str(totalParticipants) + ' Participants onto ' + str(totalNumberOfDrivers) + ' on Appointment # ' + str(thisappointment.id))
-            logger.info('Writing Driver Distribution Information for Appointment #' + str(thisappointment.id) + ' to DB.')
+
+            logger.info('Distributed ' + str(totalParticipants) + ' Participants onto ' +
+                        str(totalNumberOfDrivers) + ' on Appointment # ' + str(thisappointment.id))
+            logger.info('Writing Driver Distribution Information for Appointment #' +
+                        str(thisappointment.id) + ' to DB.')
             session.commit()
-        
-        #sortof good News !! everyone fits..at least including the may-drivers
+
+        # sortof good News !! everyone fits..at least including the may-drivers
         if totalParticipants > definiteDriversPassengerAmount and totalParticipants <= possibleDriversPassengerAmount:
-            logger.info('Not everyone fits into Definite Driver Seats. Taking Possible Drivers into Account on Appointment #' + str(thisappointment.id))
-            logger.fatal('Not yet Implemented! Distribution onto possible drivers!')
+            logger.info(
+                'Not everyone fits into Definite Driver Seats. Taking Possible Drivers into Account on Appointment #' + str(thisappointment.id))
+            logger.fatal(
+                'Not yet Implemented! Distribution onto possible drivers!')
 
         if totalParticipants > possibleDriversPassengerAmount:
-            logger.warning('Not everyone even fits onto Possible Driver Seats on Appointment #' + str(thisappointment.id) +'!')
+            logger.warning(
+                'Not everyone even fits onto Possible Driver Seats on Appointment #' + str(thisappointment.id) + '!')
             logger.fatal('Not yet Implemented! Failed Distribution !!')
 
     except:
@@ -1034,11 +1058,14 @@ def terminateAppointment(appointmentID):
     finally:
         session.close()
 
-    logger.info('Exiting terminateAppointment on Appointment #' + str(appointmentID))
+    logger.info('Exiting terminateAppointment on Appointment #' +
+                str(appointmentID))
 
 # schedule an event to be run
 #appointment: Appointment
 #time: timedelta
+
+
 def startAppointmentScheduledEvent(appointmentID, timediff):
     logger.info('Adding Scheduler Job for Appointment #' + str(appointmentID))
     # check for Appointment Retiredness
@@ -1070,7 +1097,9 @@ def refreshAppointmentRepetition(appointment):
     logger.error('Unimplemented Method called: refreshAppointmentRepetition')
     pass
 
-#actual Drivers is a List of the form [uid1, uid2, uid3, ...]
+# actual Drivers is a List of the form [uid1, uid2, uid3, ...]
+
+
 def retireAppointment(appointmentID, actualDrivers):
     "Called when a User wishes to retire an appointment"
     logger.info('Retiring Appointment #' + str(appointmentID))
@@ -1093,8 +1122,8 @@ def retireAppointment(appointmentID, actualDrivers):
             user_app_rel.actualDrivingParticipation = True
         else:
             user_app_rel.actualDrivingParticipation = False
-    
-    thisappointment.status =  Interne_helpers.APPOINTMENT_RETIRED
+
+    thisappointment.status = Interne_helpers.APPOINTMENT_RETIRED
 
     logger.info('Appointment #' + str(thisappointment.id) + ' retired')
     session.commit()
