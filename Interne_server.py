@@ -1013,9 +1013,9 @@ def terminateAppointment(appointmentID):
             listOfAllDrivers = []
             listOfAllPassengers = []
             for user_app_rel in thisappointment.users:
-                listOfAllPassengers.append(user_app_rel)
+                listOfAllPassengers.append(user_app_rel.user_id)
                 if user_app_rel.drivingLevel == 1:
-                    listOfAllDrivers.append(user_app_rel)
+                    listOfAllDrivers.append(user_app_rel.user_id)
 
             totalNumberOfDrivers = len(listOfAllDrivers)
 
@@ -1023,15 +1023,15 @@ def terminateAppointment(appointmentID):
             # distribute all passengers onto their drivers!
 
 
-            drivingDict = {}
+            drivingDict = dict()
             for user_id in listOfAllDrivers:
-                drivingDict[user_id] = []
+                drivingDict[user_id] = list()
 
-            finishedPassengers = []
+            finishedPassengers = set()
             for user_id in listOfAllPassengers:
                 if user_id in listOfAllDrivers:
                     drivingDict[user_id].append(user_id)
-                    finishedPassengers.append(user_id)
+                    finishedPassengers.add(user_id)
 
             for user_id in finishedPassengers:
                 listOfAllPassengers.remove(user_id)
@@ -1041,16 +1041,20 @@ def terminateAppointment(appointmentID):
 
             # randomly distribute passengers on cars
             for user_id in listOfAllPassengers:
-                k = randint(0, len(listOfAllDrivers))
+                k = randint(0, len(listOfAllDrivers) - 1)
                 drivingDict[listOfAllDrivers[k]].append(user_id)
-                datuser = session.query(User).get(k)
-                if len(drivingDict[listOfAllDrivers[k]]) >= datuser.maximumPassengers:
+
+                datuser = session.query(User_Appointment_Rel).get((listOfAllDrivers[k], appointmentID))
+                if len(drivingDict[listOfAllDrivers[k]]) == datuser.maximumPassengers:
                     del listOfAllDrivers[k]
             # drivingDict now holds a dictionary containing a valid configuration of drivers to cars
 
             # write to DB
-            for driver, passenger in drivingDict:
-                passenger.designatedDriverUser = driver.user
+            for driver in drivingDict:
+                driverUser = session.query(User).get(driver)
+                for passenger in drivingDict[driver]:
+                    passengerUserAppRel = session.query(User_Appointment_Rel).get((passenger, appointmentID))
+                    passengerUserAppRel.designatedDriverUser = driverUser
 
             logger.info('Distributed ' + str(totalParticipants) + ' Participants onto ' +
                         str(totalNumberOfDrivers) + ' on Appointment # ' + str(thisappointment.id))
