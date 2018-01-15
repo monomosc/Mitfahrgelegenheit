@@ -1,9 +1,10 @@
 # Moritz Basel - Interne_Entities.py
-# Version 0.1.0
+# Version 0.2.0
 from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Boolean
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 
+import Interne_helpers
 #CLASS: USER
 #///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -49,19 +50,15 @@ class Appointment(SQLBase):
     repeatTime = Column(String(15))
     users = relationship("User_Appointment_Rel", back_populates="appointment",
                             cascade= "delete, delete-orphan", foreign_keys = "User_Appointment_Rel.appointment_id")
-    retired = Column(Boolean)
+
     distance = Column(Integer)
     
-    #This has similar meaning as drivingLevel:
-    #0 - it is undecided
-    #1 - everyone fits only with the people that definitely drive (drivingLevel 1)
-    #2 - everyone fits with the users that MAY drive (drivingLevel 2)
-    #3 - not everyone fits, needs out-of-bounds resolution
-    everyoneFits = Column(Integer)
+    status = Column(Integer)
+
     def getAsJSON(self):
         return {'id' : self.id, 'startLocation' : self.startLocation, 
                 'startTime' : self.startTime, 'repeatTime' : self.repeatTime, 
-                'retired' : ('true' if self.retired is True else 'false'),
+                'status' : Interne_helpers.getAppointmentStatusString(self.status),
                 'distance' : self.distance}                                 #distance in kilometers
 
 
