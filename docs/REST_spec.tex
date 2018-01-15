@@ -17,7 +17,7 @@
 \maketitle{}
 \section{Einführung}
 \subsection{Zweck des Dokuments}
-Dieses Dokument dient als Handbuch für Fronteddeveloper zur Software "Interne Mitfahrgelegenheit". Es wird versucht, die REST-API vollständig aufzuzählen und alle möglichen Anwendungsfälle zu erfassen.
+Dieses Dokument dient als Handbuch für Frontenddeveloper zur Software \"Interne Mitfahrgelegenheit\". Es wird versucht, die REST-API vollständig aufzuzählen und alle möglichen Anwendungsfälle zu erfassen.
 Dennoch besteht die Möglichkeit, dass einzelne Spezialfälle (noch) nicht abgedeckt werden. Bei Auffinden undokumentierten Verhaltens, bei Featureanfragen und Sonstigen bitten wir um Rückmeldung unter <incomplete>.
 \subsection{Terminologie}
 \textbf{Endpoints} bezeichnen eine spezifische (z.b. \url{/api/check_api} oder gruppierte (z.B. \url{/api/users/<uid>}) URIs
@@ -69,7 +69,7 @@ Folgende Werte sind erlaubt
 \hline
 \textbf{GET} /api/users/<UID> & User-Profil \\
 \hline
-\textbf{GET} /api/users/<Username> & User-Profil \\
+\textbf{GET} /api/users/<Username> & User-ID \\
 \hline
 \textbf{POST} /api/auth & Login-Token Erstellung \\
 \hline
@@ -80,15 +80,15 @@ Folgende Werte sind erlaubt
 \textbf{GET} /api/users/<UID>/appointments & Appointments des Users \\
 \hline
 \end{tabular}
-\subsection{\textbf{POST} /api/users}
-Erwartet eine vollständige JSON-Repräsentation eines Benutzers und zusätzlich das password - Feld.
 
 \subsection{\textbf{POST} /api/users}
-Erwartet eine JSON-Repräsentation eines Benutzers und erstellt diesen nach Validierung der Daten. HTTP-Status 201 bei Erfolg.
+Erwartet eine JSON-Repräsentation eines Benutzers und Zusätzlich das 'password'-Feld und erstellt diesen nach Validierung der Daten. HTTP-Status 201 bei Erfolg.
 \subsection{\textbf{PUT,PATCH} /api/users/<UID>}
-Erwartet eine JSON-Repräsentation eines Benutzers, sowie optional ein neues Password im Feld password und überschreibt die alten Nutzerdaten.
+Erwartet eine JSON-Repräsentation eines Benutzers, sowie optional ein neues Passwort im Feld 'password' und überschreibt die alten Nutzerdaten.
 \subsection{\textbf{GET} /api/users/<UID>}
-Agiert wie erwartet. Nur der Benutzer selbst sowie Globale Administratoren haben Zugriffsrechte.
+Agiert wie erwartet. Jeder hat Zugriffsrechte.
+\subsection{\textbf{GET} /api/users/<Username>}
+Gibt lediglich die User-ID in der Form {'id' : 0} zurück. Diese kann dann weiterverwendet werden für spätere API-Zugriffe.
 \subsection{\textbf{POST} /api/auth}
 Gibt den Login-Token im JSON-Eintrag 'access\_token' zurück. Dieser muss bei Zugriffen auf geschützte http-Endpunkte im Header-Feld 'Authorization' in allen Requests mitgegeben werden.\\
 Außerdem werden alle Nutzerdaten in den Feldern 'username', 'email', 'phoneNumber', 'globalAdminStatus' versendet. Dies wird nur zur Unterstützung getan, da im JWT Body alle Felder in Base64 vorhanden sind.
