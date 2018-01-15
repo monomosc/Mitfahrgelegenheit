@@ -247,7 +247,7 @@ def signup():
 
 
 @application.route('/api/users/<int:u_id>', methods=['GET', 'PUT', 'DELETE', 'PATCH'])
-@jwt_optional
+@jwt_required
 def doSomethingWithThisUser(u_id):
     if request.method == 'PATCH':
         return patchUser(u_id)
@@ -260,7 +260,7 @@ def doSomethingWithThisUser(u_id):
 
 
 @application.route('/api/users/<string:u_name>', methods=['GET', 'PUT', 'DELETE', 'PATCH'])
-@jwt_optional
+@jwt_required
 def redirectToIdCall(u_name):
     "User redirect Username --> UserID"
     session = Session()
