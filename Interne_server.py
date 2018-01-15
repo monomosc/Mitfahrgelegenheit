@@ -235,7 +235,7 @@ def signup():
     if check_for_duplicates.count() > 0:
         session.close()
         logger.warning('User ' + requestJSON['username'] +
-                       'already exists with ID ' + str(check_for_duplicates.first().id))
+                       ' already exists with ID ' + str(check_for_duplicates.first().id))
         return jsonify(check_for_duplicates.first().getAsJSON()), 409
     newuser = User(username=requestJSON['username'], email=requestJSON['email'],
                    phoneNumber=requestJSON['phoneNumber'], globalAdminStatus=0,
@@ -614,12 +614,16 @@ def putAppUser(a_ID, u_ID):
 
     # build the relationshio column
     try:
-        rel = User_Appointment_Rel(drivingLevel=(
-            int(requestJSON['drivingLevel'])))
+        if 'maximumPassengers' in requestJSON:
+            rel = User_Appointment_Rel(drivingLevel = int(requestJSON['drivingLevel']), maximumPassengers = int(requestJSON['maximumPassengers']))
+        else:
+            rel = User_Appointment_Rel(drivingLevel=(
+                int(requestJSON['drivingLevel'])))
+        
     except ValueError:
-        logger.warn('drivingLevel was not an Integer: drivingLevel : ' +
+        logger.exception('drivingLevel was not an Integer: drivingLevel : ' +
                     requestJSON['drivingLevel'])
-        return jsonify('Expect integer drivingLevel'), 409
+        return jsonify('Expect integer Keys'), 409
     try:
 
         rel.appointment = thisappointment
@@ -627,8 +631,8 @@ def putAppUser(a_ID, u_ID):
         session.add(rel)
         session.commit()
     except exc.SQLAlchemyError:
-        logger.error(
-            'SQLAlchemy Error on building User_Takes_Part Row: %s', exc_info=True)
+        logger.exception(
+            'SQLAlchemy Error on building User_Takes_Part Row:')
         session.close()
         return jsonify(message='Unfortunately, an error occured'), 500
 
@@ -989,6 +993,7 @@ def terminateAppointment(appointmentID):
         appointments = session.query(Appointment).filter(
             Appointment.id == appointmentID)
         if appointments.count() == 0:
+            logger.error('terminateAppointment called on nonexisting Appointment (#' + str(appID) + ')')
             raise Exception('terminateAppointment called on a nonexisting Appointment!!(#' +
                             str(appointmentID) + ') This is bad news!')
         thisappointment = appointments.first()
@@ -1014,7 +1019,7 @@ def terminateAppointment(appointmentID):
             listOfAllPassengers = []
             for user_app_rel in thisappointment.users:
                 listOfAllPassengers.append(user_app_rel)
-                if user_app_rel.drivinLevel == 1:
+                if user_app_rel.drivingLevel == 1:
                     listOfAllDrivers.append(user_app_rel)
 
             totalNumberOfDrivers = len(listOfAllDrivers)
@@ -1031,12 +1036,12 @@ def terminateAppointment(appointmentID):
             finishedPassengers = []
             for user_app_rel in listOfAllPassengers:
                 if user_app_rel in listOfAllDrivers:
-                    drvingDict[user_app_rel].append(user_app_rel)
+                    drivingDict[user_app_rel].append(user_app_rel)
                     finishedPassengers.append(user_app_rel)
 
             for user_app_rel in finishedPassengers:
                 listOfAllPassengers.remove(user_app_rel)
-            finishedPassengers.clear()
+            del finishedPassengers[:]
 
             # we now have handled all drivers (who will of course have themselves as passenger)
 
@@ -1070,12 +1075,10 @@ def terminateAppointment(appointmentID):
                 'Not everyone even fits onto Possible Driver Seats on Appointment #' + str(thisappointment.id) + '!')
             logger.fatal('Not yet Implemented! Failed Distribution !!')
 
-    except:
-        try:
-            sentry.captureException()
-        except:
-            pass
-        logger.fatal('Something went wrong in terminateAppointment!!!')
+    except Exception as e:
+        logger.exception('Something went wrong in terminateAppointment!!!')
+        
+
     finally:
         session.close()
 

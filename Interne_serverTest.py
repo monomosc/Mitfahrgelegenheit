@@ -455,5 +455,106 @@ class InterneServerTestCase(unittest.TestCase):
 
 
 
+    def test_correctDrivingDistributionWithDefiniteDrivers(self):
+        """
+        Tests whether the driving distribution of an appointment is managed correctly
+        This will only test the configuration where DefiniteDrivers pass
+        """
+
+        token = self.login('UnitTest', '1234')
+        authHeader = {'content-type' : 'application/json', 'Authorizaion' : token}
+        adminToken = self.login('monomo', 'monomomo')
+        adminHeader =  authHeader
+        adminHeader['Authorization'] = adminToken
+
+        #get monomo UID
+        resp = self.app.get('/api/users/monomo',
+                                 headers = adminHeader, follow_redirects=True)
+        respJSON, err = self.validateResponse(resp, 200, ['id'])
+        self.assertEqual(err,0)
+        monomoID = int(respJSON['id'])
+
+        #get UnitTest UID:
+        resp = self.app.get('/api/users/UnitTest',
+                            headers=authHeader, follow_redirects=True)
+        respJSON, err = self.validateResponse(resp, 200, ['id'])
+        self.assertEqual(err, 0)
+        uID = int(respJSON['id'])
+
+        # create Appointment
+        postData = {'startLocation': 'Berlin',
+                    'startTime': 1614847559, 'distance': 100}  # future
+        resp = self.app.post('/api/appointments',
+                             data=json.dumps(postData), headers=authHeader)
+        respJSON, err = self.validateResponse(resp, 201, ['id'])
+        self.assertEqual(err, 0)
+        appID = int(respJSON['id'])
+        
+        #add UnitTest as driver
+        putData = {'drivingLevel': 1, 'maximumPassengers' : 5}
+        resp = self.app.put('/api/appointments/' + str(appID) + '/users/' + str(uID),
+                            data=json.dumps(putData), headers=authHeader)
+
+        #add monomo as driver
+        resp = self.app.put('/api/appointments/' + str(appID) + '/users' + str(monomoID),
+                                    data = json.dumps(putData), headers = adminHeader)       
+
+        for i in range(1,4):
+            #create User
+            putData = { 'username' : 'User' + str(i),
+                        'password' : '1234',
+                        'email' : 'mo@mo',
+                        'phoneNumber' : '1234'}
+            resp = self.app.post('/api/users', data = json.dumps(putData), headers = {'content-type' : 'application/json'})
+            self.assertTrue(resp.status_code == 201 or resp.status_code == 409) # 409 if user already exists
+            respJSON = json.loads(resp.data)
+            try:
+                uID = respJSON['id']
+            except:
+                logger.info(str(respJSON))
+                self.fail('Check logs - some response KeyError')
+
+            #add new user to appointment
+            putData = {'drivingLevel': 0}
+            resp = self.app.put('/api/appointments/' + str(appID) + '/users/' + str(uID),
+                            data=json.dumps(putData), headers=adminHeader)
+            respJSON = json.loads(resp.data)
+            if resp.status_code != 200:
+                logger.error('message: ' + respJSON['message'])
+                self.fail('Could not add User to Appointment')
+
+        
+        #execute the distribution code
+        Interne_server.terminateAppointment(appID)
+
+
+        resp = self.app.get('/api/appointments/' + str(appID) + '/drivingDistribution',
+                                headers = authHeader)
+        
+        respJSON, err = self.validateResponse(resp, 200, [str(monomoID), str(uID)])
+        if err != 0:
+            logger.error('Driving Distribution Response Content:')
+            logger.error(resp.data)
+            
+            self.fail('Driving Distribution Error!')
+            
+        #retire the appointment with UnitTest as only driver
+        Interne_server.retireAppointment(appID, [uID])
+        #Hopefully nothing went wront!
+
+
+        
+        
+        #delete a bunch of users and then delete the appointmetn:
+        for  i in range(1,4):
+            token = self.login('User' + str(i), '1234')
+            resp = self.app.delete('/api/dev/removeUser/User' + str(i), headers={'Authorization': token})
+            self.assertEquals(resp.status_code, 204)
+        
+        resp = self.app.delete('/api/appointments/' + str(appID), headers=authHeader)
+        self.assertEquals(resp.status_code, 204)
+
+
+
 if __name__ == '__main__':
     unittest.main()
