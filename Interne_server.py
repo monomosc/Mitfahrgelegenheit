@@ -1136,7 +1136,7 @@ def retireAppointment(appointmentID, actualDrivers):
         return
     thisappointment = appointments.first()
     if thisappointment.status == Interne_helpers.APPOINTMENT_RETIRED:
-        logger.error('Appointment #' + appointmentID +
+        logger.error('Appointment #' + str(appointmentID) +
                      ' retiring, but is already retired!')
         session.close()
         return
