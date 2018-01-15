@@ -1018,9 +1018,9 @@ def terminateAppointment(appointmentID):
             listOfAllDrivers = []
             listOfAllPassengers = []
             for user_app_rel in thisappointment.users:
-                listOfAllPassengers.append(user_app_rel)
+                listOfAllPassengers.append(user_app_rel.user_id)
                 if user_app_rel.drivingLevel == 1:
-                    listOfAllDrivers.append(user_app_rel)
+                    listOfAllDrivers.append(user_app_rel.user_id)
 
             totalNumberOfDrivers = len(listOfAllDrivers)
 
@@ -1029,20 +1029,24 @@ def terminateAppointment(appointmentID):
 
             #list.sort(listOfAllDrivers, key = lambda user_app_rel: user_app_rel.maximumPassengers, reverse = True)
 
-            drivingDict = {}
-            for user_app_rel in listOfAllDrivers:
-                drivingDict[user_app_rel] = []
+            drivingDict = dict()
+            for userID in listOfAllDrivers:
+                drivingDict[userID] = list()
 
-            finishedPassengers = []
-            for user_app_rel in listOfAllPassengers:
-                if user_app_rel in listOfAllDrivers:
-                    drivingDict[user_app_rel].append(user_app_rel)
-                    finishedPassengers.append(user_app_rel)
+            #handle drivers only - add them to their own passenger list
+            finishedPassengers = set()
+            for passengerID in listOfAllPassengers:
+                if passengerID in listOfAllDrivers:
+                    try:
+                        drivingDict[passengerID].append(passengerID)
+                        finishedPassengers.add(passengerID)
+                    except KeyError:
+                        logger.exception('Uh-Oh')
+                        logger.error(str(drivingDict))
 
             for user_app_rel in finishedPassengers:
                 listOfAllPassengers.remove(user_app_rel)
-            del finishedPassengers[:]
-
+            finishedPassengers.clear()
             # we now have handled all drivers (who will of course have themselves as passenger)
 
             # randomly distribute passengers on cars
