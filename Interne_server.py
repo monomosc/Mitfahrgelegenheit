@@ -463,6 +463,50 @@ def api_retire_appointment(a_ID):
     return jsonify(message='Success'), 200
 
 
+@application.route('/api/appointments/<int:a_ID>/drivingDistribution', methods = ['GET'])
+@jwt_required
+def getDrivingDistribution(a_ID):
+    "Retrieves the driving distribution for an appointment, if it is locked already"
+
+    logger.info('Driving Distribution request for appointment #' + str(a_ID) + ' from User ' + get_jwt_claims()['username'])
+
+    #query the Appointment
+    session = Session()
+    appointments = session.query(Appointment).filter (Appointment.id == a_ID)
+    if appointments.count() == 0:
+        logger.warning('Appointment #' + str(a_ID) + ' does not exist')
+        session.close()
+        return jsoinfy(message='Appointment does not exist'), 404
+    thisappointment = appointments.first()
+    
+    #check the appointment is in a valid state for driver list retrieval
+    if thisappointment.status == Interne_helpers.APPOINTMENT_UNFINISHED:
+        session.close()
+        logger.warning('Appointment #' + str(a_ID) + ' not locked yet. Driver List Retrieval Impossible.')
+        return jsonify(message = 'Appointment #' + str(a_ID) + ' not locked yet. Driver List Retrieval Impossible.'), 422
+
+    if thisappointment.status == Interne_helpers.APPOINTMENT_RETIRED:
+        session.close()
+        logger.warning('Appointment #' + str(a_ID) + ' already retired. Driver List Retrieval Impossible.')
+        return jsonify(message = 'Appointment #' + str(a_ID) + ' already retired. Driver List Retrieval Impossible.'), 422
+
+
+    if thisappointment.status == Interne_helpers.APPOINTMENT_LOCKED_NO_FIT:
+        session.close()
+        logger.warning('Appointment #' + str(a_ID) + ' has no viable driving Configuration. Empty Response generated')
+        return jsonify(message='No viable Driving Configuration'), 403
+    
+    drivingGroups = {}
+    for user_app_rel in thisappointment.users:
+        driver = user_app_rel.designatedDriverUser
+        if driver.id not in drivingGroups:
+            drivingGroups[driver.id] = []
+        drivingGroups[driver.id].append(user_app_rel.user_id)
+
+    logger.info('Generated Driving Group for Appointment #' + str(a_ID))
+    session.close()
+    return jsonify(drivingGroups), 200
+
 
 @application.route('/api/appointments/<int:a_ID>/users', methods=['GET'])
 @jwt_required
