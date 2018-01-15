@@ -14,7 +14,7 @@ unittest:
     - develop
 
 deployonserver:
-  stage: build
+  stage: deploy
   script:
     - uname -r
   only:
