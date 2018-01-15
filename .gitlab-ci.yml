@@ -10,7 +10,8 @@ stages:
   - deploy
 
 cache:
-  - ./flaskenv
+  paths:
+    - ./flaskenv
 
 unittest:
   stage: test
