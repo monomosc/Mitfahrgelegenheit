@@ -155,15 +155,13 @@ def api():
                          'startTime: int': 'required: unix timestamp for Appointment Meetup time',
                          'repeatTime: string': 'required: as of now always none',
                          'distance: int': 'required: the distance to drive',
-                         'status: int': 'Status of an Appointment; see docs (enum)'}
+                         'status: int': 'Status of an Appointment; see docs'}
 
     returnJSON['objects'] = {'user': objectUser,
                              'appointment': objectAppointment}
     returnJSON['relationships'] = [{'parent': 'User', 'child': 'appointment', 'drivingLevel: int': 'Enum: 0 denoting the User WILL NOT drive,' +
                                     '1 denoting he WILL definitely drive, 2 he MAY drive if need exists',
-                                    'maximumPassengers: int': 'optional: Denotes the maximum amount of passengers the User can transport if he were to drive',
-                                    'actualDrivingParticipation: bool' : 'For a retired Appointment this will denote whether the User has participated as a driver for this appoointment',
-                                    'designatedDriverID: int' : 'Foreign Key for Users; the participating users driver'}]
+                                    'maximumPassengers: int': 'optional: Denotes the maximum amount of passengers the User can transport if he were to drive'}]
 
     routes = []
 
@@ -235,7 +233,7 @@ def signup():
     if check_for_duplicates.count() > 0:
         session.close()
         logger.warning('User ' + requestJSON['username'] +
-                       ' already exists with ID ' + str(check_for_duplicates.first().id))
+                       'already exists with ID ' + str(check_for_duplicates.first().id))
         return jsonify(check_for_duplicates.first().getAsJSON()), 409
     newuser = User(username=requestJSON['username'], email=requestJSON['email'],
                    phoneNumber=requestJSON['phoneNumber'], globalAdminStatus=0,
@@ -263,7 +261,7 @@ def doSomethingWithThisUser(u_id):
 
 
 @application.route('/api/users/<string:u_name>', methods=['GET', 'PUT', 'DELETE', 'PATCH'])
-@jwt_required
+@jwt_optional
 def redirectToIdCall(u_name):
     "User redirect Username --> UserID"
     session = Session()
@@ -392,7 +390,6 @@ def getUserAppointments(u_id):
 @jwt_required
 def userAppointments(u_id):
     # check privileges - REMOVED! Everybody is allowed to do this
-    
 
     return getUserAppointments(u_id)
 
@@ -614,16 +611,12 @@ def putAppUser(a_ID, u_ID):
 
     # build the relationshio column
     try:
-        if 'maximumPassengers' in requestJSON:
-            rel = User_Appointment_Rel(drivingLevel = int(requestJSON['drivingLevel']), maximumPassengers = int(requestJSON['maximumPassengers']))
-        else:
-            rel = User_Appointment_Rel(drivingLevel=(
-                int(requestJSON['drivingLevel'])))
-        
+        rel = User_Appointment_Rel(drivingLevel=(
+            int(requestJSON['drivingLevel'])))
     except ValueError:
-        logger.exception('drivingLevel was not an Integer: drivingLevel : ' +
+        logger.warn('drivingLevel was not an Integer: drivingLevel : ' +
                     requestJSON['drivingLevel'])
-        return jsonify('Expect integer Keys'), 409
+        return jsonify('Expect integer drivingLevel'), 409
     try:
 
         rel.appointment = thisappointment
@@ -631,8 +624,8 @@ def putAppUser(a_ID, u_ID):
         session.add(rel)
         session.commit()
     except exc.SQLAlchemyError:
-        logger.exception(
-            'SQLAlchemy Error on building User_Takes_Part Row:')
+        logger.error(
+            'SQLAlchemy Error on building User_Takes_Part Row: %s', exc_info=True)
         session.close()
         return jsonify(message='Unfortunately, an error occured'), 500
 
@@ -993,7 +986,6 @@ def terminateAppointment(appointmentID):
         appointments = session.query(Appointment).filter(
             Appointment.id == appointmentID)
         if appointments.count() == 0:
-            logger.error('terminateAppointment called on nonexisting Appointment (#' + str(appID) + ')')
             raise Exception('terminateAppointment called on a nonexisting Appointment!!(#' +
                             str(appointmentID) + ') This is bad news!')
         thisappointment = appointments.first()
@@ -1018,42 +1010,38 @@ def terminateAppointment(appointmentID):
             listOfAllDrivers = []
             listOfAllPassengers = []
             for user_app_rel in thisappointment.users:
-                listOfAllPassengers.append(user_app_rel.user_id)
-                if user_app_rel.drivingLevel == 1:
-                    listOfAllDrivers.append(user_app_rel.user_id)
+                listOfAllPassengers.append(user_app_rel)
+                if user_app_rel.drivinLevel == 1:
+                    listOfAllDrivers.append(user_app_rel)
 
             totalNumberOfDrivers = len(listOfAllDrivers)
 
             # alright, so now an algorithmic challenge...
             # distribute all passengers onto their drivers!
 
-            #list.sort(listOfAllDrivers, key = lambda user_app_rel: user_app_rel.maximumPassengers, reverse = True)
 
-            drivingDict = dict()
-            for userID in listOfAllDrivers:
-                drivingDict[userID] = list()
+            drivingDict = {}
+            for user_id in listOfAllDrivers:
+                drivingDict[user_id] = []
 
-            #handle drivers only - add them to their own passenger list
-            finishedPassengers = set()
-            for passengerID in listOfAllPassengers:
-                if passengerID in listOfAllDrivers:
-                    try:
-                        drivingDict[passengerID].append(passengerID)
-                        finishedPassengers.add(passengerID)
-                    except KeyError:
-                        logger.exception('Uh-Oh')
-                        logger.error(str(drivingDict))
+            finishedPassengers = []
+            for user_id in listOfAllPassengers:
+                if user_id in listOfAllDrivers:
+                    drvingDict[user_id].append(user_id)
+                    finishedPassengers.append(user_id)
 
-            for user_app_rel in finishedPassengers:
-                listOfAllPassengers.remove(user_app_rel)
+            for user_id in finishedPassengers:
+                listOfAllPassengers.remove(user_id)
             finishedPassengers.clear()
+
             # we now have handled all drivers (who will of course have themselves as passenger)
 
             # randomly distribute passengers on cars
-            for user_app_rel in listOfAllPassengers:
+            for user_id in listOfAllPassengers:
                 k = randint(0, len(listOfAllDrivers))
-                drivingDict[listOfAllDrivers[k]].append(user_app_rel)
-                if len(drivingDict[listOfAllDrivers[k]]) > listOfAllDrivers[k].maximumPassengers:
+                drivingDict[listOfAllDrivers[k]].append(user_id)
+                datuser = session.query(User).get(k)
+                if len(drivingDict[listOfAllDrivers[k]]) >= datuser.maximumPassengers:
                     del listOfAllDrivers[k]
             # drivingDict now holds a dictionary containing a valid configuration of drivers to cars
 
@@ -1079,10 +1067,8 @@ def terminateAppointment(appointmentID):
                 'Not everyone even fits onto Possible Driver Seats on Appointment #' + str(thisappointment.id) + '!')
             logger.fatal('Not yet Implemented! Failed Distribution !!')
 
-    except Exception as e:
-        logger.exception('Something went wrong in terminateAppointment!!!')
-        
-
+    except:
+        logger.exception('Something went terribly wrong in terminateAppointment!')
     finally:
         session.close()
 
@@ -1140,7 +1126,7 @@ def retireAppointment(appointmentID, actualDrivers):
         return
     thisappointment = appointments.first()
     if thisappointment.status == Interne_helpers.APPOINTMENT_RETIRED:
-        logger.error('Appointment #' + str(appointmentID) +
+        logger.error('Appointment #' + appointmentID +
                      ' retiring, but is already retired!')
         session.close()
         return
