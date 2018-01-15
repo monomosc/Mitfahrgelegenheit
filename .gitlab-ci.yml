@@ -1,0 +1,21 @@
+image: python:2.7
+before_script:
+  - pip install -r requirements.txt
+stages:
+  - test
+  - deploy
+
+unittest:
+  stage: test
+  script:
+    - python Interne_serverTest.py
+  only:
+    - master
+    - develop
+
+deployonserver:
+  stage: build
+  script:
+    - uname -r
+  only:
+    - master
