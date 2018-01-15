@@ -611,8 +611,11 @@ def putAppUser(a_ID, u_ID):
 
     # build the relationshio column
     try:
-        rel = User_Appointment_Rel(drivingLevel=(
-            int(requestJSON['drivingLevel'])))
+        if requestJSON['drivingLevel'] ==0:
+            rel = User_Appointment_Rel(drivingLevel = int(requestJSON['drivingLevel']))
+        else:
+            rel = User_Appointment_Rel(drivingLevel=
+                int(requestJSON['drivingLevel']), maximumPassengers = int(requestJSON['maximumPassengers']))
     except ValueError:
         logger.warn('drivingLevel was not an Integer: drivingLevel : ' +
                     requestJSON['drivingLevel'])
@@ -1011,7 +1014,7 @@ def terminateAppointment(appointmentID):
             listOfAllPassengers = []
             for user_app_rel in thisappointment.users:
                 listOfAllPassengers.append(user_app_rel)
-                if user_app_rel.drivinLevel == 1:
+                if user_app_rel.drivingLevel == 1:
                     listOfAllDrivers.append(user_app_rel)
 
             totalNumberOfDrivers = len(listOfAllDrivers)
@@ -1027,7 +1030,7 @@ def terminateAppointment(appointmentID):
             finishedPassengers = []
             for user_id in listOfAllPassengers:
                 if user_id in listOfAllDrivers:
-                    drvingDict[user_id].append(user_id)
+                    drivingDict[user_id].append(user_id)
                     finishedPassengers.append(user_id)
 
             for user_id in finishedPassengers:
@@ -1121,7 +1124,7 @@ def retireAppointment(appointmentID, actualDrivers):
     appointments = session.query(Appointment).filter(
         Appointment.id == appointmentID)
     if appointments.count() == 0:
-        log.warning('No Appointment #' + appointment.id + 'exists')
+        log.warning('No Appointment #' + str(appointment.id) + ' exists')
         session.close()
         return
     thisappointment = appointments.first()
