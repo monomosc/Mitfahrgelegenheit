@@ -535,7 +535,9 @@ class InterneServerTestCase(unittest.TestCase):
         if err != 0:
             logger.error('Driving Distribution Response Content:')
             logger.error(resp.data)
-            
+            logger.error('Expect monomo (#' + str(monomoID) + ') and UnitTest (#' + str(uID) + ') as drivers.')
+            for driverID in respJSON:
+                logger.error('Found #' +str(driverID))
             self.fail('Driving Distribution Error!')
             
         #retire the appointment with UnitTest as only driver

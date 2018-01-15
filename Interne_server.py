@@ -69,7 +69,7 @@ def initialize_everything():
     "Initializes EVERYTHING"
     if __name__ == "__main__":
         application.debug = True
-    application.config['LogLevel'] = logging.INFO
+    application.config['LogLevel'] = logging.DEBUG
     prod = False
     if (not application.debug and not application.testing):
         if not 'MITFAHRGELEGENHEIT_TEST' in os.environ:
@@ -92,9 +92,8 @@ def initialize_everything():
     logger.info('Application is in ' +
                 ('Prod' if prod else 'NON-Prod') + ' mode')
 
-    logger.debug('Config Values:')
-    for key, val in application.config.items():
-        logger.debug(key + '  :  ' + str(val))
+    
+    
     # SQLALCHEMY SETUP
     engine = create_engine(
         application.config['SQL_ALCHEMY_ENGINE'], echo=False,  pool_recycle=3200)
@@ -233,7 +232,7 @@ def signup():
     if check_for_duplicates.count() > 0:
         session.close()
         logger.warning('User ' + requestJSON['username'] +
-                       'already exists with ID ' + str(check_for_duplicates.first().id))
+                       ' already exists with ID ' + str(check_for_duplicates.first().id))
         return jsonify(check_for_duplicates.first().getAsJSON()), 409
     newuser = User(username=requestJSON['username'], email=requestJSON['email'],
                    phoneNumber=requestJSON['phoneNumber'], globalAdminStatus=0,
@@ -1019,6 +1018,10 @@ def terminateAppointment(appointmentID):
 
             totalNumberOfDrivers = len(listOfAllDrivers)
 
+            logger.debug('listOfAllDrivers:')
+            logger.debug(listOfAllDrivers)
+            logger.debug('listOfAllPassengers')
+            logger.debug(listOfAllPassengers)
             # alright, so now an algorithmic challenge...
             # distribute all passengers onto their drivers!
 
@@ -1027,6 +1030,7 @@ def terminateAppointment(appointmentID):
             for user_id in listOfAllDrivers:
                 drivingDict[user_id] = list()
 
+            
             finishedPassengers = set()
             for user_id in listOfAllPassengers:
                 if user_id in listOfAllDrivers:
@@ -1057,7 +1061,7 @@ def terminateAppointment(appointmentID):
                     passengerUserAppRel.designatedDriverUser = driverUser
 
             logger.info('Distributed ' + str(totalParticipants) + ' Participants onto ' +
-                        str(totalNumberOfDrivers) + ' on Appointment # ' + str(thisappointment.id))
+                        str(totalNumberOfDrivers) + ' drivers on Appointment # ' + str(thisappointment.id))
             logger.info('Writing Driver Distribution Information for Appointment #' +
                         str(thisappointment.id) + ' to DB.')
             session.commit()
