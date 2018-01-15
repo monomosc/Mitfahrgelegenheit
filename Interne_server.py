@@ -362,6 +362,10 @@ def getDistance(u_id):
     return jsonify(returnJSON), 200
 
 
+def getUserAppointments(u_id):
+    # TODO: Implement and write test
+    return jsonify(message='Not yet implemented'), 404
+
 @application.route('/api/users/<int:u_id>/appointments', methods=['GET'])
 @jwt_required
 def userAppointments(u_id):
@@ -372,12 +376,10 @@ def userAppointments(u_id):
         if caller_id != u_id:
             return jsonify(message='Not allowed'), 401
 
-    return getAppointments(u_id)
+    return getUserAppointments(u_id)
 
 
-def getAppointments(u_id):
-    # TODO: Implement and write test
-    return jsonify(message='Not yet implemented'), 404
+
 
 
 @application.route('/api/users/<int:u_ID>/appointments/<int:a_ID>', methods=['PUT'])
@@ -637,12 +639,13 @@ def getAppointments():
     showFinished = False
     if 'showFinished' in request.args:
         showFinished = True if request.args['showFinished'] == 'true' else False
-    
+
     if showFinished == True:
         appointments = session.query(
             Appointment).all().order_by(Appointment.startTime)
     else:
-        appointments = session.query(Appointment).filter(Appointment.status != Interne_helpers.APPOINTMENT_RETIRED).order_by(Appointment.startTime)
+        appointments = session.query(Appointment).filter(
+            Appointment.status != Interne_helpers.APPOINTMENT_RETIRED).order_by(Appointment.startTime)
     retListJSON = []
 
     for app in appointments:
