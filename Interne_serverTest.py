@@ -473,13 +473,15 @@ class InterneServerTestCase(unittest.TestCase):
         respJSON, err = self.validateResponse(resp, 200, ['id'])
         self.assertEqual(err,0)
         monomoID = int(respJSON['id'])
+        logger.info('monomo ID: ' + str(monomoID))
 
         #get UnitTest UID:
         resp = self.app.get('/api/users/UnitTest',
                             headers=authHeader, follow_redirects=True)
         respJSON, err = self.validateResponse(resp, 200, ['id'])
         self.assertEqual(err, 0)
-        uID = int(respJSON['id'])
+        unittestID = int(respJSON['id'])
+        logger.info('UnitTest ID: ' + str(unittestID))
 
         # create Appointment
         postData = {'startLocation': 'Berlin',
@@ -492,13 +494,14 @@ class InterneServerTestCase(unittest.TestCase):
         
         #add UnitTest as driver
         putData = {'drivingLevel': 1, 'maximumPassengers' : 5}
-        resp = self.app.put('/api/appointments/' + str(appID) + '/users/' + str(uID),
+        resp = self.app.put('/api/appointments/' + str(appID) + '/users/' + str(unittestID),
                             data=json.dumps(putData), headers=authHeader)
 
+        self.assertEqual(resp.status_code, 200)
         #add monomo as driver
-        resp = self.app.put('/api/appointments/' + str(appID) + '/users' + str(monomoID),
+        resp = self.app.put('/api/appointments/' + str(appID) + '/users/' + str(monomoID),
                                     data = json.dumps(putData), headers = adminHeader)       
-
+        self.assertEqual(resp.status_code, 200)
         for i in range(1,4):
             #create User
             putData = { 'username' : 'User' + str(i),
@@ -531,11 +534,11 @@ class InterneServerTestCase(unittest.TestCase):
         resp = self.app.get('/api/appointments/' + str(appID) + '/drivingDistribution',
                                 headers = authHeader)
         
-        respJSON, err = self.validateResponse(resp, 200, [str(monomoID), str(uID)])
+        respJSON, err = self.validateResponse(resp, 200, [str(monomoID), str(unittestID)])
         if err != 0:
             logger.error('Driving Distribution Response Content:')
             logger.error(resp.data)
-            logger.error('Expect monomo (#' + str(monomoID) + ') and UnitTest (#' + str(uID) + ') as drivers.')
+            logger.error('Expect monomo (#' + str(monomoID) + ') and UnitTest (#' + str(unittestID) + ') as drivers.')
             for driverID in respJSON:
                 logger.error('Found #' +str(driverID))
             self.fail('Driving Distribution Error!')

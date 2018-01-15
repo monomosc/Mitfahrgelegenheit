@@ -1040,8 +1040,10 @@ def terminateAppointment(appointmentID):
             for user_id in finishedPassengers:
                 listOfAllPassengers.remove(user_id)
             finishedPassengers.clear()
-
             # we now have handled all drivers (who will of course have themselves as passenger)
+            logger.debug('drivingDict after distributing only drivers')
+            logger.debug(drivingDict)
+
 
             # randomly distribute passengers on cars
             for user_id in listOfAllPassengers:
@@ -1052,6 +1054,8 @@ def terminateAppointment(appointmentID):
                 if len(drivingDict[listOfAllDrivers[k]]) == datuser.maximumPassengers:
                     del listOfAllDrivers[k]
             # drivingDict now holds a dictionary containing a valid configuration of drivers to cars
+            logger.debug('drivingDict after distributing everyone drivers')
+            logger.debug(drivingDict)
 
             # write to DB
             for driver in drivingDict:
