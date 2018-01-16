@@ -210,6 +210,7 @@ def signup():
     try:
         requestJSON = json.loads(request.data)
     except json.JSONDecoder.JSONDecodeError:
+        sentry.captureException()
         return jsonify(message="Malformed JSON"), 400
 
     # check for JSON keys
