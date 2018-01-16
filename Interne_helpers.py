@@ -1,4 +1,4 @@
-#import Interne_Entities
+#import Interne_Entitiesd
 
 APPOINTMENT_UNFINISHED = 1
 APPOINTMENT_LOCKED_EVERYONE_FITS_DEFINITE = 2

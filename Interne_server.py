@@ -122,6 +122,13 @@ def initialize_everything():
         #sentry.captureMessage('Setup on Flask at ' + str(datetime.now()))
 
 
+def UserSentryContext(originalFunction):
+    def decoratedFunction(*args, **kwargs):
+        sentry.context.merge({'user' : get_jwt_claims(), 'userid' : get_jwt_identity())
+        originalFunction(*args, **kwargs)
+        sentry.context.clear()
+    return decoratedFunction
+
 if __name__ == "__main__":
     os.environ['MITFAHRGELEGENHEIT_SETTINGS'] = './Mitfahrgelegenheit.debug.conf'
 
@@ -253,6 +260,7 @@ def signup():
 
 @application.route('/api/users/<int:u_id>', methods=['GET', 'PUT', 'DELETE', 'PATCH'])
 @jwt_required
+@UserSentryContext
 def doSomethingWithThisUser(u_id):
     if request.method == 'PATCH':
         return patchUser(u_id)
@@ -356,6 +364,7 @@ def patchUser(user_id):
 
 @application.route('/api/users/<int:u_id>/distance', methods=['GET'])
 @jwt_required
+@UserSentryContext
 def getDistance(u_id):
     "Retrieves the Distance a single User has actively driven in the past"
     d = getUserTotalDistance(u_id)
