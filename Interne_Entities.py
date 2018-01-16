@@ -46,7 +46,7 @@ class Appointment(SQLBase):
     __tablename__='appointments'
     id = Column (Integer, primary_key = True)
     startLocation = Column(String(40))
-    targetLocation = Column(String(40))
+    targetLocation = Column(String(100))
     startTime = Column(DateTime)
     repeatTime = Column(String(15))
     users = relationship("User_Appointment_Rel", back_populates="appointment",
