@@ -1115,7 +1115,7 @@ def terminateAppointment(appointmentID):
             logger.warning(
                 'Not everyone even fits onto Possible Driver Seats on Appointment #' + str(thisappointment.id) + '!')
             
-            mailmsg = Message("Fahrerkonfiguration überprüfen!",
+            mailmsg = Message("Fahrerkonfiguration ueberpruefen!",
                             sender=("Errorhanlder at Mitfahrgelegenheit", "no-reply@monomo.solutions"),
                             recipients=[])
             for user_app_rel in thisappointment.users:
