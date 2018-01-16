@@ -4,6 +4,7 @@ import atexit
 import configparser
 import logging
 import os
+
 from datetime import datetime, time, timedelta
 from random import randint
 from time import strftime
@@ -24,6 +25,7 @@ from sqlalchemy.orm import sessionmaker
 from validate_email import validate_email
 from werkzeug import check_password_hash, generate_password_hash
 from werkzeug.security import safe_str_cmp
+from flask_mail import Message, Mail
 
 from Interne_Entities import Appointment, SQLBase, User, User_Appointment_Rel
 import Interne_helpers
@@ -36,6 +38,7 @@ scheduler = BackgroundScheduler()
 sentry = Sentry(
     dsn='https://3fb25fb74b6c4cf48f5c0e8ff285bc51:a36099e9044e4b0ab09224bddd652489@sentry.monomo.solutions/2')
 Session = sessionmaker()
+mail = Mail(application)
 __log_handler__ = None
 
 
@@ -115,6 +118,7 @@ def initialize_everything():
         setup_logging(sentryhandler)
 
         sentry.init_app(application)
+        application.config['MAIL_SUPPRESS_SEND'] = False
         #sentry.captureMessage('Setup on Flask at ' + str(datetime.now()))
 
 
@@ -1110,9 +1114,22 @@ def terminateAppointment(appointmentID):
         if totalParticipants > possibleDriversPassengerAmount:
             logger.warning(
                 'Not everyone even fits onto Possible Driver Seats on Appointment #' + str(thisappointment.id) + '!')
-
             
-            logger.fatal('Not yet Implemented! Failed Distribution !!')
+            mailmsg = Message("Fahrerkonfiguration überprüfen!",
+                            sender=("Errorhanlder at Mitfahrgelegenheit", "no-reply@monomo.solutions"),
+                            recipients=[])
+            for user_app_rel in thisappointment.users:
+                mailmsg.add_recipient(user_app_rel.user.email)
+            
+            appointmentDate = datetime.fromtimestamp(thisappointment.startTime)
+            appointmentDateString = appointmentDate.strftime()
+            mailmsg.body = "Achtung!\nIm Appointment #%s am %s nach %s gibt es zuwenige Fahrer! Folgend finden Sie alle Telefonnummern und Emails der Teilnehmer." % (str(thisappointment.id), appointmentDateString, thisappointment.targetLocation)
+            for user_app_rel in thisappointment.users:
+                user = user_app_rel.user
+                mailmsg.body = mailmsg.body + "\n%s: %s %s" % (user.username, user.phoneNumber, user.email)
+            mailmsg.body = mailmsg.body +"\n\nBitte Um Einigung!!"
+            mail.send(mailmsg)
+            logger.info('Sent Mail to some people about OOB-Solution')
 
     except:
         thisappointment.status = Interne_helpers.APPOINTMENT_BROKEN
