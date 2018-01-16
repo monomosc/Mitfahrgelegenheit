@@ -264,7 +264,8 @@ class InterneServerTestCase(unittest.TestCase):
 
         # create Appointment
         postData = {'startLocation': 'Berlin',
-                    'startTime': 1614847559, 'distance': 100}  # future
+                    'startTime': 1614847559, 'distance': 100,
+                    'targetLocation' : 'Berlin'}  # future
         resp = self.app.post('/api/appointments',
                              data=json.dumps(postData), headers=authHeader)
         respJSON, err = self.validateResponse(resp, 201, ['id'])
@@ -308,7 +309,8 @@ class InterneServerTestCase(unittest.TestCase):
 
         # create Appointment
         postData = {'startLocation': 'Berlin',
-                    'startTime': 1614847559, 'distance': 100}  # future
+                    'startTime': 1614847559, 'distance': 100,
+                    'targetLocation' : 'Berlin'}  # future
         resp = self.app.post('/api/appointments',
                              data=json.dumps(postData), headers=authHeader)
         respJSON, err = self.validateResponse(resp, 201, ['id'])
@@ -353,7 +355,8 @@ class InterneServerTestCase(unittest.TestCase):
 
         #create Appointment
         postData = {'startLocation': 'Berlin',
-                    'startTime': 1614847559, 'distance': 100}  # future
+                    'startTime': 1614847559, 'distance': 100,
+                    'targetLocation' : 'Berlin'}  # future
         resp = self.app.post('/api/appointments',
                              data=json.dumps(postData), headers=authHeader)
         respJSON, err = self.validateResponse(resp, 201, ['id'])
@@ -421,7 +424,8 @@ class InterneServerTestCase(unittest.TestCase):
             
             #create Appointment
         postData = {'startLocation': 'Berlin',
-                    'startTime': 1614847559, 'distance': 100}  # future
+                    'startTime': 1614847559, 'distance': 100,
+                    'targetLocation' : 'Berlin'}  # future
         resp = self.app.post('/api/appointments',
                              data=json.dumps(postData), headers=authHeader)
         respJSON, err = self.validateResponse(resp, 201, ['id'])
@@ -486,7 +490,8 @@ class InterneServerTestCase(unittest.TestCase):
 
         # create Appointment
         postData = {'startLocation': 'Berlin',
-                    'startTime': 1614847559, 'distance': 100}  # future
+                    'startTime': 1614847559, 'distance': 100,
+                    'targetLocation' : 'Berlin'}  # future
         resp = self.app.post('/api/appointments',
                              data=json.dumps(postData), headers=authHeader)
         respJSON, err = self.validateResponse(resp, 201, ['id'])
@@ -588,7 +593,8 @@ class InterneServerTestCase(unittest.TestCase):
 
         # create Appointment
         postData = {'startLocation': 'Berlin',
-                    'startTime': 1614847559, 'distance': 100}  # future
+                    'startTime': 1614847559, 'distance': 100,
+                    'targetLocation' : 'Berlin'}  # future
         resp = self.app.post('/api/appointments',
                              data=json.dumps(postData), headers=authHeader)
         respJSON, err = self.validateResponse(resp, 201, ['id'])
