@@ -658,6 +658,7 @@ def putAppUser(a_ID, u_ID):
 
 @application.route('/api/appointments', methods=['GET', 'POST'])
 @jwt_required
+@UserSentryContext
 def appointments():
     if request.method == 'GET':
         return getAppointments
@@ -710,14 +711,20 @@ def makeAppointment():
         rTime = requestJSON['repeatTime']
     else:
         rTime = 'None'
-
-    newappointment = Appointment(startLocation=requestJSON['startLocation'],
+    session = Session()
+    try:
+        newappointment = Appointment(startLocation=requestJSON['startLocation'],
                                  startTime=datetime.fromtimestamp(
                                      requestJSON['startTime']),
                                  repeatTime=rTime,
                                  status=Interne_helpers.APPOINTMENT_UNFINISHED,
-                                 distance=requestJSON['distance'])
-    session = Session()
+                                 distance=requestJSON['distance'],
+                                 targetLocation=requestJSON['targetLocation'])
+    except:
+        logger.exception('Error creating Appointment')
+        session.close()
+        return jsonify(message='An Error Occured'), 500
+    
     session.add(newappointment)
     session.commit()
 
