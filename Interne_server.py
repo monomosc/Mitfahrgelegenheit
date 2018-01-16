@@ -69,7 +69,7 @@ def initialize_everything():
     "Initializes EVERYTHING"
     if __name__ == "__main__":
         application.debug = True
-    application.config['LogLevel'] = logging.INFO
+    application.config['LogLevel'] = logging.DEBUG
     prod = False
     if (not application.debug and not application.testing):
         if not 'MITFAHRGELEGENHEIT_TEST' in os.environ:
@@ -973,7 +973,7 @@ def getUserTotalDistance(u_ID):
     return totaldistance
 
 
-def distributePassengersOnDrivers(listOfAllDrivers listOfAllPassengers, session):
+def distributePassengersOnDrivers(listOfAllDrivers, listOfAllPassengers, appointmentID, session):
     
 
     totalNumberOfDrivers = len(listOfAllDrivers)
@@ -1021,10 +1021,10 @@ def distributePassengersOnDrivers(listOfAllDrivers listOfAllPassengers, session)
             passengerUserAppRel = session.query(User_Appointment_Rel).get((passenger, appointmentID))
             passengerUserAppRel.designatedDriverUser = driverUser
 
-    logger.info('Distributed ' + str(totalParticipants) + ' Participants onto ' +
-                        str(totalNumberOfDrivers) + ' drivers on Appointment # ' + str(thisappointment.id))
+    logger.info('Distributed ' + str(len(listOfAllPassengers)) + ' Participants onto ' +
+                        str(len(listOfAllDrivers)) + ' drivers on Appointment # ' + str(appointmentID))
     logger.info('Writing Driver Distribution Information for Appointment #' +
-                        str(thisappointment.id) + ' to DB.')
+                        str(appointmentID) + ' to DB.')
     session.commit()
 
 
@@ -1072,16 +1072,16 @@ def terminateAppointment(appointmentID):
             listOfAllDrivers = []
             listOfAllPassengers = []
             for user_app_rel in thisappointment.users:
-            listOfAllPassengers.append(user_app_rel.user_id)
-            if user_app_rel.drivingLevel == 1:
-                listOfAllDrivers.append(user_app_rel.user_id)
+                listOfAllPassengers.append(user_app_rel.user_id)
+                if user_app_rel.drivingLevel == 1:
+                    listOfAllDrivers.append(user_app_rel.user_id)
             
             logger.debug('listOfAllDrivers:')
             logger.debug(listOfAllDrivers)
             logger.debug('listOfAllPassengers')
             logger.debug(listOfAllPassengers)
 
-            distributePassengersOnDrivers(listOfAllDrivers, listOfAllPassengers, session)
+            distributePassengersOnDrivers(listOfAllDrivers, listOfAllPassengers, appointmentID, session)
 
 
         # sortof good News !! everyone fits..at least including the may-drivers
@@ -1093,7 +1093,7 @@ def terminateAppointment(appointmentID):
             listOfAllDrivers = []
             listOfAllPassengers = []
             for user_app_rel in thisappointment.users:
-            listOfAllPassengers.append(user_app_rel.user_id)
+                listOfAllPassengers.append(user_app_rel.user_id)
             if user_app_rel.drivingLevel == 1 or user_app_rel.drivingLevel ==2:
                 listOfAllDrivers.append(user_app_rel.user_id)
             
@@ -1102,7 +1102,7 @@ def terminateAppointment(appointmentID):
             logger.debug('listOfAllPassengers')
             logger.debug(listOfAllPassengers)
 
-            distributePassengersOnDrivers(listOfAllDrivers, listOfAllPassengers, session)
+            distributePassengersOnDrivers(listOfAllDrivers, listOfAllPassengers, appointmentID, session)
             
             logger.fatal(
                 'Not yet Implemented! Distribution onto possible drivers!')
@@ -1110,10 +1110,12 @@ def terminateAppointment(appointmentID):
         if totalParticipants > possibleDriversPassengerAmount:
             logger.warning(
                 'Not everyone even fits onto Possible Driver Seats on Appointment #' + str(thisappointment.id) + '!')
+
+            
             logger.fatal('Not yet Implemented! Failed Distribution !!')
 
     except:
-        thisappointment.status = APPOINTMENT_BROKEN
+        thisappointment.status = Interne_helpers.APPOINTMENT_BROKEN
         logger.exception('Something went terribly wrong in terminateAppointment! Appointment #' + str(thisappointment.id) + ' is broken!')
     finally:
         session.close()
@@ -1176,7 +1178,8 @@ def retireAppointment(appointmentID, actualDrivers):
                      ' retiring, but is already retired!')
         session.close()
         return
-
+    if thisappointment.status == Interne_helpers.APPOINTMENT_BROKEN:
+        logger.warning('Retiring broken Appointment #' + str(thisappointment.id))
     for user_app_rel in thisappointment.users:
         if user_app_rel.user_id in actualDrivers:
             user_app_rel.actualDrivingParticipation = True
