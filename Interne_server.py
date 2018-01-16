@@ -124,7 +124,7 @@ def initialize_everything():
 
 def UserSentryContext(originalFunction):
     def decoratedFunction(*args, **kwargs):
-    
+        prod = True if (application.testing == False and application.debug == False) else False
         if prod:
             sentry.client.context.merge({'user' : get_jwt_claims(), 'userid' : get_jwt_identity()})
         return originalFunction(*args, **kwargs)
