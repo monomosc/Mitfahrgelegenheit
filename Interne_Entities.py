@@ -46,6 +46,7 @@ class Appointment(SQLBase):
     __tablename__='appointments'
     id = Column (Integer, primary_key = True)
     startLocation = Column(String(40))
+    targetLocation = Column(String(40))
     startTime = Column(DateTime)
     repeatTime = Column(String(15))
     users = relationship("User_Appointment_Rel", back_populates="appointment",
@@ -59,7 +60,8 @@ class Appointment(SQLBase):
         return {'id' : self.id, 'startLocation' : self.startLocation, 
                 'startTime' : self.startTime, 'repeatTime' : self.repeatTime, 
                 'status' : Interne_helpers.getAppointmentStatusString(self.status),
-                'distance' : self.distance}                                 #distance in kilometers
+                'distance' : self.distance,
+                'targetLocation' : self.targetLocation}                                 #distance in kilometers
 
 
 class User_Appointment_Rel(SQLBase):
