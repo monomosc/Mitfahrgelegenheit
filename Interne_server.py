@@ -124,9 +124,13 @@ def initialize_everything():
 
 def UserSentryContext(originalFunction):
     def decoratedFunction(*args, **kwargs):
-        sentry.context.merge({'user' : get_jwt_claims(), 'userid' : get_jwt_identity())
-        originalFunction(*args, **kwargs)
-        sentry.context.clear()
+    
+        if prod:
+            sentry.client.context.merge({'user' : get_jwt_claims(), 'userid' : get_jwt_identity()})
+        return originalFunction(*args, **kwargs)
+        if prod:
+            sentry.client.context.clear()
+    decoratedFunction.func_name = originalFunction.func_name
     return decoratedFunction
 
 if __name__ == "__main__":
