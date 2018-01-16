@@ -973,6 +973,62 @@ def getUserTotalDistance(u_ID):
     return totaldistance
 
 
+def distributePassengersOnDrivers(listOfAllDrivers listOfAllPassengers, session):
+    
+
+    totalNumberOfDrivers = len(listOfAllDrivers)
+
+    
+    # alright, so now an algorithmic challenge...
+    # distribute all passengers onto their drivers!
+
+
+    drivingDict = dict()
+    for user_id in listOfAllDrivers:
+        drivingDict[user_id] = list()
+
+            
+    finishedPassengers = set()
+    for user_id in listOfAllPassengers:
+        if user_id in listOfAllDrivers:
+            drivingDict[user_id].append(user_id)
+            finishedPassengers.add(user_id)
+
+    for user_id in finishedPassengers:
+        listOfAllPassengers.remove(user_id)
+    finishedPassengers.clear()
+    # we now have handled all drivers (who will of course have themselves as passenger)
+    logger.debug('drivingDict after distributing only drivers')
+    logger.debug(drivingDict)
+
+
+    # randomly distribute passengers on cars
+    for user_id in listOfAllPassengers:
+        k = randint(0, len(listOfAllDrivers) - 1)
+        drivingDict[listOfAllDrivers[k]].append(user_id)
+
+        datuser = session.query(User_Appointment_Rel).get((listOfAllDrivers[k], appointmentID))
+        if len(drivingDict[listOfAllDrivers[k]]) == datuser.maximumPassengers:
+            del listOfAllDrivers[k]
+    # drivingDict now holds a dictionary containing a valid configuration of drivers to cars
+    logger.debug('drivingDict after distributing everyone drivers')
+    logger.debug(drivingDict)
+
+    # write to DB
+    for driver in drivingDict:
+        driverUser = session.query(User).get(driver)
+        for passenger in drivingDict[driver]:
+            passengerUserAppRel = session.query(User_Appointment_Rel).get((passenger, appointmentID))
+            passengerUserAppRel.designatedDriverUser = driverUser
+
+    logger.info('Distributed ' + str(totalParticipants) + ' Participants onto ' +
+                        str(totalNumberOfDrivers) + ' drivers on Appointment # ' + str(thisappointment.id))
+    logger.info('Writing Driver Distribution Information for Appointment #' +
+                        str(thisappointment.id) + ' to DB.')
+    session.commit()
+
+
+
 def terminateAppointment(appointmentID):
     "terminateAppointment is called by the scheduler 1 hour before the appointment takes place"
     # get Number of total possible Passengers including only
@@ -985,13 +1041,16 @@ def terminateAppointment(appointmentID):
     totalParticipants = 0
 
     session = Session()
-    try:
-        appointments = session.query(Appointment).filter(
+    appointments = session.query(Appointment).filter(
             Appointment.id == appointmentID)
-        if appointments.count() == 0:
-            raise Exception('terminateAppointment called on a nonexisting Appointment!!(#' +
+    if appointments.count() == 0:
+        raise Exception('terminateAppointment called on a nonexisting Appointment!!(#' +
                             str(appointmentID) + ') This is bad news!')
-        thisappointment = appointments.first()
+    thisappointment = appointments.first()
+
+
+    try:
+        
         for user_app_rel in thisappointment.users:
             if user_app_rel.drivingLevel == 1:
                 definiteDriversPassengerAmount = definiteDriversPassengerAmount + \
@@ -1013,68 +1072,38 @@ def terminateAppointment(appointmentID):
             listOfAllDrivers = []
             listOfAllPassengers = []
             for user_app_rel in thisappointment.users:
-                listOfAllPassengers.append(user_app_rel.user_id)
-                if user_app_rel.drivingLevel == 1:
-                    listOfAllDrivers.append(user_app_rel.user_id)
-
-            totalNumberOfDrivers = len(listOfAllDrivers)
-
+            listOfAllPassengers.append(user_app_rel.user_id)
+            if user_app_rel.drivingLevel == 1:
+                listOfAllDrivers.append(user_app_rel.user_id)
+            
             logger.debug('listOfAllDrivers:')
             logger.debug(listOfAllDrivers)
             logger.debug('listOfAllPassengers')
             logger.debug(listOfAllPassengers)
-            # alright, so now an algorithmic challenge...
-            # distribute all passengers onto their drivers!
 
+            distributePassengersOnDrivers(listOfAllDrivers, listOfAllPassengers, session)
 
-            drivingDict = dict()
-            for user_id in listOfAllDrivers:
-                drivingDict[user_id] = list()
-
-            
-            finishedPassengers = set()
-            for user_id in listOfAllPassengers:
-                if user_id in listOfAllDrivers:
-                    drivingDict[user_id].append(user_id)
-                    finishedPassengers.add(user_id)
-
-            for user_id in finishedPassengers:
-                listOfAllPassengers.remove(user_id)
-            finishedPassengers.clear()
-            # we now have handled all drivers (who will of course have themselves as passenger)
-            logger.debug('drivingDict after distributing only drivers')
-            logger.debug(drivingDict)
-
-
-            # randomly distribute passengers on cars
-            for user_id in listOfAllPassengers:
-                k = randint(0, len(listOfAllDrivers) - 1)
-                drivingDict[listOfAllDrivers[k]].append(user_id)
-
-                datuser = session.query(User_Appointment_Rel).get((listOfAllDrivers[k], appointmentID))
-                if len(drivingDict[listOfAllDrivers[k]]) == datuser.maximumPassengers:
-                    del listOfAllDrivers[k]
-            # drivingDict now holds a dictionary containing a valid configuration of drivers to cars
-            logger.debug('drivingDict after distributing everyone drivers')
-            logger.debug(drivingDict)
-
-            # write to DB
-            for driver in drivingDict:
-                driverUser = session.query(User).get(driver)
-                for passenger in drivingDict[driver]:
-                    passengerUserAppRel = session.query(User_Appointment_Rel).get((passenger, appointmentID))
-                    passengerUserAppRel.designatedDriverUser = driverUser
-
-            logger.info('Distributed ' + str(totalParticipants) + ' Participants onto ' +
-                        str(totalNumberOfDrivers) + ' drivers on Appointment # ' + str(thisappointment.id))
-            logger.info('Writing Driver Distribution Information for Appointment #' +
-                        str(thisappointment.id) + ' to DB.')
-            session.commit()
 
         # sortof good News !! everyone fits..at least including the may-drivers
         if totalParticipants > definiteDriversPassengerAmount and totalParticipants <= possibleDriversPassengerAmount:
             logger.info(
                 'Not everyone fits into Definite Driver Seats. Taking Possible Drivers into Account on Appointment #' + str(thisappointment.id))
+            thisappointment.status = Interne_helpers.APPOINTMENT_LOCKED_EVERYONE_FITS_POSSIBLE
+
+            listOfAllDrivers = []
+            listOfAllPassengers = []
+            for user_app_rel in thisappointment.users:
+            listOfAllPassengers.append(user_app_rel.user_id)
+            if user_app_rel.drivingLevel == 1 or user_app_rel.drivingLevel ==2:
+                listOfAllDrivers.append(user_app_rel.user_id)
+            
+            logger.debug('listOfAllDrivers:')
+            logger.debug(listOfAllDrivers)
+            logger.debug('listOfAllPassengers')
+            logger.debug(listOfAllPassengers)
+
+            distributePassengersOnDrivers(listOfAllDrivers, listOfAllPassengers, session)
+            
             logger.fatal(
                 'Not yet Implemented! Distribution onto possible drivers!')
 
@@ -1084,7 +1113,8 @@ def terminateAppointment(appointmentID):
             logger.fatal('Not yet Implemented! Failed Distribution !!')
 
     except:
-        logger.exception('Something went terribly wrong in terminateAppointment!')
+        thisappointment.status = APPOINTMENT_BROKEN
+        logger.exception('Something went terribly wrong in terminateAppointment! Appointment #' + str(thisappointment.id) + ' is broken!')
     finally:
         session.close()
 
