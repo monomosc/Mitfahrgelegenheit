@@ -218,8 +218,9 @@ class InterneServerTestCase(unittest.TestCase):
             self.fail('UnitTest Login Failure')
 
         # create an appointment
-        postData = {'startLocation': 'Berlin',
-                    'startTime': 1614847559, 'distance': 100}
+        postData = {'startLocation': 'Wuerzburg',
+                    'startTime': 1614847559, 'distance': 100,
+                    'targetLocation' : 'Berlin'}
         resp = self.app.post('/api/appointments',
                              data=json.dumps(postData), headers={'content-type': 'application/json', 'Authorization': token})
         self.assertEqual(resp.status_code, 201,
