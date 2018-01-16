@@ -13,7 +13,7 @@ def getAppointmentStatusString(status):
         2 : "APPOINTMENT_LOCKED_EVERYONE_FITS_DEFINITE",
         3 : "APPOINTMENT_LOCKED_EVERYONE_FITS_POSSIBLE",
         4 : "APPOINTMENT_LOCKED_NO_FIT",
-        5 : "APPOINTMENT_RETIRED"
+        5 : "APPOINTMENT_RETIRED",
         6 : "APPOINTMENT_BROKEN"
     }
     return returnString[status]
