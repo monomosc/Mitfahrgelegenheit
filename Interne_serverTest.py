@@ -233,8 +233,8 @@ class InterneServerTestCase(unittest.TestCase):
         self.assertEqual(resp.status_code, 200,
                          'Appointment apprently does not exist: 200 expected, returned ' + str(resp.status_code))
         respJSON = json.loads(resp.data)
-        self.assertEqual(respJSON['startLocation'], 'Berlin',
-                         'Newly created appointment has a different startLocation! Expected Berlin but got: ' + respJSON['startLocation'])
+        self.assertEqual(respJSON['startLocation'], 'Wuerzburg',
+                         'Newly created appointment has a different startLocation! Expected Wuerzburg but got: ' + respJSON['startLocation'])
 
         # delete the appointment
         resp = self.app.delete('/api/appointments/' + str(appID), data='',
