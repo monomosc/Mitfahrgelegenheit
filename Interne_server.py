@@ -4,6 +4,7 @@ import atexit
 import configparser
 import logging
 import os
+import sys
 
 from datetime import datetime, time, timedelta
 from random import randint
@@ -130,7 +131,13 @@ def UserSentryContext(originalFunction):
         return originalFunction(*args, **kwargs)
         if prod:
             sentry.client.context.clear()
-    decoratedFunction.func_name = originalFunction.func_name
+            
+    #different for python2 vs python3!
+    if sys.version_info >= (3,0):
+        decoratedFunction.__name__ = originalFunction.__name__
+    else:
+        decoratedFunction.func_name = originalFunction.func_name
+
     return decoratedFunction
 
 if __name__ == "__main__":
