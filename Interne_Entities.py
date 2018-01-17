@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*- 
 # Moritz Basel - Interne_Entities.py
 # Version 0.2.0
+from datetime import datetime
 from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Boolean
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
+
 
 import Interne_helpers
 #CLASS: USER
@@ -58,11 +60,13 @@ class Appointment(SQLBase):
     status = Column(Integer)
 
     def getAsJSON(self):
+        timeString = datetime.fromtimestamp(self.startTime).strftime('%c')
         return {'id' : self.id, 'startLocation' : self.startLocation, 
                 'startTime' : self.startTime, 'repeatTime' : self.repeatTime, 
                 'status' : Interne_helpers.getAppointmentStatusString(self.status),
                 'distance' : self.distance,
-                'targetLocation' : self.targetLocation}                                 #distance in kilometers
+                'targetLocation' : self.targetLocation,
+                'startTimeString' : timeString}                                 #distance in kilometers
 
 
 class User_Appointment_Rel(SQLBase):
