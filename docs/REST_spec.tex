@@ -86,9 +86,9 @@ Erwartet eine JSON-Repräsentation eines Benutzers und Zusätzlich das 'password
 \subsection{\textbf{PUT,PATCH} /api/users/<UID>}
 Erwartet eine JSON-Repräsentation eines Benutzers, sowie optional ein neues Passwort im Feld 'password' und überschreibt die alten Nutzerdaten.
 \subsection{\textbf{GET} /api/users/<UID>}
-Agiert wie erwartet. Jeder hat Zugriffsrechte.
+Agiert wie erwartet - gibt die JSON-Repräsentation des Nutzers zurück. Zugriffsrechte hat jeder Nutzer.
 \subsection{\textbf{GET} /api/users/<Username>}
-Gibt lediglich die User-ID in der Form {'id' : 0} zurück. Diese kann dann weiterverwendet werden für spätere API-Zugriffe.
+Gibt lediglich die User-ID in der Form {'id' : 0} zurück. Diese kann dann weiterverwendet werden für spätere API-Zugriffe. Dies ist (im Moment 0.2.0) noch offen für anonyme Zugriffe.
 \subsection{\textbf{POST} /api/auth}
 Gibt den Login-Token im JSON-Eintrag 'access\_token' zurück. Dieser muss bei Zugriffen auf geschützte http-Endpunkte im Header-Feld 'Authorization' in allen Requests mitgegeben werden.\\
 Außerdem werden alle Nutzerdaten in den Feldern 'username', 'email', 'phoneNumber', 'globalAdminStatus' versendet. Dies wird nur zur Unterstützung getan, da im JWT Body alle Felder in Base64 vorhanden sind.
