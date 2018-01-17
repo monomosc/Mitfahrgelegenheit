@@ -75,6 +75,7 @@ def initialize_everything():
     if __name__ == "__main__":
         application.debug = True
     application.config['LogLevel'] = logging.DEBUG
+    application.config['JSON_AS_ASCII'] = False
     prod = False
     if (not application.debug and not application.testing):
         if not 'MITFAHRGELEGENHEIT_TEST' in os.environ:
