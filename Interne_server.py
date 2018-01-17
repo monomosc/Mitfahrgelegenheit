@@ -677,7 +677,7 @@ def appointments():
 def getAppointments():
     "Get a list of appointments"
     # request argument parsing
-    log.info('User ' + get_jwt_claims()
+    logger.info('User ' + get_jwt_claims()
              ['username'] + 'requesting appointment List')
     showFinished = False
     if 'showFinished' in request.args:
