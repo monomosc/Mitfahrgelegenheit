@@ -212,12 +212,19 @@ def api():
 @jwt_required
 def users():
 
+    logger.info('User List Request by '+ get_jwt_claims()['username'])
     returnJSON = []
     session = Session()
-    for instance in session.query(User):
+    try:
+    
+        for instance in session.query(User):
         returnJSON.append(instance.getAsJSON())
-
+    except:
+        logger.exception()
+        session.close()
+        return jsonify(message='Serverside Error'), 500
     session.close()
+    logger.info('Returning Userlist, size ' + str(len(returnJSON)))
     return jsonify(returnJSON), 200
 
 
