@@ -738,6 +738,7 @@ def makeAppointment():
     requiredKeys = ['startLocation', 'startTime', 'distance']
     for key in requiredKeys:
         if key not in requestJSON:
+            logger.warning('Missing JSON key: ' + key + ' in makeAppointment')
             return jsonify(message='Missing JSON key: ' + key), 422
 
     if 'repeatTime' in requestJSON:
