@@ -683,6 +683,7 @@ def getAppointments():
     if 'showFinished' in request.args:
         showFinished = True if request.args['showFinished'] == 'true' else False
 
+    session = Session()
     if showFinished == True:
         appointments = session.query(
             Appointment).all().order_by(Appointment.startTime)
@@ -693,7 +694,7 @@ def getAppointments():
 
     for app in appointments:
         retListJSON.append(app.getAsJSON())
-
+    session.close()
     return jsonify(retListJSON), 200
 
 
