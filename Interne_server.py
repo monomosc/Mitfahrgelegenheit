@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*- 
 # Moritz Basel - interne_server.py
 # Version 0.2.0
 import atexit

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*- 
 import configparser
 import requests
 with open("Version.conf") as f:

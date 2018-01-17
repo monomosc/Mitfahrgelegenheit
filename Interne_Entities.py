@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*- 
 # Moritz Basel - Interne_Entities.py
 # Version 0.2.0
 from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Boolean

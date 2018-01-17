@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*- 
 #import Interne_Entitiesd
 
 APPOINTMENT_UNFINISHED = 1
