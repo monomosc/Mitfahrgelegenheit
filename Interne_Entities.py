@@ -2,6 +2,7 @@
 # Moritz Basel - Interne_Entities.py
 # Version 0.2.0
 from datetime import datetime
+import time
 from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Boolean
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
@@ -60,13 +61,13 @@ class Appointment(SQLBase):
     status = Column(Integer)
 
     def getAsJSON(self):
-        timeString = datetime.fromtimestamp(self.startTime).strftime('%c')
+        startTimeTimestamp = time.mktime(self.startTime.timetumple())
         return {'id' : self.id, 'startLocation' : self.startLocation, 
                 'startTime' : self.startTime, 'repeatTime' : self.repeatTime, 
                 'status' : Interne_helpers.getAppointmentStatusString(self.status),
                 'distance' : self.distance,
                 'targetLocation' : self.targetLocation,
-                'startTimeString' : timeString}                                 #distance in kilometers
+                'startTimeTimestamp' : startTimeTimestamp}                                 #distance in kilometers
 
 
 class User_Appointment_Rel(SQLBase):
