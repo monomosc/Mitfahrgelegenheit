@@ -700,7 +700,7 @@ def getAppointments():
     "Get a list of appointments"
     # request argument parsing
     logger.info('User ' + get_jwt_claims()
-             ['username'] + 'requesting appointment List')
+             ['username'] + ' requesting Appointment List')
     showFinished = False
     if 'showFinished' in request.args:
         showFinished = True if request.args['showFinished'] == 'true' else False
@@ -717,6 +717,7 @@ def getAppointments():
     for app in appointments:
         retListJSON.append(app.getAsJSON())
     session.close()
+    logger.info('Generated Appointment List; size: ' + str(len(retListJSON)))
     return jsonify(retListJSON), 200
 
 
