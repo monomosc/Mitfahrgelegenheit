@@ -218,7 +218,7 @@ def users():
     try:
     
         for instance in session.query(User):
-        returnJSON.append(instance.getAsJSON())
+            returnJSON.append(instance.getAsJSON())
     except:
         logger.exception()
         session.close()
@@ -239,7 +239,7 @@ def signup():
     try:
         requestJSON = json.loads(request.data)
     except json.JSONDecoder.JSONDecodeError:
-        sentry.captureException()
+        logger.exception()
         return jsonify(message="Malformed JSON"), 400
 
     # check for JSON keys
@@ -248,10 +248,15 @@ def signup():
     if 'phoneNumber' not in requestJSON or 'username' not in requestJSON:
         return make_message_response("Signup must contain (username, phoneNumber) JSON Keys", 400)
     
+    success = False
     try:
         a = int(requestJSON['username'])
-    except ValueError:
-        return jsonify(message="Username cannot be a number"), 422
+    except:
+        success = True
+    if success == False:
+        logger.error('Username ' + requestJSON['username'] + ' is invalid')
+        return jsonify(message='Invalid Username')
+
     # hash the password
     hashed_password = generate_password_hash(requestJSON['password'])
 
