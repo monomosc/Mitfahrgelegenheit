@@ -32,13 +32,24 @@ Zum Anmeldeschluss (voraussichtlich 60 Minuten vor dem Appointment) können kein
 ```
 GET /api/appointments/{appointmentID}/drivingDistribution
 ```
-die Fahrerverteilung angezeigt. Ebenfalls zu diesem Zeitpunkt wird der Status angepasst - das Status-Feld in der SQL-Datenbank wird einen der folgenden drei Zustände annehmen:
+die Fahrerverteilung angezeigt. Sie liegt in der Form einer assoziativen Liste vor:
+```json
+{
+    1 : [1,2,3,4],
+    6 : [6,7,9],
+    ...
+}
+```
+Ebenfalls zu diesem Zeitpunkt wird der Status angepasst - das Status-Feld in der SQL-Datenbank wird einen der folgenden drei Zustände annehmen:
 ```Python
 APPOINTMENT_LOCKED_EVERYONE_FITS_DEFINITE = 2
 APPOINTMENT_LOCKED_EVERYONE_FITS_POSSIBLE = 3
 APPOINTMENT_LOCKED_NO_FIT = 4
 ```
-
+Außerdem, um Fehler anzuzeigen, existiert noch der Zustand
+```Python
+APPOINTMENT_BROKEN = 6
+```
 
 ## Archivieren von Appointments
 
