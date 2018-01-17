@@ -240,7 +240,11 @@ def signup():
         return make_message_response("Signup must contain (password, email) JSON keys", 400)
     if 'phoneNumber' not in requestJSON or 'username' not in requestJSON:
         return make_message_response("Signup must contain (username, phoneNumber) JSON Keys", 400)
-
+    
+    try:
+        a = int(requestJSON['username'])
+    except ValueError:
+        return jsonify(message="Username cannot be a number"), 422
     # hash the password
     hashed_password = generate_password_hash(requestJSON['password'])
 
