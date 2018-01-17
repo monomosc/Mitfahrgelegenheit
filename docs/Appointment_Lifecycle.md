@@ -50,6 +50,7 @@ Außerdem, um Fehler anzuzeigen, existiert noch der Zustand
 ```Python
 APPOINTMENT_BROKEN = 6
 ```
+Falls keine valide Fahrerkonfiguration gefunden werden konnte, git diese Route einen Fehler zurück (Stat)
 
 ## Archivieren von Appointments
 
