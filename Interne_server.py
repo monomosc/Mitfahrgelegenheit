@@ -294,7 +294,7 @@ def doSomethingWithThisUser(u_id):
     except ValueError:
         logger.error('Somehow an non-int slipped through! in /api/users/u_id')
         return jsonify(message="Error: " + str(u_id) + ' not an integer!')
-    
+
     if request.method == 'PATCH':
         return patchUser(u_id)
     if request.method == 'PUT':
@@ -799,7 +799,7 @@ def authenticate_and_return_accessToken():
     thisuser = users.first()
     if check_password_hash(thisuser.password, requestJSON['password']):
         logger.info('Creating Access Token for ' + requestJSON['username'])
-        token = create_access_token(identity=thisuser)
+        token = create_access_token(identity=thisuser, expires_delta = timedelta(days=365))
         logger.debug('Access Token: Bearer ' + token)
         session.close()
         return jsonify(access_token=token, username=thisuser.username, email=thisuser.email, globalAdminStatus=thisuser.globalAdminStatus, phoneNumber=thisuser.phoneNumber), 200
