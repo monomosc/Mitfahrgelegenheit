@@ -564,7 +564,7 @@ def getDrivingDistribution(a_ID):
         session.close()
         logger.warning('Appointment #' + str(a_ID) +
                        ' has no viable driving Configuration. Empty Response generated')
-        return jsonify(message='No viable Driving Configuration'), 403
+        return jsonify(message='No viable Driving Configuration'), 200
 
     drivingGroups = {}
     for user_app_rel in thisappointment.users:
