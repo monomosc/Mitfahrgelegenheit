@@ -668,7 +668,7 @@ def putAppUser(a_ID, u_ID):
 @UserSentryContext
 def appointments():
     if request.method == 'GET':
-        return getAppointments
+        return getAppointments()
     if request.method == 'POST':
         return makeAppointment()
     return jsonify(message='Method not allowed'), 405
