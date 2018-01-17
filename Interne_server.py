@@ -799,6 +799,7 @@ def authenticate_and_return_accessToken():
                     (requestJSON['username'] if 'username' in requestJSON else requestJSON['email']) + ' does not exist)')
         session.close()
         return jsonify(message='Invalid Username or Password'), 404
+
     thisuser = users.first()
     if check_password_hash(thisuser.password, requestJSON['password']):
         logger.info('Creating Access Token for ' + requestJSON['username'])
@@ -810,7 +811,7 @@ def authenticate_and_return_accessToken():
         session.close()
         logger.info(
             'Invalid Password in Access Token Request for user: ' + requestJSON['username'])
-        return jsonify(message='Invalid Username or Password')
+        return jsonify(message='Invalid Username or Password'), 403
 
 
 # DYNAMIC PART - REST-DEV-API
