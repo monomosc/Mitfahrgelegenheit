@@ -61,7 +61,7 @@ class Appointment(SQLBase):
     status = Column(Integer)
 
     def getAsJSON(self):
-        startTimeTimestamp = time.mktime(self.startTime.timetumple())
+        startTimeTimestamp = self.startTime.timestamp()
         return {'id' : self.id, 'startLocation' : self.startLocation, 
                 'startTime' : self.startTime, 'repeatTime' : self.repeatTime, 
                 'status' : Interne_helpers.getAppointmentStatusString(self.status),
