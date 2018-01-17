@@ -3,6 +3,7 @@
 # Version 0.2.0
 from datetime import datetime
 import time
+import sys
 from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Boolean
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
@@ -61,7 +62,12 @@ class Appointment(SQLBase):
     status = Column(Integer)
 
     def getAsJSON(self):
-        startTimeTimestamp = self.startTime.timestamp()
+        # python is just an incredibly language !!
+        if sys.version_info >= (3,0):
+            startTimeTimestamp = self.startTime.timestamp()
+        else:
+            startTimeTimestamp = time.mktime(self.startTime.timetuple())
+        
         return {'id' : self.id, 'startLocation' : self.startLocation, 
                 'startTime' : self.startTime, 'repeatTime' : self.repeatTime, 
                 'status' : Interne_helpers.getAppointmentStatusString(self.status),
