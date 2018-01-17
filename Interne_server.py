@@ -254,7 +254,7 @@ def signup():
     except:
         success = True
     if success == False:
-        logger.error('Username ' + requestJSON['username'] + ' is invalid')
+        logger.warning('Username ' + requestJSON['username'] + ' is invalid')
         return jsonify(message='Invalid Username')
 
     # hash the password
@@ -289,6 +289,12 @@ def signup():
 @jwt_required
 @UserSentryContext
 def doSomethingWithThisUser(u_id):
+    try:
+        a = int(u_id)
+    except ValueError:
+        logger.error('Somehow an non-int slipped through! in /api/users/u_id')
+        return jsonify(message="Error: " + str(u_id) + ' not an integer!')
+    
     if request.method == 'PATCH':
         return patchUser(u_id)
     if request.method == 'PUT':
