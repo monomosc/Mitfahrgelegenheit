@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*- 
+# -*- coding: utf-8 -*-
 # Moritz Basel - interne_server.py
 # Version 0.2.0
 import atexit
@@ -735,21 +735,29 @@ def makeAppointment():
     except json.JSONDecodeError:
         return jsonify(message='Illegal JSON'), 400
 
-    requiredKeys = ['startLocation', 'startTime', 'distance']
+    requiredKeys = ['startLocation', 'distance']
     for key in requiredKeys:
         if key not in requestJSON:
             logger.warning('Missing JSON key: ' + key + ' in makeAppointment')
             return jsonify(message='Missing JSON key: ' + key), 422
-
     if 'repeatTime' in requestJSON:
         rTime = requestJSON['repeatTime']
     else:
         rTime = 'None'
+    
+    if 'startTime' not in requestJSON and 'startTimeTimestamp' not in requestJSON:
+        logger.warning('Missing JSON key: startTime or startTimeTimestamp in makeAppointment')
+        return jsonify(message='Missing JSON key: startTime or startTimeTimestamp'), 422
+
+    if 'startTimeTimestamp' in requestJSON:
+        appTime = datetime.fromtimestamp(requestJSON['startTimeTimestamp'])
+    else:
+        appTime = datetime.fromtimestamp(requestJSON['startTime'])
+    
     session = Session()
     try:
         newappointment = Appointment(startLocation=requestJSON['startLocation'],
-                                 startTime=datetime.fromtimestamp(
-                                     requestJSON['startTime']),
+                                 startTime=appTime,
                                  repeatTime=rTime,
                                  status=Interne_helpers.APPOINTMENT_UNFINISHED,
                                  distance=requestJSON['distance'],
