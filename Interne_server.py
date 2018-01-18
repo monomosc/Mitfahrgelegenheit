@@ -23,7 +23,7 @@ from raven.conf import setup_logging
 from raven.contrib.flask import Sentry
 from raven.handlers.logging import SentryHandler
 from sqlalchemy import create_engine, exc
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, scoped_session
 from validate_email import validate_email
 from werkzeug import check_password_hash, generate_password_hash
 from werkzeug.security import safe_str_cmp
@@ -39,7 +39,7 @@ logger = logging.getLogger(__name__)
 scheduler = BackgroundScheduler()
 sentry = Sentry(
     dsn='https://3fb25fb74b6c4cf48f5c0e8ff285bc51:a36099e9044e4b0ab09224bddd652489@sentry.monomo.solutions/2')
-Session = sessionmaker()
+Session = scoped_session(sessionmaker())
 mail = Mail(application)
 __log_handler__ = None
 
