@@ -52,6 +52,27 @@ APPOINTMENT_BROKEN = 6
 ```
 Falls keine valide Fahrerkonfiguration gefunden werden konnte, git diese Route einen Fehler zurück (Stat)
 
+## Abfragen von Daten zum Appointment
+
+Die meisten wichtigen Punkte werden in der REST_spec.pdf behandelt. Zu Beachten ist nur noch der spezielle Endpunkt
+```
+GET /api/appointments/{appointmentID}/users
+```
+Er gibt Daten der folgender Form zurück:
+
+```json
+[
+    {
+        //vollständiger Nutzerdaten
+        "maximumPassenger" : y,
+        "actualDrivingParticipation" : False/True //Ob der Nutzer tatsächlich gefahren ist; wird über / api/appointments/x/retire gesetzt
+        "drivingLevel" : z
+    },
+    {
+        ...
+    }
+]
+```
 ## Archivieren von Appointments
 
 ### Anzeigen aller noch nicht archivierten Appointments

@@ -80,6 +80,8 @@ Folgende Werte sind erlaubt
 \hline
 \textbf{GET} /api/users/<UID>/appointments & Appointments des Users \\
 \hline
+\textbf{GET} /api/users & Alle User\\
+\hline
 \end{tabular}
 
 \subsection{\textbf{POST} /api/users}
@@ -97,6 +99,8 @@ Außerdem werden alle Nutzerdaten in den Feldern 'username', 'email', 'phoneNumb
 Gibt die tatsächlich als Fahrer gefahrene Distanz eines Users zurück.
 \subsection{\textbf{GET} /api/users/<UID>/appointments}
 Gibt die Appointments des Nutzers zurück. (a.k.a. alle Appointments, an denen der User teilnimmt)
+\subsection{\textbf{GET} /api/users}
+Gibt die Alle Nutzerdaten in einer Liste zurück. Arbeitet mit vollen User-JSON-Repräsentationen.
 \section{Appointment-Funktionalitäten}
 \subsection{Überblick}
 \begin{tabular}{|c|c|}
@@ -109,15 +113,23 @@ Gibt die Appointments des Nutzers zurück. (a.k.a. alle Appointments, an denen d
 \hline
 \textbf{POST} /api/appointments & Erstellt ein neues Appointment \\
 \hline
+\textbf{GET} /api/appointments/<appointmentID>/users & Liste alle teilnehmenden user \\
+\hline
 \end{tabular}
 
 \subsection{\textbf{GET} /api/appointments/<appointmentID>}
 Gibt eine JSON-Repräsentation des Appointments zurück.
-\subsection{\textbf{GET} /api/users/appointments}
-Liste aller Apppointments, an denen der Nutzer beteiligt ist. Diese Methode unterstützt \textbf{GET}-Parameter
-\begin{description}
-    \item[finished] Standardmäßig auf "false" - bestimmt, ob auch schon vergangene Appointments gefordert werden
-\end{description}
+\subsection{\textbf{GET} /api/users/<userID>/appointments}
+Gibt die Appointments eines Users in einer Liste zurück. Nutzt die volle JSON-Represäntation von Appointments.
+\subsection{\textbf{GET} /api/appointments}
+Gibt die volle Liste aller Appointments in einer Liste zurück. Nutzt die volle JSON-Represäntation von Appointments.
+\subsection{\textbf{POST} /api/appointments}
+Erstellt ein neues Appointment. Verlangt eine vollständige JSON-Represäntation im Request-Body.
+\subsection{\textbf{GET} /api/appointments/<appointmentID>/users}
+Liste aller am Appointment teilnehmenden User. 
+Dieser Endpunkt verhält sich besonders und gibt Daten in besonderer Form zurück. 
+Für weitere Details, die Datei zum Appointment Lifecycle konsultieren.
+
 \section{Entwicklungs-API}
 \subsection{Überblick}
 
