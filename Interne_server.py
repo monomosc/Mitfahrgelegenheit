@@ -390,7 +390,7 @@ def patchUser(user_id):
         logger.info('Set new Password on User ' + thisuser.username)
         thisuser.password = hashed_password
     if 'username' in requestJSON:
-        logstring = logstring + 'username ' +  str/requestJSON['username']) + ', '
+        logstring = logstring + 'username ' +  str(requestJSON['username']) + ', '
         thisuser.username = requestJSON['username']
         
     session.commit()
