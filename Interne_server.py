@@ -357,13 +357,13 @@ def patchUser(user_id):
         try:
             if int(requestJSON['globalAdminStatus']) > uclaims['globalAdminStatus']:
                 logger.warn(
-                    'User ' + uclaims['username'] + 'illegaly attempts to elevate Admin Privileges to ' + requestJSON['globalAdminStatus'])
+                    'User ' + uclaims['username'] + 'illegaly attempts to elevate Admin Privileges to ' + str(requestJSON['globalAdminStatus']))
                 return jsonify(message='Not allowed'), 404
         except ValueError:
             return jsonify(message='Illegal Type in field "globalAdminStatus"'), 422
     if 'username' in requestJSON:
-        logger.info('Username change is not allowed')
-        return jsonify(message='Username change is not allowed'), 403
+        logger.info('Username change is noe allowed!')
+
     # end permission checks
 
     session = Session()
@@ -389,7 +389,10 @@ def patchUser(user_id):
         hashed_password = generate_password_hash(requestJSON['password'])
         logger.info('Set new Password on User ' + thisuser.username)
         thisuser.password = hashed_password
-
+    if 'username' in requestJSON:
+        logstring = logstring + 'username ' +  str/requestJSON['username']) + ', '
+        thisuser.username = requestJSON['username']
+        
     session.commit()
     logger.info('Changed User ' + thisuser.username +
                 '. Changed Keys: ' + logstring)
