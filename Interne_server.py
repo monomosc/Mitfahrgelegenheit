@@ -637,11 +637,12 @@ def putAppUser(a_ID, u_ID):
 
     # Some basic checks for request syntax and semantics
     if not request.is_json:
+        logger.info('Invalid Request on putAppuser')
         return jsonify(message='Expect JSON Body'), 400
     try:
         requestJSON = json.loads(request.data)
     except:
-        logger.warn('Illegal Request Syntax')
+        logger.warn('Illegal Request Syntax in putAppUser')
         return jsoinfy('Expect JSON Body'), 400
 
     if 'drivingLevel' not in requestJSON:
@@ -656,7 +657,7 @@ def putAppUser(a_ID, u_ID):
     # check priviliges:
     if get_jwt_claims()['globalAdminStatus'] < 1:
         if get_jwt_identity() != u_ID:
-            logger.warn('User ' + get_jwt_claims()['username'] + ' tried to add ' +
+            logger.warning('User ' + get_jwt_claims()['username'] + ' tried to add ' +
                         thisuser.username + ' to an Appointment as Non-Admin')
             return jsonify('Non-Admin can only add him/herself to Appointments'), 403
 
@@ -677,9 +678,9 @@ def putAppUser(a_ID, u_ID):
         thisuser.appointments.append(rel)
         session.add(rel)
         session.commit()
-    except exc.SQLAlchemyError:
-        logger.error(
-            'SQLAlchemy Error on building User_Takes_Part Row: %s', exc_info=True)
+    except:
+        logger.exception(
+            'SQLAlchemy Error on building User_Takes_Part')
         session.close()
         return jsonify(message='Unfortunately, an error occured'), 500
 
