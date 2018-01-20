@@ -661,9 +661,31 @@ def putAppUser(a_ID, u_ID):
                         thisuser.username + ' to an Appointment as Non-Admin')
             return jsonify('Non-Admin can only add him/herself to Appointments'), 403
 
+
+    # check if relationship already exists
+    try:
+        rel = session.query(User_Appointment_Rel).get((thisuser.id, thisappointment.id))
+        if rel is not None:
+            # Relationship already exists
+            rel.drivingLevel = int(requestJSON['drivingLevel'])
+            if requestJSON['drivingLevel'] != 0:
+                rel.maximumPassengers = int(requestJSON['maximumPassengers'])
+            session.commit()
+            name = thisuser.name
+            session.close()
+            return jsonify(message='Updated User ' + name + ' to Appointment #' + str(a_ID)), 200
+    except:
+        logger.exception("Error updating User Driving Participation")
+        try:
+            session.close()
+        except:
+            pass
+        return jsonify(message='An Error occured updating User Driving Participation'), 500
+
+
     # build the relationshio column
     try:
-        if requestJSON['drivingLevel'] ==0:
+        if requestJSON['drivingLevel'] == 0:
             rel = User_Appointment_Rel(drivingLevel = int(requestJSON['drivingLevel']))
         else:
             rel = User_Appointment_Rel(drivingLevel=
