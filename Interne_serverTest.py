@@ -282,6 +282,7 @@ class InterneServerTestCase(unittest.TestCase):
         # check appointment data
         resp = self.app.get('/api/appointments/' +
                             str(appID) + '/users', headers=authHeader)
+        logger.info(resp.data)
         self.assertEqual(resp.status_code, 200)
         respJSON = json.loads(resp.data)
         self.assertGreaterEqual(len(respJSON), 1)

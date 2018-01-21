@@ -590,15 +590,16 @@ def getDrivingDistribution(a_ID):
 def getAppUsers(a_ID):
     logger.info('User ' + get_jwt_claims()
                 ['username'] + ' requesting User List to Appointment ' + str(a_ID))
-    session = Session()
+    
     try:
+        session = Session()
         thisappointment = session.query(Appointment).get(a_ID)
         if thisappointment == None:
             session.close()
             return jsonify(message="No Such Appointment"), 404
 
         returnJSON = []
-        for user_app_rel in thisappointment.users:
+        for user_app_rel in session.query(User_Appointment_Rel).join(User, User_Appointment_Rel.user_id == User.id).filter(User_Appointment_Rel.appointment_id == a_ID):
             appendJSON = user_app_rel.user.getAsJSON()
             appendJSON['drivingLevel'] = user_app_rel.drivingLevel
             appendJSON['actualDrivingParticipation'] = user_app_rel.actualDrivingParticipation
@@ -606,7 +607,7 @@ def getAppUsers(a_ID):
             returnJSON.append(appendJSON)
 
         logger.info('Returning Appointment ' + str(a_ID) +
-                        ' User List, containing ' + str(len(thisappointment.users)) + ' entities')
+                        ' User List, containing ' + str(len(returnJSON)) + ' entities')
     except:
         logger.exception('An Error occured constructing participant list to Appointment ' + str(a_ID))
         session.close()
@@ -641,7 +642,8 @@ def putAppUser(a_ID, u_ID):
 
     logger.info('User ' + get_jwt_claims()
                 ['username'] + ' attempts to add ' + thisuser.username + ' to Appointment ' + str(a_ID))
-
+    logger.debug('Request:')
+    logger.debug(request.data)
     # Some basic checks for request syntax and semantics
     if not request.is_json:
         logger.info('Invalid Request on putAppuser')
