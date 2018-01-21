@@ -591,22 +591,27 @@ def getAppUsers(a_ID):
     logger.info('User ' + get_jwt_claims()
                 ['username'] + ' requesting User List to Appointment ' + str(a_ID))
     session = Session()
+    try:
+        appointments = session.query(Appointment).filter(Appointment.id == a_ID)
+        if appointments.count() == 0:
+            return jsonify(message="No Such Appointment"), 404
 
-    appointments = session.query(Appointment).filter(Appointment.id == a_ID)
-    if appointments.count() == 0:
-        return jsonify(message="No Such Appointment"), 404
+        returnJSON = []
+        thisappointment = appointments.first()
+        for user_app_rel in thisappointment.users:
+            appendJSON = user_app_rel.user.getAsJSON()
+            appendJSON['drivingLevel'] = user_app_rel.drivingLevel
+            appendJSON['actualDrivingParticipation'] = user_app_rel.actualDrivingParticipation
+            appendJSON['maximumPassengers'] = user_app_rel.maximumPassengers
+            returnJSON.append(appendJSON)
 
-    returnJSON = []
-    thisappointment = appointments.first()
-    for user_app_rel in thisappointment.users:
-        appendJSON = user_app_rel.user.getAsJSON()
-        appendJSON['drivingLevel'] = user_app_rel.drivingLevel
-        appendJSON['actualDrivingParticipation'] = user_app_rel.actualDrivingParticipation
-        appendJSON['maximumPassengers'] = user_app_rel.maximumPassengers
-        returnJSON.append(appendJSON)
+        logger.info('Returning Appointment ' + str(a_ID) +
+                        ' User List, containing ' + str(len(thisappointment.users)) + ' entities')
+    except:
+        logger.exception('An Error occured constructing participant list to Appointment ' + str(a_ID))
+        session.close()
+        return jsonify(message='An Error has occured while constructing participant List to Appointment ' + str(a_ID)), 500
 
-    logger.info('Returning Appointment ' + str(a_ID) +
-                ' User List, containing ' + str(len(thisappointment.users)) + ' entities')
     session.close()
     return jsonify(returnJSON), 200
 
