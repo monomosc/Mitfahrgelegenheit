@@ -532,9 +532,10 @@ def api_retire_appointment(a_ID):
         sentry.captureException()
         return jsonify('JSON syntax Error'), 400
 
+    
     logger.info('Retire Command on Appointment #' + str(a_ID) +
                 ' by User ' + get_jwt_claims()['username'])
-
+    
     driverList = requestJSON['drivers']
     try:
         retireAppointment(a_ID, driverList)
@@ -664,11 +665,16 @@ def putAppUser(a_ID, u_ID):
     session = Session()
 
     # check if Appointment exists:
-    appointments = session.query(Appointment).filter(Appointment.id == a_ID)
-    if appointments.count() == 0:
+    thisappointment = session.query(Appointment).get(a_ID)
+    if thisappointment is None:
+        session.close()
         return jsonify(message='No such Appointment exists'), 404
-    thisappointment = appointments.first()
 
+    #check appointment status:
+    if thisappointment.status != Interne_helpers.APPOINTMENT_UNFINISHED:
+        session.close()
+        logger.info('Appointment #' + str(a_ID) + ' is not unfinished')
+        return jsonify(message='Can only add participants to unfinished Appointmetns')
     # check if user exists:
     users = session.query(User).filter(User.id == u_ID)
     if users.count() == 0:
