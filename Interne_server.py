@@ -884,6 +884,8 @@ def removeUser(uname):
                     uname + ' does not exist')
         return jsonify(message='Invalid Username or Password'), 404
     thisuser = users.first()
+    User_Appointment_Rel.__table__.delete().where(User_Appointment_Rel.user_id == thisuser.id)
+
     session.delete(thisuser)
     session.commit()
     session.close()
