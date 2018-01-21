@@ -1213,18 +1213,28 @@ def terminateAppointment(appointmentID):
             mailmsg = Message("Fahrerkonfiguration ueberpruefen!",
                             sender=("Errorhanlder at Mitfahrgelegenheit", "no-reply@monomo.solutions"),
                             recipients=[])
+            recipientList = []
             for user_app_rel in thisappointment.users:
+                recipientList.append(user_app_rel.user.username)
                 mailmsg.add_recipient(user_app_rel.user.email)
             
-            appointmentDate = datetime.fromtimestamp(thisappointment.startTime)
-            appointmentDateString = appointmentDate.strftime()
+            appointmentDate = thisappointment.startTime
+            appointmentDateString = appointmentDate.strftime("%A, %d.%m.%y  %H:%M")
             mailmsg.body = "Achtung!\nIm Appointment #%s am %s nach %s gibt es zuwenige Fahrer! Folgend finden Sie alle Telefonnummern und Emails der Teilnehmer." % (str(thisappointment.id), appointmentDateString, thisappointment.targetLocation)
+            
             for user_app_rel in thisappointment.users:
                 user = user_app_rel.user
                 mailmsg.body = mailmsg.body + "\n%s: %s %s" % (user.username, user.phoneNumber, user.email)
-            mailmsg.body = mailmsg.body +"\n\nBitte Um Einigung!!"
+                mailmsg.body = mailmsg.body +"\n\nBitte Um Einigung!!"
             mail.send(mailmsg)
             logger.info('Sent Mail to some people about OOB-Solution')
+            logger.info('Mail Body:')
+            logger.info(mailmsg.body)
+            logger.info('Recipients:')
+            logger.info(str(recipientList))
+
+
+            
 
     except:
         thisappointment.status = Interne_helpers.APPOINTMENT_BROKEN
