@@ -143,6 +143,11 @@ def UserSentryContext(originalFunction):
 
     return decoratedFunction
 
+@application.teardown_appcontext
+def shutdown_session(exception=None):
+    Session.remove()
+
+
 if __name__ == "__main__":
     os.environ['MITFAHRGELEGENHEIT_SETTINGS'] = './Mitfahrgelegenheit.debug.conf'
 
