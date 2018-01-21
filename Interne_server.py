@@ -223,7 +223,7 @@ def users():
         for instance in session.query(User):
             returnJSON.append(instance.getAsJSON())
     except:
-        logger.exception()
+        logger.exception('An Error occured while constructing user list')
         session.close()
         return jsonify(message='Serverside Error'), 500
     session.close()
