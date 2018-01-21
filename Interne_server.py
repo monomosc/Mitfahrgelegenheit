@@ -494,7 +494,7 @@ def deleteAppointment(appointmentID):
         return jsonify(message="Appointment does not exist"), 404
     try:
         appointment = appointments.first()
-        User_Appointment_Rel.delete().where(User_Appointment_Rel.appointment_id == appointmentID)
+        User_Appointment_Rel.__table__.delete().where(User_Appointment_Rel.appointment_id == appointmentID)
         session.delete(appointment)
         session.commit()
         logger.info('Appointment ' + appointmentID + ' deleted')
