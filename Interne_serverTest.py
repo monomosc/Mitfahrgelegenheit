@@ -667,6 +667,64 @@ class InterneServerTestCase(unittest.TestCase):
         self.assertEquals(resp.status_code, 204)
 
 
+    def test_TooManyPassengersConfiguration(self):
+        token = self.login('UnitTest', '1234')
+        authHeader = {'content-type' : 'application/json', 'Authorizaion' : token}
+        adminToken = self.login('monomo', 'monomomo')
+        adminHeader =  authHeader
+        adminHeader['Authorization'] = adminToken
+
+        #get monomo UID
+        resp = self.app.get('/api/users/monomo',
+                                 headers = adminHeader, follow_redirects=True)
+        respJSON, err = self.validateResponse(resp, 200, ['id'])
+        self.assertEqual(err,0)
+        monomoID = int(respJSON['id'])
+        logger.info('monomo ID: ' + str(monomoID))
+
+        #get UnitTest UID:
+        resp = self.app.get('/api/users/UnitTest',
+                            headers=authHeader, follow_redirects=True)
+        respJSON, err = self.validateResponse(resp, 200, ['id'])
+        self.assertEqual(err, 0)
+        unittestID = int(respJSON['id'])
+        logger.info('UnitTest ID: ' + str(unittestID))
+
+        # create Appointment
+        postData = {'startLocation': 'Berlin',
+                    'startTime': 1614847559, 'distance': 100,
+                    'targetLocation' : 'Berlin'}  # future
+        resp = self.app.post('/api/appointments',
+                             data=json.dumps(postData), headers=authHeader)
+        respJSON, err = self.validateResponse(resp, 201, ['id'])
+        self.assertEqual(err, 0)
+        appID = int(respJSON['id'])
+        
+        #add UnitTest as driver with only one slot
+        putData = {'drivingLevel': 1, 'maximumPassengers' : 1}
+        resp = self.app.put('/api/appointments/' + str(appID) + '/users/' + str(unittestID),
+                            data=json.dumps(putData), headers=authHeader)
+        self.assertEqual(resp.status_code, 200)
+
+        #add monomo as Passenger
+        putData = {'drivingLevel' : 0}
+        resp = self.app.put('/api/appointments/' + str(appID) + '/users/' + str(monomoID),
+                            data=json.dumps(putData), headers=authHeader)
+        self.assertEqual(resp.status_code, 200)
+
+        Interne_server.terminateAppointment(appID)
+
+        resp = self.app.get('/api/appointments/' + str(appID), headers = authHeader)
+        respJSON, err = self.validateResponse(resp, 200, ['id', 'status'])
+        if err != 0:
+            logger.error(resp.data)
+            self.fail()
+
+        self.assertEqual(respJSON['status'], 'APPOINTMENT_LOCKED_NO_FIT')
+
+        resp = self.app.delete('/api/appointments/' + str(appID), headers=authHeader)
+       
+        self.assertEquals(resp.status_code, 204)
 
 if __name__ == '__main__':
     unittest.main()
