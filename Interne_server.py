@@ -796,8 +796,11 @@ def makeAppointment():
     now = datetime.now()
     if appTime < now:
         logger.info('Appointment Time is in the past: ' + str(appTime) +' before ' + str(now))
-        return jsonify('Appointment Time is in the Past: ' + str(appTime) + ' before ' + str(now))
-
+        return jsonify(message='Appointment Time is in the Past: ' + str(appTime) + ' before ' + str(now)), 422
+    
+    if appTime < (now + timedelta(hours=1)):
+        logger.info('Appointment Time is too close in the future'  + str(appTime) +' before ' + str(now))
+        return jsonify(message='Appointment Time is too close in the future'  + str(appTime) +' before ' + str(now)), 422
     session = Session()
     try:
         newappointment = Appointment(startLocation=requestJSON['startLocation'],
