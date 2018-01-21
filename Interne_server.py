@@ -656,8 +656,8 @@ def putAppUser(a_ID, u_ID):
                 'maximumPassengers not in Request for adding User to Appointment')
             return jsonify(message='If drivingLevel is not 0, supply maximumPassengers key'), 422
         if requestJSON['maximumPassengers'] < 1:
-            logger.info('maximumPassengers ' + str(requestJSON['maximumPassengers']) + ' is smaller than zero')
-            return jsonify(message='maximumPassengers ' + str(requestJSON['maximumPassengers']) + ' is smaller than zero'), 422
+            logger.info('maximumPassengers ' + str(requestJSON['maximumPassengers']) + ' is smaller than one')
+            return jsonify(message='maximumPassengers ' + str(requestJSON['maximumPassengers']) + ' is smaller than one'), 422
 
     # check priviliges:
     if get_jwt_claims()['globalAdminStatus'] < 1:
