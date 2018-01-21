@@ -1189,7 +1189,7 @@ def terminateAppointment(appointmentID):
             logger.info(
                 'Not everyone fits into Definite Driver Seats. Taking Possible Drivers into Account on Appointment #' + str(thisappointment.id))
             thisappointment.status = Interne_helpers.APPOINTMENT_LOCKED_EVERYONE_FITS_POSSIBLE
-
+            session.commit()
             listOfAllDrivers = []
             listOfAllPassengers = []
             for user_app_rel in thisappointment.users:
@@ -1210,7 +1210,8 @@ def terminateAppointment(appointmentID):
         if totalParticipants > possibleDriversPassengerAmount:
             logger.warning(
                 'Not everyone even fits onto Possible Driver Seats on Appointment #' + str(thisappointment.id) + '!')
-            
+            thisappointment.status = Interne_helpers.APPOINTMENT_LOCKED_NO_FIT
+            session.commit()
             mailmsg = Message("Fahrerkonfiguration ueberpruefen!",
                             sender=("Errorhanlder at Mitfahrgelegenheit", "no-reply@monomo.solutions"),
                             recipients=[])
@@ -1226,7 +1227,8 @@ def terminateAppointment(appointmentID):
             for user_app_rel in thisappointment.users:
                 user = user_app_rel.user
                 mailmsg.body = mailmsg.body + "\n%s: %s %s" % (user.username, user.phoneNumber, user.email)
-                mailmsg.body = mailmsg.body +"\n\nBitte Um Einigung!!"
+            
+            mailmsg.body = mailmsg.body +"\n\nBitte Um Einigung!!"
             try:
                 mail.send(mailmsg)
             except:
@@ -1243,6 +1245,7 @@ def terminateAppointment(appointmentID):
 
     except:
         thisappointment.status = Interne_helpers.APPOINTMENT_BROKEN
+        session.commit()
         logger.exception('Something went terribly wrong in terminateAppointment! Appointment #' + str(thisappointment.id) + ' is broken!')
     finally:
         session.close()
