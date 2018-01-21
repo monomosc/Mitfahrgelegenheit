@@ -592,12 +592,12 @@ def getAppUsers(a_ID):
                 ['username'] + ' requesting User List to Appointment ' + str(a_ID))
     session = Session()
     try:
-        appointments = session.query(Appointment).filter(Appointment.id == a_ID)
-        if appointments.count() == 0:
+        thisappointment = session.query(Appointment).get(a_ID)
+        if thisappointment == None:
+            session.close()
             return jsonify(message="No Such Appointment"), 404
 
         returnJSON = []
-        thisappointment = appointments.first()
         for user_app_rel in thisappointment.users:
             appendJSON = user_app_rel.user.getAsJSON()
             appendJSON['drivingLevel'] = user_app_rel.drivingLevel
