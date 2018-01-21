@@ -445,6 +445,7 @@ def getUserAppointments(u_id):
 
 @application.route('/api/users/<int:u_id>/appointments', methods=['GET'])
 @jwt_required
+@UserSentryContext
 def userAppointments(u_id):
     # check privileges - REMOVED! Everybody is allowed to do this
 
@@ -464,6 +465,7 @@ def putAppointment(u_id):
 
 @application.route('/api/appointments/<appointmentID>', methods=['GET', 'DELETE'])
 @jwt_required
+@UserSentryContext
 def appointment(appointmentID):
     if request.method == 'GET':
         return appointment_data(appointmentID)
@@ -521,6 +523,7 @@ def deleteAppointment(appointmentID):
 
 @application.route('/api/appointments/<int:a_ID>/retire', methods=['POST'])
 @jwt_required
+@UserSentryContext
 def api_retire_appointment(a_ID):
     "API Endpoint to retire and appointment after it has been run and fix the driver list"
     try:
@@ -544,6 +547,7 @@ def api_retire_appointment(a_ID):
 
 @application.route('/api/appointments/<int:a_ID>/drivingDistribution', methods=['GET'])
 @jwt_required
+@UserSentryContext
 def getDrivingDistribution(a_ID):
     "Retrieves the driving distribution for an appointment, if it is locked already"
 
@@ -616,6 +620,7 @@ def getDrivingDistribution(a_ID):
 
 @application.route('/api/appointments/<int:a_ID>/users', methods=['GET'])
 @jwt_required
+@UserSentryContext
 def getAppUsers(a_ID):
     logger.info('User ' + get_jwt_claims()
                 ['username'] + ' requesting User List to Appointment ' + str(a_ID))
@@ -648,6 +653,7 @@ def getAppUsers(a_ID):
 
 @application.route('/api/appointments/<int:a_ID>/users/<int:u_ID>', methods=['PUT', 'GET'])
 @jwt_required
+@UserSentryContext
 def putAppUser(a_ID, u_ID):
     "Add an existing appointment to a User (in the sense that he will be taking part)"
     if request.method == 'GET':
