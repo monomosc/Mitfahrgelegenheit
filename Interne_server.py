@@ -786,11 +786,18 @@ def makeAppointment():
         logger.warning('Missing JSON key: startTime or startTimeTimestamp in makeAppointment')
         return jsonify(message='Missing JSON key: startTime or startTimeTimestamp'), 422
 
+
+    #to maintain backwards compatibility, startTime is also a timestamp
     if 'startTimeTimestamp' in requestJSON:
         appTime = datetime.fromtimestamp(requestJSON['startTimeTimestamp'])
     else:
         appTime = datetime.fromtimestamp(requestJSON['startTime'])
     
+    now = datetime.now()
+    if appTime < now:
+        logger.info('Appointment Time is in the past: ' + str(appTime) +' before ' + str(now))
+        return jsonify('Appointment Time is in the Past: ' + str(appTime) + ' before ' + str(now))
+
     session = Session()
     try:
         newappointment = Appointment(startLocation=requestJSON['startLocation'],
@@ -814,7 +821,12 @@ def makeAppointment():
         logger.error(
             'Could not print Date of newly created Appointment! ID: ' + str(newappointment.id))
 
-    startAppointmentScheduledEvent(newappointment.id, timedelta(hours=1))
+    try:
+        startAppointmentScheduledEvent(newappointment.id, timedelta(hours=1))
+    except:
+        logger.exception('Error adding scheduled Job for terminateEvent for Appointment ' + str(newappointment.id))
+        session.close()
+        return jsonify(message='An Error occured'), 500
     returnJSON = newappointment.getAsJSON()
     session.close()
 
