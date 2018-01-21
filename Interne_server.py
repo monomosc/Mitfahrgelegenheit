@@ -108,6 +108,7 @@ def initialize_everything():
     Session.configure(bind=engine)
     SQLBase.metadata.create_all(engine)
 
+    application.config['MAIL_SUPPRESS_SEND'] = True
     if prod:
 
         apscheduleSqliteEngine = create_engine(
@@ -1226,7 +1227,11 @@ def terminateAppointment(appointmentID):
                 user = user_app_rel.user
                 mailmsg.body = mailmsg.body + "\n%s: %s %s" % (user.username, user.phoneNumber, user.email)
                 mailmsg.body = mailmsg.body +"\n\nBitte Um Einigung!!"
-            mail.send(mailmsg)
+            try:
+                mail.send(mailmsg)
+            except:
+                logger.exception('Failed to send Mail')
+            
             logger.info('Sent Mail to some people about OOB-Solution')
             logger.info('Mail Body:')
             logger.info(mailmsg.body)
