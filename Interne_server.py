@@ -524,7 +524,7 @@ def deleteAppointment(appointmentID):
 def api_retire_appointment(a_ID):
     "API Endpoint to retire and appointment after it has been run and fix the driver list"
     try:
-        requestJSON = json.loads()
+        requestJSON = json.loads(request.data)
     except:
         sentry.captureException()
         return jsonify('JSON syntax Error'), 400
@@ -1201,8 +1201,9 @@ def terminateAppointment(appointmentID):
     appointments = session.query(Appointment).filter(
             Appointment.id == appointmentID)
     if appointments.count() == 0:
-        raise Exception('terminateAppointment called on a nonexisting Appointment!!(#' +
+        logger.error('terminateAppointment called on a nonexisting Appointment!!(#' +
                             str(appointmentID) + ') This is bad news!')
+        return
     thisappointment = appointments.first()
 
 
