@@ -650,7 +650,13 @@ def putAppUser(a_ID, u_ID):
     if 'drivingLevel' not in requestJSON:
         return jsonify('Expect drivingLevel Integer JSON key'), 409
 
-    if requestJSON['drivingLevel'] != 0:
+    try:
+        drivingLevel = int(requestJSON['drivingLevel'])
+    except ValueError:
+        logger.info('Illegal Value for drivingLevel: ' + str(requestJSON['drivingLevel']))
+        return jsonify(message='Illegal Value for drivingLevel', drivingLevel=requestJSON['drivingLevel'])
+
+    if drivingLevel != 0:
         if 'maximumPassengers' not in requestJSON:
             logger.warning(
                 'maximumPassengers not in Request for adding User to Appointment')
@@ -672,8 +678,8 @@ def putAppUser(a_ID, u_ID):
         rel = session.query(User_Appointment_Rel).get((thisuser.id, thisappointment.id))
         if rel is not None:
             # Relationship already exists
-            rel.drivingLevel = int(requestJSON['drivingLevel'])
-            if requestJSON['drivingLevel'] != 0:
+            rel.drivingLevel = drivingLevel
+            if drivingLevel != 0:
                 rel.maximumPassengers = int(requestJSON['maximumPassengers'])
             session.commit()
             name = thisuser.username
@@ -691,13 +697,13 @@ def putAppUser(a_ID, u_ID):
     # build the relationshio column
     try:
         if requestJSON['drivingLevel'] == 0:
-            rel = User_Appointment_Rel(drivingLevel = int(requestJSON['drivingLevel']))
+            rel = User_Appointment_Rel(drivingLevel = drivingLevel)
         else:
             rel = User_Appointment_Rel(drivingLevel=
-                int(requestJSON['drivingLevel']), maximumPassengers = int(requestJSON['maximumPassengers']))
+                drivingLevel, maximumPassengers = int(requestJSON['maximumPassengers']))
     except ValueError:
         logger.warn('drivingLevel was not an Integer: drivingLevel : ' +
-                    requestJSON['drivingLevel'])
+                    str(drivingLevel))
         return jsonify('Expect integer drivingLevel'), 409
     try:
 
