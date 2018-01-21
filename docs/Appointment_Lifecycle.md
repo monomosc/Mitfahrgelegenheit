@@ -32,12 +32,16 @@ Zum Anmeldeschluss (voraussichtlich 60 Minuten vor dem Appointment) können kein
 ```
 GET /api/appointments/{appointmentID}/drivingDistribution
 ```
-die Fahrerverteilung angezeigt. Sie liegt in der Form einer assoziativen Liste vor:
+die Fahrerverteilung angezeigt. **NEW IN 0.3.0 21/01/2018** Im Folgended das JSON-Schema:
 ```json
 {
-    1 : [1,2,3,4],
-    6 : [6,7,9],
-    ...
+    "status" : False/True
+    "message" : "xx"
+    "participationList" : {
+        1 : [1,2,3,4],
+        6 : [6,7,9],
+        ...
+    }
 }
 ```
 Ebenfalls zu diesem Zeitpunkt wird der Status angepasst - das Status-Feld in der SQL-Datenbank wird einen der folgenden drei Zustände annehmen:

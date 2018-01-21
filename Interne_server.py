@@ -559,35 +559,59 @@ def getDrivingDistribution(a_ID):
         return jsoinfy(message='Appointment does not exist'), 404
     thisappointment = appointments.first()
 
+    returnJSON = dict()
     # check the appointment is in a valid state for driver list retrieval
     if thisappointment.status == Interne_helpers.APPOINTMENT_UNFINISHED:
         session.close()
-        logger.warning('Appointment #' + str(a_ID) +
-                       ' not locked yet. Driver List Retrieval Impossible.')
-        return jsonify(message='Appointment #' + str(a_ID) + ' not locked yet. Driver List Retrieval Impossible.'), 422
+        message = 'Appointment #' + str(a_ID) + ' not locked yet. Driver List Retrieval Impossible.'
+        logger.warning(message)
+        returnJSON['status'] = False
+        returnJSON['message'] = message
+        return jsonify(returnJSON), 422
 
     if thisappointment.status == Interne_helpers.APPOINTMENT_RETIRED:
         session.close()
-        logger.warning('Appointment #' + str(a_ID) +
-                       ' already retired. Driver List Retrieval Impossible.')
-        return jsonify(message='Appointment #' + str(a_ID) + ' already retired. Driver List Retrieval Impossible.'), 422
+        message='Appointment #' + str(a_ID) + ' already retired. Driver List Retrieval Impossible.'
+        logger.warning(message)
+        returnJSON['status'] = False
+        returnJSON['message'] = message
+        return jsonify(returnJSON), 422
 
     if thisappointment.status == Interne_helpers.APPOINTMENT_LOCKED_NO_FIT:
         session.close()
-        logger.warning('Appointment #' + str(a_ID) +
-                       ' has no viable driving Configuration. Empty Response generated')
-        return jsonify(message='No viable Driving Configuration'), 200
+        message='Appointment #' + str(a_ID) + ' has no viable driving Configuration.'
+        logger.warning(message)
+        returnJSON['status'] = False
+        returnJSON['message'] = message
+        return jsonify(returnJSON), 422
 
+    if thisappointment.status == Interne_helpers.APPOINTMENT_BROKEN:
+        session.close()
+        message = 'Appointment #' + str(a_ID) + ' broken. Driver List Retrieval Impossible.'
+        logger.warning(message)
+        returnJSON['status'] = False
+        returnJSON['message'] = message
+        return jsonify(returnJSON), 422
+
+    returnJSON = {}
     drivingGroups = {}
-    for user_app_rel in thisappointment.users:
-        driver = user_app_rel.designatedDriverUser
-        if driver.id not in drivingGroups:
-            drivingGroups[driver.id] = []
-        drivingGroups[driver.id].append(user_app_rel.user_id)
+    try:
+        for user_app_rel in thisappointment.users:
+            driver = user_app_rel.designatedDriverUser
+            if driver.id not in drivingGroups:
+                drivingGroups[driver.id] = []
+            drivingGroups[driver.id].append(user_app_rel.user_id)
+    except:
+        logger.exception('Error construction drivingGroups for Appointment #' + str(a_ID))
+        session.close()
+        return jsonify(message='Error construction drivingGroups for Appointment #' + str(a_ID)), 500
 
+    returnJSON['status'] = True
+    returnJSON['message'] = 'Generated Driving Group for Appointment #' + str(a_ID)
+    returnJSON['participationList'] = drivingGroups
     logger.info('Generated Driving Group for Appointment #' + str(a_ID))
     session.close()
-    return jsonify(drivingGroups), 200
+    return jsonify(returnJSON), 200
 
 
 @application.route('/api/appointments/<int:a_ID>/users', methods=['GET'])

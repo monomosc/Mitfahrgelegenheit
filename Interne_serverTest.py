@@ -541,7 +541,7 @@ class InterneServerTestCase(unittest.TestCase):
         resp = self.app.get('/api/appointments/' + str(appID) + '/drivingDistribution',
                                 headers = authHeader)
         
-        respJSON, err = self.validateResponse(resp, 200, [str(monomoID), str(unittestID)])
+        respJSON, err = self.validateResponse(resp, 200, ['status', 'message', 'participationList'])
         if err != 0:
             logger.error('Driving Distribution Response Content:')
             logger.error(resp.data)
@@ -549,12 +549,19 @@ class InterneServerTestCase(unittest.TestCase):
             for driverID in respJSON:
                 logger.error('Found #' +str(driverID))
             self.fail('Driving Distribution Error!')
-            
+        
+        participationList = respJSON['participationList']
+        self.assertTrue(str(monomoID) in participationList)
+        self.assertTrue(str(unittestID) in participationList)
+        self.assertEqual(respJSON['status'], True)
         #retire the appointment with UnitTest as only driver
         Interne_server.retireAppointment(appID, [uID])
         #Hopefully nothing went wront!
 
+        resp = self.app.get('/api/appointments/' + str(appID), headers = authHeader)
 
+        respJSON, err = self.validateResponse(resp, 200, ['status'])
+        self.assertEqual(respJSON['status'], 'APPOINTMENT_RETIRED')
         
         
         #delete a bunch of users and then delete the appointmetn:
@@ -646,13 +653,14 @@ class InterneServerTestCase(unittest.TestCase):
         resp = self.app.get('/api/appointments/' + str(appID) + '/drivingDistribution',
                                 headers = authHeader)
         
-        respJSON, err = self.validateResponse(resp, 200, [str(monomoID), str(unittestID)])
+        respJSON, err = self.validateResponse(resp, 200, ['status', 'message'])
         if err !=0:
             logger.error(resp.data)
             self.fail('Terminate Appointment Error')
         
-        self.assertTrue(len(respJSON[str(monomoID)]) == 2)
-        self.assertTrue(len(respJSON[str(unittestID)]) == 2)
+        participationList=respJSON['participationList']
+        self.assertTrue(len(participationList[str(monomoID)]) == 2)
+        self.assertTrue(len(participationList[str(unittestID)]) == 2)
         
         
 
