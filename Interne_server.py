@@ -671,7 +671,7 @@ def putAppUser(a_ID, u_ID):
             if requestJSON['drivingLevel'] != 0:
                 rel.maximumPassengers = int(requestJSON['maximumPassengers'])
             session.commit()
-            name = thisuser.name
+            name = thisuser.username
             session.close()
             return jsonify(message='Updated User ' + name + ' to Appointment #' + str(a_ID)), 200
     except:
