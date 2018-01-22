@@ -118,7 +118,7 @@ def initialize_everything():
         scheduler.start()
         sentryhandler = SentryHandler(
             'https://3fb25fb74b6c4cf48f5c0e8ff285bc51:a36099e9044e4b0ab09224bddd652489@sentry.monomo.solutions/2')
-        sentryhandler.setLevel(logging.WARNING)
+        sentryhandler.setLevel(logging.ERROR)
         setup_logging(sentryhandler)
 
         sentry.init_app(application)
