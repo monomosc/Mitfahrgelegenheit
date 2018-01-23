@@ -120,7 +120,10 @@ Gibt die Alle Nutzerdaten in einer Liste zurück. Arbeitet mit vollen User-JSON-
 \subsection{\textbf{GET} /api/appointments/<appointmentID>}
 Gibt eine JSON-Repräsentation des Appointments zurück.
 \subsection{\textbf{GET} /api/users/<userID>/appointments}
-Gibt die Appointments eines Users in einer Liste zurück. Nutzt die volle JSON-Represäntation von Appointments.
+Gibt die Appointments eines Users in einer Liste zurück. Nutzt die volle JSON-Represäntation von Appointments. \\
+Es wird ein GET-URL-Parameter unterstützt: \\
+finished=true/false (default: false). \\
+Bei finished=true werden auch Appointments im Status APPOINTMENT\_RETIRED zurückgegeben.
 \subsection{\textbf{GET} /api/appointments}
 Gibt die volle Liste aller Appointments in einer Liste zurück. Nutzt die volle JSON-Represäntation von Appointments.
 \subsection{\textbf{POST} /api/appointments}
