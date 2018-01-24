@@ -799,7 +799,7 @@ def getAppointments():
             Appointment).all().order_by(Appointment.startTime)
     else:
         appointments = session.query(Appointment).filter(
-            Appointment.status != Interne_helpers.APPOINTMENT_RETIRED).order_by(Appointment.startTime)
+            Appointment.status != Interne_helpers.APPOINTMENT_RETIRED).all()
     retListJSON = []
 
     for app in appointments:
