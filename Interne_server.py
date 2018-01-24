@@ -1233,9 +1233,10 @@ def terminateAppointment(appointmentID):
                     user_app_rel.maximumPassengers
             totalParticipants = totalParticipants + 1
 
-        if possibleDriversPassengerAmount == 0 and totalParticipants== 0:
-            logger.info('Appointment #' + str(appointmentID) + ' has neither passengers nor drivers. Exiting terminateAppointment')
+        if possibleDriversPassengerAmount == 0 and totalParticipants == 0:
+            logger.info('Appointment #' + str(appointmentID) + ' has no space for passengers and no passengers. Exiting terminateAppointment')
             thissappointment.status = Interne_helpers.APPOINTMENT_RETIRED
+        
         # good News !! Everyone fits!
         if totalParticipants <= definiteDriversPassengerAmount:
             logger.info(
@@ -1268,8 +1269,8 @@ def terminateAppointment(appointmentID):
             listOfAllPassengers = []
             for user_app_rel in thisappointment.users:
                 listOfAllPassengers.append(user_app_rel.user_id)
-            if user_app_rel.drivingLevel == 1 or user_app_rel.drivingLevel ==2:
-                listOfAllDrivers.append(user_app_rel.user_id)
+                if user_app_rel.drivingLevel == 1 or user_app_rel.drivingLevel ==2:
+                    listOfAllDrivers.append(user_app_rel.user_id)
             
             logger.debug('listOfAllDrivers:')
             logger.debug(listOfAllDrivers)
