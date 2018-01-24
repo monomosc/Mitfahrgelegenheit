@@ -792,7 +792,7 @@ def getAppointments():
     showFinished = False
     if 'showFinished' in request.args:
         showFinished = True if request.args['finished'] == 'true' else False
-
+    logger.info('Showing finished Appointments: ' + str(showFinished))
     session = Session()
     if showFinished == True:
         appointments = session.query(
