@@ -1279,8 +1279,6 @@ def terminateAppointment(appointmentID):
 
             distributePassengersOnDrivers(listOfAllDrivers, listOfAllPassengers, appointmentID, session)
             
-            logger.fatal(
-                'Not yet Implemented! Distribution onto possible drivers!')
 
         if totalParticipants > possibleDriversPassengerAmount:
             logger.warning(
