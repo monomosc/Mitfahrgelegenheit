@@ -4,12 +4,12 @@ pipeline {
     stages {
         stage('Test') {
             steps {
-                echo 'Testing..'
+                sh 'python Interne_serverTest.py'
             }
         }
         stage('Deploy') {
             steps {
-                echo 'Deploying....'
+                echo 'deploy'
             }
         }
     }
