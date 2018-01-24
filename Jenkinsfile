@@ -10,8 +10,10 @@ pipeline {
         }
         stage('Deploy') {
             steps {
-                sh 'ssh monomo@monomo.solutions cd /var/git/Mitfahrgelegenheit && git pull'
-                sh 'ssh monomo@monomo.solutions source /var/WebSrv/deployment.sh'
+                sshagent (credentials: ['aa7aef04-6441-4572-ad11-380b67364795']) {
+                    sh 'ssh monomo@monomo.solutions cd /var/git/Mitfahrgelegenheit && git pull'
+                    sh 'ssh monomo@monomo.solutions source /var/WebSrv/deployment.sh'
+                }
             }
         }
     }
