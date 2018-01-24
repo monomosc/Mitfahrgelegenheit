@@ -790,7 +790,7 @@ def getAppointments():
     logger.info('User ' + get_jwt_claims()
              ['username'] + ' requesting Appointment List')
     showFinished = False
-    if 'showFinished' in request.args:
+    if 'finished' in request.args:
         showFinished = True if request.args['finished'] == 'true' else False
     logger.info('Showing finished Appointments: ' + str(showFinished))
     session = Session()
