@@ -11,7 +11,7 @@ pipeline {
         stage('Deploy') {
             steps {
                 sshagent (credentials: ['aa7aef04-6441-4572-ad11-380b67364795']) {
-                    sh 'ssh monomo@monomo.solutions source /var/WebSrv/deployment.sh'
+                    sh 'ssh -o StrictHostKeyChecking=no -l monomo monomo.solutions source /var/WebSrv/deployment.sh'
                 }
             }
         }
