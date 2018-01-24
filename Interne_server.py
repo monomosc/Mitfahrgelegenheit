@@ -791,7 +791,7 @@ def getAppointments():
              ['username'] + ' requesting Appointment List')
     showFinished = False
     if 'showFinished' in request.args:
-        showFinished = True if request.args['showFinished'] == 'true' else False
+        showFinished = True if request.args['finished'] == 'true' else False
 
     session = Session()
     if showFinished == True:
