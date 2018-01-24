@@ -1233,7 +1233,7 @@ def terminateAppointment(appointmentID):
                     user_app_rel.maximumPassengers
             totalParticipants = totalParticipants + 1
 
-        if totalDrivers == 0 and totalParticipants== 0:
+        if possibleDriversPassengerAmount == 0 and totalParticipants== 0:
             logger.info('Appointment #' + str(appointmentID) + ' has neither passengers nor drivers. Exiting terminateAppointment')
             thissappointment.status = Interne_helpers.APPOINTMENT_RETIRED
         # good News !! Everyone fits!
