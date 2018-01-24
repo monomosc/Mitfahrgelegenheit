@@ -3,6 +3,9 @@
 if [ "$(id -u)" != "0" ]; then
   exec sudo "$0" "$@" 
 fi
+
+cd /var/git/Mitfahrgelegenheit
+git pull
 /bin/cp /var/git/Mitfahrgelegenheit/Interne_server.py /var/WebSrv/Interne_server.py
 /bin/cp /var/git/Mitfahrgelegenheit/Mitfahrgelegenheit_nginx.conf /var/WebSrv/Mitfahrgelegenheit_nginx.conf
 /bin/cp /var/git/Mitfahrgelegenheit/uwsgi.ini /var/WebSrv/uwsgi.ini
