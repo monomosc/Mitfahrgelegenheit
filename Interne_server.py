@@ -796,7 +796,7 @@ def getAppointments():
     session = Session()
     if showFinished == True:
         appointments = session.query(
-            Appointment).all().order_by(Appointment.startTime)
+            Appointment).all()
     else:
         appointments = session.query(Appointment).filter(
             Appointment.status != Interne_helpers.APPOINTMENT_RETIRED).all()
