@@ -674,7 +674,8 @@ def putAppUser(a_ID, u_ID):
     if thisappointment.status != Interne_helpers.APPOINTMENT_UNFINISHED:
         session.close()
         logger.info('Appointment #' + str(a_ID) + ' is not unfinished')
-        return jsonify(message='Can only add participants to unfinished Appointmetns')
+        return jsonify(message='Can only add participants to unfinished Appointmetns'), 409
+
     # check if user exists:
     users = session.query(User).filter(User.id == u_ID)
     if users.count() == 0:
@@ -1232,6 +1233,9 @@ def terminateAppointment(appointmentID):
                     user_app_rel.maximumPassengers
             totalParticipants = totalParticipants + 1
 
+        if totalDrivers == 0 and totalParticipants== 0:
+            logger.info('Appointment #' + str(appointmentID) + ' has neither passengers nor drivers. Exiting terminateAppointment')
+            thissappointment.status = Interne_helpers.APPOINTMENT_RETIRED
         # good News !! Everyone fits!
         if totalParticipants <= definiteDriversPassengerAmount:
             logger.info(
