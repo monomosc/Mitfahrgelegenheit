@@ -1314,9 +1314,46 @@ def terminateAppointment(appointmentID):
             logger.info(mailmsg.body)
             logger.info('Recipients:')
             logger.info(str(recipientList))
+    
 
+        if thisappointment.repeatTime is "daily":
+            logger.info('Creating new Appointment 1 day after Appointment #' + str(thisappointment.id))
+            try:
+                newappointment = Appointment(startLocation=thisappointment.startLocation,
+                                    startTime = thisappointment.startTime + timedelta(days=1),
+                                    repeatTime = "daily",
+                                    status = Interne_helpers.APPOINTMENT_UNFINISHED,
+                                    distance = thisappointment.distance,
+                                    targetLocation = thisappointment.targetLocation)
+                session.add(newappointment)
+                session.commit()
+                logger.info('Added new Appointment #' + str(newappointment.id) + 'on ' + str(newappointment.startTime))
+                try:
+                    startAppointmentScheduledEvent(newappointment.id, timedelta(hours=1))
+                except:
+                    logger.exception('Error adding scheduled Job for terminateEvent #' + str(newappointment.id))
+            except:
+                logger.exception('Could not create repeated Appointment')
 
-            
+        if thisappointment.repeatTime == "weekly":
+            logger.info('Creating new Appointment 1 week after Appointment #' + str(thisappointment.id))
+            try:
+                newappointment = Appointment(startLocation=thisappointment.startLocation,
+                                    startTime = thisappointment.startTime + timedelta(days=7),
+                                    repeatTime = "week",
+                                    status = Interne_helpers.APPOINTMENT_UNFINISHED,
+                                    distance = thisappointment.distance,
+                                    targetLocation = thisappointment.targetLocation)
+                session.add(newappointment)
+                session.commit()
+                logger.info('Added new Appointment #' + str(newappointment.id) + 'on ' + str(newappointment.startTime))
+                try:
+                    startAppointmentScheduledEvent(newappointment.id, timedelta(hours=1))
+                except:
+                    logger.exception('Error adding scheduled Job for terminateEvent #' + str(newappointment.id))
+            except:
+                logger.exception('Could not create repeated Appointment')
+
 
     except:
         thisappointment.status = Interne_helpers.APPOINTMENT_BROKEN
