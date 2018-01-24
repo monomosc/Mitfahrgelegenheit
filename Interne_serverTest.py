@@ -248,6 +248,15 @@ class InterneServerTestCase(unittest.TestCase):
         self.assertEqual(resp.status_code, 404,
                          'Appointment apprently still exists: 404 expected, returned ' + str(resp.status_code))
 
+    def test_getAppointments(self):
+        "Basic test for /api/appointments endpoint"
+        token = self.login('UnitTest', '1234')
+        authHeader = { 'content-type' : 'application/json', 'Authorization' : token}
+        resp = self.app.get('/api/appointments', headers = authHeader)
+        self.assertEqual(resp.status_code, 200)
+
+        resp = self.app.get('/api/appointments?finished=true', headers = authHeader)
+        self.assertEqual(resp.status_code, 200)
     def test_addUserToAppointment(self):
         "Tests Adding a User to an Appointment"
         token = self.login('UnitTest', '1234')
