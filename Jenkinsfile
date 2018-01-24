@@ -10,7 +10,8 @@ pipeline {
         }
         stage('Deploy') {
             steps {
-                echo 'deploy'
+                sh 'ssh monomo@monomo.solutions cd /var/git/Mitfahrgelegenheit && git pull'
+                sh 'ssh monomo@monomo.solutions source /var/WebSrv/deployment.sh'
             }
         }
     }
