@@ -1239,7 +1239,8 @@ def terminateAppointment(appointmentID):
 
         if possibleDriversPassengerAmount == 0 and totalParticipants == 0:
             logger.info('Appointment #' + str(appointmentID) + ' has no space for passengers and no passengers. Exiting terminateAppointment')
-            thissappointment.status = Interne_helpers.APPOINTMENT_RETIRED
+            thisappointment.status = Interne_helpers.APPOINTMENT_RETIRED
+            return
         
         # good News !! Everyone fits!
         if totalParticipants <= definiteDriversPassengerAmount:
@@ -1318,7 +1319,7 @@ def terminateAppointment(appointmentID):
             logger.info(str(recipientList))
     
 
-        if thisappointment.repeatTime is "Daily":
+        if thisappointment.repeatTime == "Daily":
             logger.info('Creating new Appointment 1 day after Appointment #' + str(thisappointment.id))
             try:
                 newappointment = Appointment(startLocation=thisappointment.startLocation,
