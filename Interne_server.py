@@ -830,7 +830,10 @@ def makeAppointment():
         rTime = requestJSON['repeatTime']
     else:
         rTime = 'None'
-    logger.info('repeatTime:' + str(requestJSON['repeatTime']) + ' rTime: ' + str(rTime))
+    try:
+        logger.info('repeatTime: ' + str(requestJSON['repeatTime']) + ' rTime: ' + str(rTime))
+    except KeyError:
+        logger.info('rTime: ' + str(rTime))
 
     if 'startTime' not in requestJSON and 'startTimeTimestamp' not in requestJSON:
         logger.warning('Missing JSON key: startTime or startTimeTimestamp in makeAppointment')
