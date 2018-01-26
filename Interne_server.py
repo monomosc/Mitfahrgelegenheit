@@ -1205,6 +1205,7 @@ def distributePassengersOnDrivers(listOfAllDrivers, listOfAllPassengers, appoint
 
 def terminateAppointment(appointmentID):
     "terminateAppointment is called by the scheduler 1 hour before the appointment takes place"
+    logger.info('Executing terminateAppointment for Appointment #' + str(appointmentID))
     # get Number of total possible Passengers including only
     # Definite Drivers - drivingLevel #1
     definiteDriversPassengerAmount = 0
@@ -1236,6 +1237,12 @@ def terminateAppointment(appointmentID):
                 possibleDriversPassengerAmount = possibleDriversPassengerAmount + \
                     user_app_rel.maximumPassengers
             totalParticipants = totalParticipants + 1
+
+        logger.info('Appointment #' + str(appointmentID) + \
+        '  definiteDriversPassengerAmount: ' + str(definiteDriversPassengerAmount) + \
+        ', possibleDriversPassengerAmount: ' + str(possibleDriversPassengerAmount) + \
+        ', totalParticipants: ' + str(totalParticipants))
+
 
         if possibleDriversPassengerAmount == 0 and totalParticipants == 0:
             logger.info('Appointment #' + str(appointmentID) + ' has no space for passengers and no passengers. Exiting terminateAppointment')
