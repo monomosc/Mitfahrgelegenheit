@@ -1240,6 +1240,8 @@ def terminateAppointment(appointmentID):
         if possibleDriversPassengerAmount == 0 and totalParticipants == 0:
             logger.info('Appointment #' + str(appointmentID) + ' has no space for passengers and no passengers. Exiting terminateAppointment')
             thisappointment.status = Interne_helpers.APPOINTMENT_RETIRED
+            session.commit()
+            session.close()
             return
         
         # good News !! Everyone fits!
