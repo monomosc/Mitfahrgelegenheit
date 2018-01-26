@@ -830,7 +830,8 @@ def makeAppointment():
         rTime = requestJSON['repeatTime']
     else:
         rTime = 'None'
-    
+    logger.info('repeatTime:' + str(requestJSON['repeatTime']) + ' rTime: ' + str(rTime))
+
     if 'startTime' not in requestJSON and 'startTimeTimestamp' not in requestJSON:
         logger.warning('Missing JSON key: startTime or startTimeTimestamp in makeAppointment')
         return jsonify(message='Missing JSON key: startTime or startTimeTimestamp'), 422
@@ -1319,7 +1320,7 @@ def terminateAppointment(appointmentID):
             try:
                 newappointment = Appointment(startLocation=thisappointment.startLocation,
                                     startTime = thisappointment.startTime + timedelta(days=1),
-                                    repeatTime = "daily",
+                                    repeatTime = "Daily",
                                     status = Interne_helpers.APPOINTMENT_UNFINISHED,
                                     distance = thisappointment.distance,
                                     targetLocation = thisappointment.targetLocation)
@@ -1338,7 +1339,7 @@ def terminateAppointment(appointmentID):
             try:
                 newappointment = Appointment(startLocation=thisappointment.startLocation,
                                     startTime = thisappointment.startTime + timedelta(days=7),
-                                    repeatTime = "week",
+                                    repeatTime = "Weekly",
                                     status = Interne_helpers.APPOINTMENT_UNFINISHED,
                                     distance = thisappointment.distance,
                                     targetLocation = thisappointment.targetLocation)
