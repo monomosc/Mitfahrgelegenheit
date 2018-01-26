@@ -683,7 +683,7 @@ def putAppUser(a_ID, u_ID):
     thisuser = users.first()
 
     logger.info('User ' + get_jwt_claims()
-                ['username'] + ' attempts to add ' + thisuser.username + ' to Appointment ' + str(a_ID))
+                ['username'] + ' attempts to add ' + thisuser.username + ' to Appointment #' + str(a_ID))
     logger.debug('Request:')
     logger.debug(request.data)
     # Some basic checks for request syntax and semantics
