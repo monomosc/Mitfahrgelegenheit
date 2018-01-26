@@ -1390,11 +1390,13 @@ def startAppointmentScheduledEvent(appointmentID, timediff):
         Appointment.id == appointmentID)
     if appointments.count() == 0:
         logger.warning('No such Appointment #' + str(appointmentID))
+        session.close()
         return
     thisappointment = appointments.first()
     if thisappointment.status == Interne_helpers.APPOINTMENT_RETIRED:
         log.error('Appointment #' + appointmentID +
                   ' sent to Scheduler despite it being retired!')
+        session.close()
         return
 
     # check if runtime is in the past
