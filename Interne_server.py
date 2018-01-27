@@ -688,7 +688,7 @@ def putAppUser(a_ID, u_ID):
     thisuser = users.first()
 
     logger.info('User ' + get_jwt_claims()
-                ['username'] + ' attempts to add ' + thisuser.username + ' to Appointment ' + str(a_ID))
+                ['username'] + ' attempts to add ' + thisuser.username + ' to Appointment #' + str(a_ID))
     logger.debug('Request:')
     logger.debug(request.data)
     # Some basic checks for request syntax and semantics
@@ -835,7 +835,11 @@ def makeAppointment():
         rTime = requestJSON['repeatTime']
     else:
         rTime = 'None'
-    
+    try:
+        logger.info('repeatTime: ' + str(requestJSON['repeatTime']) + ' rTime: ' + str(rTime))
+    except KeyError:
+        logger.info('rTime: ' + str(rTime))
+
     if 'startTime' not in requestJSON and 'startTimeTimestamp' not in requestJSON:
         logger.warning('Missing JSON key: startTime or startTimeTimestamp in makeAppointment')
         return jsonify(message='Missing JSON key: startTime or startTimeTimestamp'), 422
@@ -1206,6 +1210,7 @@ def distributePassengersOnDrivers(listOfAllDrivers, listOfAllPassengers, appoint
 
 def terminateAppointment(appointmentID):
     "terminateAppointment is called by the scheduler 1 hour before the appointment takes place"
+    logger.info('Executing terminateAppointment for Appointment #' + str(appointmentID))
     # get Number of total possible Passengers including only
     # Definite Drivers - drivingLevel #1
     definiteDriversPassengerAmount = 0
@@ -1238,9 +1243,18 @@ def terminateAppointment(appointmentID):
                     user_app_rel.maximumPassengers
             totalParticipants = totalParticipants + 1
 
+        logger.info('Appointment #' + str(appointmentID) + \
+        '  definiteDriversPassengerAmount: ' + str(definiteDriversPassengerAmount) + \
+        ', possibleDriversPassengerAmount: ' + str(possibleDriversPassengerAmount) + \
+        ', totalParticipants: ' + str(totalParticipants))
+
+
         if possibleDriversPassengerAmount == 0 and totalParticipants == 0:
             logger.info('Appointment #' + str(appointmentID) + ' has no space for passengers and no passengers. Exiting terminateAppointment')
-            thissappointment.status = Interne_helpers.APPOINTMENT_RETIRED
+            thisappointment.status = Interne_helpers.APPOINTMENT_RETIRED
+            session.commit()
+            session.close()
+            return
         
         # good News !! Everyone fits!
         if totalParticipants <= definiteDriversPassengerAmount:
@@ -1319,12 +1333,12 @@ def terminateAppointment(appointmentID):
             logger.info(str(recipientList))
     
 
-        if thisappointment.repeatTime is "daily":
+        if thisappointment.repeatTime == "Daily":
             logger.info('Creating new Appointment 1 day after Appointment #' + str(thisappointment.id))
             try:
                 newappointment = Appointment(startLocation=thisappointment.startLocation,
                                     startTime = thisappointment.startTime + timedelta(days=1),
-                                    repeatTime = "daily",
+                                    repeatTime = "Daily",
                                     status = Interne_helpers.APPOINTMENT_UNFINISHED,
                                     distance = thisappointment.distance,
                                     targetLocation = thisappointment.targetLocation)
@@ -1338,12 +1352,12 @@ def terminateAppointment(appointmentID):
             except:
                 logger.exception('Could not create repeated Appointment')
 
-        if thisappointment.repeatTime == "weekly":
+        if thisappointment.repeatTime == "Weekly":
             logger.info('Creating new Appointment 1 week after Appointment #' + str(thisappointment.id))
             try:
                 newappointment = Appointment(startLocation=thisappointment.startLocation,
                                     startTime = thisappointment.startTime + timedelta(days=7),
-                                    repeatTime = "week",
+                                    repeatTime = "Weekly",
                                     status = Interne_helpers.APPOINTMENT_UNFINISHED,
                                     distance = thisappointment.distance,
                                     targetLocation = thisappointment.targetLocation)
@@ -1381,11 +1395,13 @@ def startAppointmentScheduledEvent(appointmentID, timediff):
         Appointment.id == appointmentID)
     if appointments.count() == 0:
         logger.warning('No such Appointment #' + str(appointmentID))
+        session.close()
         return
     thisappointment = appointments.first()
     if thisappointment.status == Interne_helpers.APPOINTMENT_RETIRED:
         log.error('Appointment #' + appointmentID +
                   ' sent to Scheduler despite it being retired!')
+        session.close()
         return
 
     # check if runtime is in the past
