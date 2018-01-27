@@ -97,8 +97,13 @@ def initialize_everything():
                 ('DEBUG' if application.debug else 'NON-DEBUG') + ' mode')
     logger.info('Application is in ' +
                 ('Prod' if prod else 'NON-Prod') + ' mode')
-
-    
+    try:
+        with open("Version.conf") as f:
+            conf = configparser.RawConfigParser(allow_no_value=True)
+            conf.read_file(f)
+            logger.info('API Version: ' + conf.get('VERSION', 'VERSION'))
+    except:
+        logger.error('Could not determine Version')
     
     # SQLALCHEMY SETUP
     engine = create_engine(
