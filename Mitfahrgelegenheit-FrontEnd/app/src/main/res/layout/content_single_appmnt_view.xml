@@ -1,0 +1,278 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+											 xmlns:app="http://schemas.android.com/apk/res-auto"
+											 xmlns:tools="http://schemas.android.com/tools"
+											 android:layout_width="match_parent"
+											 android:layout_height="match_parent"
+											 app:layout_behavior="@string/appbar_scrolling_view_behavior"
+											 tools:context="mitfahgelegenheit.androidapp.gui.activities.SingleAppmntViewActivity"
+											 tools:showIn="@layout/activity_single_appmnt_view">
+
+	<LinearLayout
+			android:id="@+id/appointmentSingleInfoLayout"
+			android:layout_width="0dp"
+			android:layout_height="wrap_content"
+			android:layout_marginEnd="8dp"
+			android:layout_marginStart="8dp"
+			android:layout_marginTop="8dp"
+			android:orientation="vertical"
+			app:layout_constraintEnd_toEndOf="parent"
+			app:layout_constraintStart_toStartOf="parent"
+			app:layout_constraintTop_toTopOf="parent">
+
+		<TextView
+				android:id="@+id/textSingleFrom"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:text="From"
+				android:textSize="24sp"
+				tools:layout_editor_absoluteX="17dp"
+				tools:layout_editor_absoluteY="4dp"/>
+
+		<TextView
+				android:id="@+id/textSingleStartLocation"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:text="startLocation"
+				android:textSize="24sp"
+				android:textStyle="bold"
+				tools:layout_editor_absoluteX="39dp"
+				tools:layout_editor_absoluteY="36dp"/>
+
+		<LinearLayout
+			android:layout_width="match_parent"
+			android:layout_height="match_parent"
+			android:orientation="horizontal">
+
+			<TextView
+				android:id="@+id/textSingleTo"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:layout_weight="1"
+				android:text="To"
+				android:textSize="24sp"
+				tools:layout_editor_absoluteX="16dp"
+				tools:layout_editor_absoluteY="78dp" />
+
+			<Space
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:layout_weight="1" />
+
+			<TextView
+				android:id="@+id/textKmView"
+				android:layout_width="wrap_content"
+				android:layout_height="match_parent"
+				android:layout_weight="1"
+				android:text="xxx km"
+				android:textAlignment="textEnd"
+				android:textSize="24sp" />
+		</LinearLayout>
+
+		<TextView
+				android:id="@+id/textSingleTargetLocation"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:text="targetLocation"
+				android:textSize="24sp"
+				android:textStyle="bold"
+				tools:layout_editor_absoluteX="39dp"
+				tools:layout_editor_absoluteY="110dp"/>
+
+		<TextView
+				android:id="@+id/textSingleOn"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:text="Start time and date"
+				android:textSize="24sp"
+				tools:layout_editor_absoluteX="16dp"
+				tools:layout_editor_absoluteY="149dp"/>
+
+		<TextView
+				android:id="@+id/textSingleDateTime"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:text="dateTime"
+				android:textSize="22sp"
+				android:textStyle="bold"
+				tools:layout_editor_absoluteX="39dp"
+				tools:layout_editor_absoluteY="181dp"/>
+
+		<LinearLayout
+				android:id="@+id/repeatsLayoutSingle"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:orientation="horizontal">
+
+			<TextView
+					android:id="@+id/textSingleRepeats"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:layout_weight="1"
+					android:text="repeats "
+					android:textSize="24sp"
+					tools:layout_editor_absoluteX="56dp"
+					tools:layout_editor_absoluteY="221dp"/>
+
+			<TextView
+					android:id="@+id/textSingleRepeatType"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:layout_weight="1"
+					android:text="repeatType"
+					android:textSize="24sp"
+					android:textStyle="bold"
+					tools:layout_editor_absoluteX="148dp"
+					tools:layout_editor_absoluteY="221dp"/>
+
+		</LinearLayout>
+
+		<LinearLayout
+				android:id="@+id/partAndCarLayout"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:orientation="horizontal">
+
+			<TextView
+					android:id="@+id/participationTitle"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:layout_weight="1"
+					android:text="Participation:         "
+					android:textSize="24sp"
+					android:textStyle="italic"
+					tools:layout_editor_absoluteX="16dp"
+					tools:layout_editor_absoluteY="294dp"/>
+
+			<LinearLayout
+					android:id="@+id/hasCarSeekBarLayout"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:layout_weight="1"
+					android:orientation="vertical">
+
+				<SeekBar
+						android:id="@+id/carAvailabilitySeekBar"
+						style="@style/Widget.AppCompat.SeekBar.Discrete"
+						android:layout_width="match_parent"
+						android:layout_height="36dp"
+						android:max="2"
+						android:progress="0"
+						tools:layout_editor_absoluteX="191dp"
+						tools:layout_editor_absoluteY="299dp"/>
+
+				<LinearLayout
+						android:id="@+id/hasCarLayout"
+						android:layout_width="wrap_content"
+						android:layout_height="wrap_content"
+						android:orientation="horizontal"
+						tools:layout_editor_absoluteX="191dp"
+						tools:layout_editor_absoluteY="335dp">
+
+					<TextView
+							android:id="@+id/textNoCar"
+							android:layout_width="wrap_content"
+							android:layout_height="wrap_content"
+							android:layout_weight="1"
+							android:text="no car"
+							android:textSize="18sp"/>
+
+					<TextView
+							android:id="@+id/textWillDrive"
+							android:layout_width="wrap_content"
+							android:layout_height="wrap_content"
+							android:layout_weight="1"
+							android:text="will drive"
+							android:textAlignment="textEnd"
+							android:textSize="18sp"/>
+
+					<TextView
+							android:id="@+id/textMayDrive"
+							android:layout_width="wrap_content"
+							android:layout_height="wrap_content"
+							android:layout_weight="1"
+							android:text="may drive"
+							android:textAlignment="textEnd"
+							android:textSize="18sp"/>
+				</LinearLayout>
+			</LinearLayout>
+		</LinearLayout>
+
+		<LinearLayout
+				android:id="@+id/seatLayout"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:orientation="horizontal">
+
+			<TextView
+					android:id="@+id/textFreeSeats"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:layout_weight="1"
+					android:text="seats (incl. driver):"
+					android:textSize="18sp"
+					tools:layout_editor_absoluteX="188dp"
+					tools:layout_editor_absoluteY="388dp"/>
+
+			<EditText
+					android:id="@+id/editFreeSeats"
+					android:layout_width="106dp"
+					android:layout_height="41dp"
+					android:layout_weight="1"
+					android:ems="10"
+					android:hint="seats"
+					android:inputType="number"
+					android:text="0"
+					android:textAlignment="center"
+					tools:layout_editor_absoluteX="262dp"
+					tools:layout_editor_absoluteY="372dp"/>
+
+		</LinearLayout>
+
+		<Button
+				android:id="@+id/participationButton"
+				android:layout_width="wrap_content"
+				android:layout_height="66dp"
+				android:layout_gravity="center"
+				android:layout_weight="100000"
+				android:text="participate"
+				android:textAlignment="center"
+				android:textSize="17sp"
+				tools:layout_editor_absoluteX="42dp"
+				tools:layout_editor_absoluteY="346dp"/>
+
+		<Space
+				android:layout_width="match_parent"
+				android:layout_height="5dp"/>
+
+		<LinearLayout
+				android:id="@+id/extraOptionsLayout"
+				android:layout_width="match_parent"
+				android:layout_height="match_parent"
+				android:orientation="horizontal">
+
+			<Button
+					android:id="@+id/participationgUsersButton"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:layout_marginTop="1dp"
+					android:layout_weight="1"
+					android:text="participating users"
+					android:textSize="14sp"
+					app:layout_constraintTop_toBottomOf="@+id/appointmentSingleInfoLayout"
+					tools:layout_editor_absoluteX="105dp"/>
+
+			<Button
+					android:id="@+id/achiveAppointmentButton"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:layout_marginTop="1dp"
+					android:layout_weight="1"
+					android:text="Archive Appointment"
+					app:layout_constraintTop_toBottomOf="@+id/participationgUsersButton"
+					tools:layout_editor_absoluteX="100dp"/>
+		</LinearLayout>
+
+	</LinearLayout>
+
+</android.support.constraint.ConstraintLayout>

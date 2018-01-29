@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+												 xmlns:app="http://schemas.android.com/apk/res-auto"
+												 xmlns:tools="http://schemas.android.com/tools"
+												 android:id="@+id/singleAoomntView"
+												 android:layout_width="match_parent"
+												 android:layout_height="match_parent"
+												 tools:context="mitfahgelegenheit.androidapp.gui.activities.SingleAppmntViewActivity">
+
+	<android.support.design.widget.AppBarLayout
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:theme="@style/AppTheme.AppBarOverlay">
+
+		<TextView
+				android:id="@+id/singleAppmntTop"
+				android:layout_width="match_parent"
+				android:layout_height="60dp"
+				android:layout_weight="1"
+				android:text="Appointment Info"
+				android:textAlignment="center"
+				android:textSize="36sp"/>
+	</android.support.design.widget.AppBarLayout>
+
+	<include layout="@layout/content_single_appmnt_view"/>
+
+</android.support.design.widget.CoordinatorLayout>

@@ -1,0 +1,274 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+											 xmlns:app="http://schemas.android.com/apk/res-auto"
+											 xmlns:tools="http://schemas.android.com/tools"
+											 android:layout_width="match_parent"
+											 android:layout_height="match_parent"
+											 app:layout_behavior="@string/appbar_scrolling_view_behavior"
+											 tools:context="mitfahgelegenheit.androidapp.gui.activities.AddNewAppmntActivity"
+											 tools:showIn="@layout/activity_add_new_appmnt">
+
+	<Space
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_weight="1"/>
+
+	<TextView
+			android:id="@+id/textFrom"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_marginEnd="8dp"
+			android:layout_marginStart="8dp"
+			android:layout_marginTop="1dp"
+			android:layout_weight="1"
+			android:text="From"
+			android:textSize="24sp"
+			app:layout_constraintEnd_toEndOf="parent"
+			app:layout_constraintStart_toStartOf="parent"
+			app:layout_constraintTop_toTopOf="parent"/>
+
+	<EditText
+			android:id="@+id/editStartLocation"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_marginEnd="8dp"
+			android:layout_marginStart="8dp"
+			android:layout_marginTop="8dp"
+			android:layout_weight="1"
+			android:ems="10"
+			android:hint="start location"
+			android:inputType="textPersonName"
+			android:textAlignment="center"
+			app:layout_constraintEnd_toEndOf="parent"
+			app:layout_constraintHorizontal_bias="0.503"
+			app:layout_constraintStart_toStartOf="parent"
+			app:layout_constraintTop_toBottomOf="@+id/textFrom"/>
+
+	<TextView
+			android:id="@+id/textTo"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_marginEnd="8dp"
+			android:layout_marginStart="8dp"
+			android:layout_marginTop="9dp"
+			android:layout_weight="1"
+			android:text="To "
+			android:textSize="24sp"
+			app:layout_constraintEnd_toEndOf="parent"
+			app:layout_constraintStart_toStartOf="parent"
+			app:layout_constraintTop_toBottomOf="@+id/editStartLocation"/>
+
+	<EditText
+			android:id="@+id/editTargetLocation"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_marginEnd="8dp"
+			android:layout_marginStart="8dp"
+			android:layout_marginTop="9dp"
+			android:layout_weight="1"
+			android:ems="10"
+			android:hint="target location"
+			android:inputType="textPersonName"
+			android:textAlignment="center"
+			app:layout_constraintEnd_toEndOf="parent"
+			app:layout_constraintHorizontal_bias="0.503"
+			app:layout_constraintStart_toStartOf="parent"
+			app:layout_constraintTop_toBottomOf="@+id/textTo"/>
+
+	<LinearLayout
+			android:id="@+id/startTimeLayout"
+			android:layout_width="368dp"
+			android:layout_height="88dp"
+			android:layout_marginEnd="8dp"
+			android:layout_marginStart="8dp"
+			android:layout_marginTop="8dp"
+			android:orientation="horizontal"
+			app:layout_constraintEnd_toEndOf="parent"
+			app:layout_constraintStart_toStartOf="parent"
+			app:layout_constraintTop_toBottomOf="@+id/editTargetLocation">
+
+		<Space
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:layout_weight="1"/>
+
+		<LinearLayout
+				android:id="@+id/dateLayout"
+				android:layout_width="wrap_content"
+				android:layout_height="match_parent"
+				android:gravity="start"
+				android:orientation="vertical">
+
+			<TextView
+					android:id="@+id/textDate"
+					android:layout_width="match_parent"
+					android:layout_height="wrap_content"
+					android:text="On"
+					android:textAlignment="center"
+					android:textSize="24sp"/>
+
+			<Button
+					android:id="@+id/datePickButton"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:text="todaysDate"
+					android:textAllCaps="false"
+					android:textSize="18sp"/>
+
+		</LinearLayout>
+
+		<Space
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:layout_weight="1"/>
+
+		<LinearLayout
+				android:id="@+id/timeLayout"
+				android:layout_width="wrap_content"
+				android:layout_height="match_parent"
+				android:gravity="right|end"
+				android:orientation="vertical">
+
+			<TextView
+					android:id="@+id/textTime"
+					android:layout_width="match_parent"
+					android:layout_height="wrap_content"
+					android:text="at "
+					android:textAlignment="center"
+					android:textSize="24sp"/>
+
+			<Button
+					android:id="@+id/timePickButton"
+					android:layout_width="match_parent"
+					android:layout_height="wrap_content"
+					android:text="todaystime"
+					android:textAllCaps="false"
+					android:textSize="18sp"/>
+
+		</LinearLayout>
+
+		<Space
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:layout_weight="1"/>
+
+	</LinearLayout>
+
+	<TextView
+			android:id="@+id/textRepeat"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_marginEnd="8dp"
+			android:layout_marginStart="8dp"
+			android:layout_marginTop="20dp"
+			android:text="Repeating"
+			android:textSize="24sp"
+			app:layout_constraintEnd_toEndOf="parent"
+			app:layout_constraintHorizontal_bias="0.191"
+			app:layout_constraintStart_toStartOf="parent"
+			app:layout_constraintTop_toBottomOf="@+id/startTimeLayout"/>
+
+	<SeekBar
+			android:id="@+id/editRepeatSeekbar"
+			style="@style/Widget.AppCompat.SeekBar.Discrete"
+			android:layout_width="188dp"
+			android:layout_height="37dp"
+			android:layout_marginStart="8dp"
+			android:layout_marginTop="12dp"
+			android:contentDescription="repeatType"
+			android:max="2"
+			android:progress="0"
+			android:thumb="@android:drawable/radiobutton_off_background"
+			app:layout_constraintStart_toStartOf="parent"
+			app:layout_constraintTop_toBottomOf="@+id/textRepeat"
+			android:layout_marginLeft="8dp"/>
+
+	<LinearLayout
+			android:id="@+id/repeatLayout"
+			android:layout_width="193dp"
+			android:layout_height="37dp"
+			android:layout_marginStart="8dp"
+			android:layout_marginTop="8dp"
+			android:orientation="horizontal"
+			app:layout_constraintStart_toStartOf="parent"
+			app:layout_constraintTop_toBottomOf="@+id/editRepeatSeekbar"
+			android:layout_marginLeft="8dp">
+
+		<TextView
+				android:id="@+id/textRepeat1"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:layout_weight="1"
+				android:text="never"
+				android:textAlignment="center"
+				android:textSize="18sp"/>
+
+		<TextView
+				android:id="@+id/textRepeat2"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:layout_weight="1"
+				android:text="daily"
+				android:textAlignment="center"
+				android:textSize="18sp"/>
+
+		<TextView
+				android:id="@+id/textRepeat3"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:layout_weight="1"
+				android:text="weekly"
+				android:textAlignment="center"
+				android:textSize="18sp"/>
+	</LinearLayout>
+
+	<Button
+			android:id="@+id/addNewButton"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_marginBottom="29dp"
+			android:layout_marginEnd="148dp"
+			android:layout_marginStart="148dp"
+			android:layout_marginTop="14dp"
+			android:text="Create"
+			android:textSize="18sp"
+			app:layout_constraintBottom_toBottomOf="parent"
+			app:layout_constraintEnd_toEndOf="parent"
+			app:layout_constraintStart_toStartOf="parent"
+			app:layout_constraintTop_toBottomOf="@+id/repeatLayout"/>
+
+	<TextView
+			android:id="@+id/textKmDriven"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_marginEnd="16dp"
+			android:layout_marginStart="12dp"
+			android:layout_marginTop="20dp"
+			android:text="Distance (km)"
+			android:textSize="24sp"
+			android:textAlignment="center"
+			app:layout_constraintEnd_toEndOf="parent"
+			app:layout_constraintStart_toEndOf="@+id/editRepeatSeekbar"
+			app:layout_constraintTop_toBottomOf="@+id/startTimeLayout"
+			app:layout_constraintHorizontal_bias="0.0"/>
+
+	<EditText
+			android:id="@+id/editKmDriven"
+			android:layout_width="150dp"
+			android:layout_height="wrap_content"
+			android:layout_marginBottom="9dp"
+			android:layout_marginEnd="18dp"
+			android:layout_marginStart="12dp"
+			android:layout_marginTop="5dp"
+			android:ems="10"
+			android:hint="km driven"
+			android:inputType="number"
+			android:text="0"
+			android:textAlignment="center"
+			app:layout_constraintBottom_toTopOf="@+id/addNewButton"
+			app:layout_constraintEnd_toEndOf="parent"
+			app:layout_constraintStart_toEndOf="@+id/repeatLayout"
+			app:layout_constraintTop_toBottomOf="@+id/textKmDriven"
+	/>
+
+</android.support.constraint.ConstraintLayout>

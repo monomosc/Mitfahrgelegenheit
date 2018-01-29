@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+												 xmlns:app="http://schemas.android.com/apk/res-auto"
+												 xmlns:tools="http://schemas.android.com/tools"
+												 android:layout_width="match_parent"
+												 android:layout_height="match_parent"
+												 android:fitsSystemWindows="true"
+												 tools:context="mitfahgelegenheit.androidapp.gui.activities.AppointmentViewActivity">
+
+	<android.support.design.widget.AppBarLayout
+			android:id="@+id/app_bar"
+			android:layout_width="match_parent"
+			android:layout_height="220dp"
+			android:fitsSystemWindows="true"
+			android:theme="@style/AppTheme.AppBarOverlay">
+
+		<android.support.design.widget.CollapsingToolbarLayout
+				android:id="@+id/toolbar_layout"
+				android:layout_width="match_parent"
+				android:layout_height="match_parent"
+				android:fitsSystemWindows="true"
+				app:contentScrim="?attr/colorPrimary"
+				app:layout_scrollFlags="scroll|exitUntilCollapsed"
+				app:toolbarId="@+id/toolbar">
+
+			<android.support.v7.widget.Toolbar
+					android:id="@+id/toolbar"
+					android:layout_width="match_parent"
+					android:layout_height="220dp"
+					app:layout_collapseMode="pin"
+					app:popupTheme="@style/AppTheme.PopupOverlay"/>
+
+			<LinearLayout
+					android:layout_width="match_parent"
+					android:layout_height="wrap_content"
+					android:orientation="vertical">
+
+				<LinearLayout
+						android:layout_width="match_parent"
+						android:layout_height="wrap_content"
+						android:orientation="horizontal">
+
+					<Button
+							android:id="@+id/userOptionButton"
+							android:layout_width="wrap_content"
+							android:layout_height="wrap_content"
+							android:layout_gravity="bottom"
+							android:layout_weight="1"
+							android:text="edit user"
+							android:textSize="12sp"/>
+
+					<Button
+							android:id="@+id/yourParticipationButton"
+							android:layout_width="wrap_content"
+							android:layout_height="wrap_content"
+							android:layout_gravity="bottom"
+							android:layout_weight="1"
+							android:text="your participations"
+							android:textSize="12sp"/>
+
+					<Button
+							android:id="@+id/newAppointmentButton"
+							android:layout_width="wrap_content"
+							android:layout_height="wrap_content"
+							android:layout_gravity="bottom"
+							android:layout_weight="1"
+							android:text="add new"
+							android:textSize="12sp"/>
+
+					<Button
+							android:id="@+id/updateButton"
+							android:layout_width="wrap_content"
+							android:layout_height="wrap_content"
+							android:layout_gravity="bottom"
+							android:layout_weight="1"
+							android:text="up date"
+							android:textSize="12sp"/>
+
+					<Button
+							android:id="@+id/logOutButton"
+							android:layout_width="wrap_content"
+							android:layout_height="wrap_content"
+							android:layout_gravity="bottom"
+							android:layout_weight="1"
+							android:text="Log out"
+							android:textSize="12sp"/>
+
+				</LinearLayout>
+
+				<Space
+						android:layout_width="match_parent"
+						android:layout_height="10dp"/>
+
+				<TextView
+						android:id="@+id/textSort"
+						android:layout_width="match_parent"
+						android:layout_height="wrap_content"
+						android:layout_gravity="fill_horizontal|bottom"
+						android:layout_weight="2"
+						android:text="Press to sort by: (press again for descending)"
+						android:textAlignment="center"
+						android:textSize="14sp"/>
+
+				<LinearLayout
+						android:layout_width="match_parent"
+						android:layout_height="wrap_content"
+						android:orientation="horizontal">
+
+					<Button
+							android:id="@+id/SortByTimeButton"
+							style="@style/Widget.AppCompat.Button.Borderless"
+							android:layout_width="wrap_content"
+							android:layout_height="match_parent"
+							android:layout_weight="1"
+							android:text="Time"
+							android:textSize="12sp"/>
+
+					<Button
+							android:id="@+id/SortByStartButton"
+							style="@style/Widget.AppCompat.Button.Borderless"
+							android:layout_width="wrap_content"
+							android:layout_height="match_parent"
+							android:layout_weight="1"
+							android:text="Start"
+							android:textSize="12sp"/>
+
+					<Button
+							android:id="@+id/SortByTargetButton"
+							style="@style/Widget.AppCompat.Button.Borderless"
+							android:layout_width="wrap_content"
+							android:layout_height="match_parent"
+							android:layout_weight="1"
+							android:text="Target"
+							android:textSize="12sp"/>
+
+					<Button
+							android:id="@+id/SortByRepeatType"
+							style="@style/Widget.AppCompat.Button.Borderless"
+							android:layout_width="wrap_content"
+							android:layout_height="match_parent"
+							android:layout_weight="1"
+							android:text="Repeat"
+							android:textSize="12sp"/>
+
+					<Button
+							android:id="@+id/SortByLifeCycle"
+							style="@style/Widget.AppCompat.Button.Borderless"
+							android:layout_width="wrap_content"
+							android:layout_height="wrap_content"
+							android:layout_weight="1"
+							android:text="Status"
+							android:textSize="12sp"/>
+				</LinearLayout>
+
+			</LinearLayout>
+
+		</android.support.design.widget.CollapsingToolbarLayout>
+	</android.support.design.widget.AppBarLayout>
+
+	<include layout="@layout/content_appointment_view"/>
+
+</android.support.design.widget.CoordinatorLayout>
