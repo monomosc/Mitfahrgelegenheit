@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*- 
 # Moritz Basel - Interne_Entities.py
-# Version 0.2.0
+# Version 1.0.0
+# Licensed under CC-by-nc-nd
+
 from datetime import datetime
 import time
 import sys
